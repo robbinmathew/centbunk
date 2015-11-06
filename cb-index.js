@@ -60,7 +60,7 @@ app.use(function(req, res, next){
 });
 
 var handleBar = expHandleBar.create({
-    defaultLayout: 'main',
+	defaultLayout: 'main',
 });
 
 app.engine('handlebars', handleBar.engine);
@@ -72,25 +72,25 @@ app.set('view engine', 'handlebars');
 /*===============Routes setup ==================*/
 
 app.get('/', function(req, res){
-  res.render('home', {user: req.user});
+	res.render('home', {user: req.user});
 });
 
-app.get('/signin', function(req, res){
-  res.render('signin');
+app.get('/unauth', function(req, res){
+	res.render('unauth');
 });
 
 app.post('/login', passport.authenticate('local-signin', { 
-  successRedirect: '/',
-  failureRedirect: '/signin'
-  })
+	successRedirect: '/',
+  	failureRedirect: '/unauth'
+  	})
 );
 
 app.get('/logout', function(req, res){
-  var name = req.user.username;
-  console.log("LOGGIN OUT " + req.user.username)
-  req.logout();
-  res.redirect('/');
-  req.session.notice = "You have successfully been logged out " + name + "!";
+	var name = req.user.username;
+  	console.log("LOGGIN OUT " + req.user.username)
+  	req.logout();
+  	res.redirect('/');
+  	req.session.notice = "You have successfully been logged out " + name + "!";
 });
 
 /*===============Routes setup ==================*/
@@ -98,36 +98,37 @@ app.get('/logout', function(req, res){
 
 /*===============Passport setup ==================*/
 passport.use('local-signin', new LocalStrategy(
-  //allows us to pass back the request to the callback
-  {passReqToCallback : true},
-  function(req, username, password, done) {
-    cbAuth.localAuth(username, password)
-    .then(function (user) {
-      if (user) {
-        console.log("LOGGED IN AS: " + user);
-        req.session.success = 'You are successfully logged in ' + user+ '!';
-        done(null, user);
-      }
-      if (!user) {
-        console.log("COULD NOT LOG IN");
-        req.session.error = 'Could not log user in. Please try again.'; //inform user could not log them in
-        done(null, user);
-      }
-    })
-    .fail(function (err){
-      console.log(err.body);
-    });
-  }
+	//allows us to pass back the request to the callback
+  	{passReqToCallback : true},
+  	function(req, username, password, done) {
+    		cbAuth.localAuth(username, password)
+    		.then(function (user) {
+			if (user) {
+				console.log("LOGGED IN AS: " + user);
+				req.session.success = 'You are successfully logged in ' + user+ '!';
+				done(null, user);
+			}
+			if (!user) {
+				console.log("COULD NOT LOG IN");
+				//inform user could not log them in
+				req.session.error = 'Could not log user in ' + user + '. Please try again.';
+				done(null, user);
+			}
+		})
+		.fail(function (err){
+			console.log(err.body);
+		});
+	}
 ));
 
 passport.serializeUser(function(user, done) {
-  console.log("SERIALIZING " + user);
-  done(null, user);
+	console.log("SERIALIZING " + user);
+  	done(null, user);
 });
 
 passport.deserializeUser(function(user, done) {
-  console.log("DESERIALIZING " + user);
-  done(null, user);
+  	console.log("DESERIALIZING " + user);
+  	done(null, user);
 });
 /*===============Passport setup ==================*/
 

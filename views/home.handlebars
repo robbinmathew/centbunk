@@ -1,27 +1,37 @@
 <!-- /home.handlebars -->
 {{#if user}}
-  <div class="jumbotron">
-    <h1>User Authentication</h1>
-  </div>
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      <h3 class="panel-title">Profile Information</h3>
-    </div>
-    <div class="panel-body">
-      <p>Username: {{user}}</p>
-    </div>
-  </div>
+	<div class="jumbotron">
+    		<h1>User Authentication</h1>
+  	</div>
+	
+	<div class="panel panel-default">
+    		<div class="panel-heading">
+      			<h3 class="panel-title">Profile Information</h3>
+		</div>
+
+    		<div class="panel-body">
+      			<p>Username: {{user}}</p>
+    		</div>
+  	</div>
 
 {{else}}
-  <div class="jumbotron">
-    <h1>Welcome</h1>
-    <p>Sign in and view your profile!</p>
-    <p>
-      <a href="/signin" class="btn btn-primary btn-lg" role="button">
-        <span class="glyphicon glyphicon-user"></span> 
-        Sign in!
-      </a>
-    </p>
-  </div>
+	<!--No user. Provide the signin page-->
+  	<div class="jumbotron">
+		<h1>Please sign in</h1>
+  	</div>
+	<form id="local-sign-in" class="collapse" action="/login" method="post">
+		<div>
+			<p></p>
+			<label>User name:</label>
+			<input type="text" name="username"/>
+		</div>
+      		<div>
+			<label>Password :</label>
+			<input type="password" name="password"/>
+      		</div>
+      		<div>
+          		<input type="submit" class="btn btn-primary btn-sm" value="Log In"/>
+      		</div>
+   	</form>
 
 {{/if}}
