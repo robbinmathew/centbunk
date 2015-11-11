@@ -16,6 +16,7 @@ var LocalStrategy = require('passport-local');
 
 /* Local module for authentication*/
 var cbAuth = require('./cb-auth.js');
+//var cbDb = require('./cb-db.js');
 /*===============INCLUDE modules ===============*/
 
 
@@ -27,7 +28,8 @@ app.use(logger('combined')); /*combined is the apache format for logging*/
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(methodOverride('X-HTTP-Method-Override'));
-app.use(session({secret: 'asdfasdf123123', saveUninitialized: true, resave: false})); //TODO: add cookie as secure as below
+app.use(session({secret: 'asdfasdf123123', saveUninitialized: true, resave: false}));
+//TODO: add cookie as secure as below
 //app.use(session({secret: 'asdfasdf123123', saveUninitialized: true, resave: false, cookie: {secure: true}}));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -65,8 +67,8 @@ var handleBar = expHandleBar.create({
 
 app.engine('handlebars', handleBar.engine);
 app.set('view engine', 'handlebars');
-/*===============INIT the app ==================*/
 
+/*===============INIT the app ==================*/
 
 
 /*===============Routes setup ==================*/
@@ -95,8 +97,30 @@ app.get('/logout', function(req, res){
 
 /*===============Routes setup ==================*/
 
+/*===============DB connect start==================*/
+//cbDb.connect();
+var mysql = require('mysql');
 
-/*===============Passport setup ==================*/
+var dbConn = mysql.createConnection({
+	connectionLimit : 100, //important
+	host     : process.env.CB_MYSQL_SERVER,
+	user     : process.env.CB_MYSQL_USER,
+	password : process.env.CB_MYSQL_PASSWORD,
+	port     : process.env.CB_MYSQL_PORT,
+	database : process.env.CB_MYSQL_DB_NAME
+});
+
+dbConn.query('SELECT * FROM users', function(err, rows) {
+	// connected! (unless `err` is set)
+	if (err) throw err;
+
+	console.log('The solution is: ', rows[0]);
+});
+
+/*===============DB connect end==================*/
+
+
+/*===============Passport setup start ==================*/
 passport.use('local-signin', new LocalStrategy(
 	//allows us to pass back the request to the callback
   	{passReqToCallback : true},
@@ -130,7 +154,7 @@ passport.deserializeUser(function(user, done) {
   	console.log("DESERIALIZING " + user);
   	done(null, user);
 });
-/*===============Passport setup ==================*/
+/*===============Passport setup end ==================*/
 
 /*===============Start the app====================*/
 var port = 8000;
