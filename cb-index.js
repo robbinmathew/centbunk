@@ -6,6 +6,8 @@ var logger = require('morgan');
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 var session = require('express-session');
+var https = require('https');
+var fs = require('fs');
 
 /* Non-Express modules for creating views*/
 var expHandleBar = require('express-handlebars');
@@ -141,8 +143,25 @@ passport.deserializeUser(function(user, done) {
 /*===============Passport setup end ==================*/
 
 /*===============Start the app====================*/
-var port = 8000;
-app.listen(port);
-console.log("listening on: " + port);
+var key = fs.readFileSync(process.env.CB_HTTPS_KEY);
+var cert = fs.readFileSync(process.env.CB_HTTPS_CERT);
+
+var https_options = {
+	key: key,
+	cert: cert
+};
+
+// Redirect from http port to https
+var http = require('http');
+http.createServer(function (req, res) {
+	var redirectURL = req.headers['host'].replace(process.env.CB_HTTP_PORT, process.env.CB_HTTPS_PORT) + req.url;
+	res.writeHead(301, { "Location": "https://" + redirectURL});
+	console.log("http request redirect: " + redirectURL);
+	res.end();
+}).listen(process.env.CB_HTTP_PORT);
+
+server = https.createServer(https_options, app).listen(process.env.CB_HTTPS_PORT);
+
+console.log("listening on: " + process.env.CB_HTTP_PORT);
 /*===============Start the app====================*/
 
