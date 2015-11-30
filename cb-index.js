@@ -16,7 +16,7 @@ var LocalStrategy = require('passport-local');
 
 /* Local module for authentication*/
 var cbAuth = require('./cb-auth.js');
-//var cbDb = require('./cb-db.js');
+var cbDb = require('./cb-db.js');
 /*===============INCLUDE modules ===============*/
 
 
@@ -98,24 +98,8 @@ app.get('/logout', function(req, res){
 /*===============Routes setup ==================*/
 
 /*===============DB connect start==================*/
-//cbDb.connect();
-var mysql = require('mysql');
 
-var dbConn = mysql.createConnection({
-	connectionLimit : 100, //important
-	host     : process.env.CB_MYSQL_SERVER,
-	user     : process.env.CB_MYSQL_USER,
-	password : process.env.CB_MYSQL_PASSWORD,
-	port     : process.env.CB_MYSQL_PORT,
-	database : process.env.CB_MYSQL_DB_NAME
-});
-
-dbConn.query('SELECT * FROM users', function(err, rows) {
-	// connected! (unless `err` is set)
-	if (err) throw err;
-
-	console.log('The solution is: ', rows[0]);
-});
+cbDb.connect();
 
 /*===============DB connect end==================*/
 

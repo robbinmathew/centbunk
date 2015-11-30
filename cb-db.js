@@ -10,27 +10,17 @@ var dbConn = mysql.createConnection({
 });
 
 
-/*Connect to the DB*/
-dbConn.connect(function(err) {
-  if (err) {
-    console.error('error connecting: ' + err.stack);
-    return;
-  }
- 
-  console.log('connected as id ' + connection.threadId);
-});
 
+function queryUsers() {
+	dbConn.query('SELECT * FROM users', function(err, rows) {
+		// connected! (unless `err` is set)
+		if (err) throw err;
 
-exports.connect= function () {
+		console.log('The solution is: ', rows[0]);
+	});
+}
+
+exports.connect = function () {
         console.log('db connection started.. ' + dbConn);
-
-	/*
-	dbConn.connect(function(err) {
-		if (err) {
-			console.error('DB: error connecting: ' + err.stack);
-			return;
-		}
- 
-		console.log('DB: connected as id ' + connection.threadId);
-	}); */
+	queryUsers();
 }
