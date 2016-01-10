@@ -7,10 +7,15 @@ var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 var session = require('express-session');
 var https = require('https');
+var http = require('http');
 var fs = require('fs');
+var proxy = require('express-http-proxy');
+
 
 /* Non-Express modules for creating views*/
 var expHandleBar = require('express-handlebars');
+
+var apiHandler = require('./lib/routes/cb-handler');
 
 /* Module required for authentication*/
 var passport = require('passport');
@@ -24,17 +29,25 @@ var cbDb = require('./cb-db.js');
 
 
 /*===============INIT the app ==================*/
-var app = express(); 
+var app = express();
 
-app.use(logger('combined')); /*combined is the apache format for logging*/
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-app.use(methodOverride('X-HTTP-Method-Override'));
 app.use(session({secret: 'asdfasdf123123', saveUninitialized: true, resave: false}));
 //TODO: add cookie as secure as below
 //app.use(session({secret: 'asdfasdf123123', saveUninitialized: true, resave: false, cookie: {secure: true}}));
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use('/api*', proxy('localhost:8081', {
+	forwardPath: function(req, res) {
+		return require('url').parse(req.baseUrl).path;
+	}
+}));
+
+app.use(logger('combined')); /*combined is the apache format for logging*/
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(methodOverride('X-HTTP-Method-Override'));
+
 
 // Session-persisted message middleware
 app.use(function(req, res, next){
@@ -62,6 +75,12 @@ app.use(function(req, res, next){
 	delete req.session.notice;
 	next();
 });
+
+
+
+
+
+app.use(express.static("resources"));
 
 var handleBar = expHandleBar.create({
 	defaultLayout: 'main',
@@ -96,6 +115,8 @@ app.get('/logout', function(req, res){
   	res.redirect('/');
   	req.session.notice = "You have successfully been logged out " + name + "!";
 });
+
+app.use('/apiv2', apiHandler)
 
 /*===============Routes setup ==================*/
 
@@ -152,7 +173,7 @@ var https_options = {
 };
 
 // Redirect from http port to https
-var http = require('http');
+
 http.createServer(function (req, res) {
 	var redirectURL = req.headers['host'].replace(process.env.CB_HTTP_PORT, process.env.CB_HTTPS_PORT) + req.url;
 	res.writeHead(301, { "Location": "https://" + redirectURL});
