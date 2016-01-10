@@ -1,0 +1,6 @@
+
+.formatCell .x-grid-cell-inner{
+  margin:5px !important;
+  white-space:pre-wrap !important;
+  display:inline-block;
+}
