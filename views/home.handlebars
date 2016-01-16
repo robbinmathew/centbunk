@@ -1,7 +1,15 @@
 <!-- /home.handlebars -->
 {{#if user}}
     <head>
+        <script type="text/javascript" src="js/bunk-models.js"></script>
+        <script type="text/javascript" src="js/bunk-stores.js"></script>
+        <script type="text/javascript" src="js/stock-receipts.js"></script>
+        <script type="text/javascript" src="js/daily-statement.js"></script>
         <script type="text/javascript" src="js/app.js"></script>
+        <script type="text/javascript">
+            var username = '{{user}}';
+        </script>
+
     </head>
     <body>
 	<div class="jumbotron">

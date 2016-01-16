@@ -39,7 +39,7 @@ app.use(passport.session());
 
 app.use('/api*', proxy('localhost:8081', {
 	forwardPath: function(req, res) {
-		return require('url').parse(req.baseUrl).path;
+		return require('url').parse(req.originalUrl).path;
 	}
 }));
 
