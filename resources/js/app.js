@@ -11,9 +11,6 @@ function getDataWithAjax(urlPath, success, failure) {
         })
     });
 }
-getDataWithAjax('api/info', function(response){
-    bunkCache.infos = Ext.decode(response.responseText);
-});
 
 var navStore = Ext.create('Ext.data.TreeStore', {
     root: {
@@ -50,6 +47,22 @@ Ext.application({
     name: 'bronz.bunk',
     extend: 'Ext.app.Application',
     launch: function() {
+        Ext.getBody().setStyle('overflow', 'auto');
+        var myMask = new Ext.LoadMask(Ext.getBody(), {msg:"Loading..."});
+        myMask.show();
+        console.log("Test1");
+        getDataWithAjax('api/info', function(response){
+            bunkCache.infos = Ext.decode(response.responseText);
+            if(Ext.getCmp('userInfo')) {
+                Ext.getCmp('userInfo').body.update('<h4>Username:' + username + '<br/>Date:' + (bunkCache.infos?bunkCache.infos.todayDateDayText:'-') + '</h4>');
+            }
+            myMask.hide();
+        },function(response){
+            console.log('failed to read info from server:' + response);
+            myMask.hide();
+            var failedMask = new Ext.LoadMask(Ext.getBody(), {msg:"Failed to read data from server. Please try after sometime."});
+            failedMask.show();
+        });
         Ext.create('Ext.container.Viewport', {
             layout:'border',
             defaults: {
@@ -79,7 +92,8 @@ Ext.application({
                     cmargins: '0 0 0 0'
 
                 },{
-                    html: '<h4>Username:' + username + '<br/>Date:' + bunkCache.infos.todayDateDayText + '</h4>',
+                    id:'userInfo',
+                    html: '<h4>Username:' + username + '<br/>Loading date</h4>',
                     preventBodyReset: true,
                     width:'20%',
                     region:'east',
@@ -210,7 +224,7 @@ function prepareErrorMsg(msg, errors) {
 }
 
 function editableColumnRenderer(value, metaData, record, rowIndex, colIndex, store, view) {
-    metaData.style = 'background-color:#ffffe5 !important;';
+    metaData.style = 'background:#ffffe5 !important;';
     return value;
 }
 

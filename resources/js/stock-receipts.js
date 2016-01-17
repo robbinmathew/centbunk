@@ -37,7 +37,7 @@ function buildFuelReceiptsPanel(title, record) {
         xtype: 'gridpanel',
         id:'tankReceiptGrid',
         autoscroll: true,
-        height: 120,
+        height: 'auto',
         //renderTo: Ext.getBody(),
         //region: 'center',
         store: tankReceiptStore,
@@ -115,7 +115,7 @@ function buildBatteryWaterReceiptsPanel(title, record) {
 }
 
 function buildReceiptsPanel(title, record, prodType, panelItems, prodsPanelHeight, editableReceiptAmt, onSaveType) {
-    var fuelProdsReceiptStore = buildAvailableProductList(prodType);
+    var fuelProdsReceiptStore = buildAvailableProductListStore(prodType);
     var receiptAmtField;
     var receiptAmtRenderer;
     if(editableReceiptAmt) {
@@ -132,7 +132,7 @@ function buildReceiptsPanel(title, record, prodType, panelItems, prodsPanelHeigh
         xtype: 'gridpanel',
         id:'fuelReceiptGrid',
         autoscroll: true,
-        height: prodsPanelHeight,
+        height: 'auto',
         //renderTo: Ext.getBody(),
         //region: 'center',
         store: fuelProdsReceiptStore,
@@ -202,7 +202,7 @@ function buildReceiptsPanel(title, record, prodType, panelItems, prodsPanelHeigh
         xtype:'fieldset',
         defaults: {anchor: '100%',height:'30px'},
         layout: 'hbox',
-        title:'Test',
+        //title:'Test',
         //width:'100%',
         height:'50px',
         defaultType: 'textfield',
