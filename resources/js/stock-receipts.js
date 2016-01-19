@@ -125,7 +125,6 @@ function buildReceiptsPanel(title, record, prodType, panelItems, prodsPanelHeigh
             allowBlank: false
         };
         receiptAmtRenderer=editableColumnRenderer;
-
     }
 
     panelItems.push({
@@ -355,7 +354,6 @@ function updateMargin(record) {
         record.set("marginPerUnit", 0);
 
     }
-
 }
 
 function getGroupedReceiptAmtFromTankGrid() {

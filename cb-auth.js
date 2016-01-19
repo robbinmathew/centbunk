@@ -3,8 +3,10 @@ var Q = require('q');
 
 /*Hard-coded users and password*/
 var authorized_users = [
-	['u1', '111'],
-	['u2', '222'],
+	['robin', 'robin123'],
+	['thomas', 'thomas123'],
+	['robbin', 'Robbin@123'],
+	['prabin', 'Prabin@123'],
 ];
 
 exports.localAuth = function (username, password) {

@@ -50,7 +50,6 @@ Ext.application({
         Ext.getBody().setStyle('overflow', 'auto');
         var myMask = new Ext.LoadMask(Ext.getBody(), {msg:"Loading..."});
         myMask.show();
-        console.log("Test1");
         getDataWithAjax('api/info', function(response){
             bunkCache.infos = Ext.decode(response.responseText);
             if(Ext.getCmp('userInfo')) {
@@ -109,6 +108,7 @@ Ext.application({
                 margins: '0 0 0 0',
                 width:'100%',
                 height:'100%',
+                autoScroll:true,
                 items : [buildSummaryPanel()]
             },{
                 //title: 'NavPanel',

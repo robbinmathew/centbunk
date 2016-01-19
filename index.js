@@ -23,7 +23,7 @@ var LocalStrategy = require('passport-local');
 
 /* Local module for authentication*/
 var cbAuth = require('./cb-auth.js');
-var cbDb = require('./cb-db.js');
+//var cbDb = require('./cb-db.js');
 /*===============INCLUDE modules ===============*/
 
 
@@ -122,7 +122,7 @@ app.use('/apiv2', apiHandler)
 
 /*===============DB connect start==================*/
 
-cbDb.connect();
+//cbDb.connect();
 
 /*===============DB connect end==================*/
 
