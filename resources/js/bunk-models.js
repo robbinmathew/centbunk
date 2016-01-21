@@ -63,6 +63,7 @@ Ext.define('PartyTransaction', {
     extend: 'Ext.data.Model',
     fields: [
         {name: 'id', type: 'int'},
+        {name: 'slNo', type: 'int'},
         {name: 'partyId', type: 'int'},
         'partyName',
         'debitDetail',

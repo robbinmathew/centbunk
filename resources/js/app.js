@@ -21,7 +21,7 @@ var navStore = Ext.create('Ext.data.TreeStore', {
             },{
                 id:'products', text: "Products", expanded: true, collapsible: false,
                 children: [
-                    { id:'prods-add-edit', text: "Add/Edit", leaf: true},
+                    //{ id:'prods-add-edit', text: "Add/Edit", leaf: true},
                     {
                         id:'receive-prods',
                         text: "Receive products",
@@ -34,11 +34,11 @@ var navStore = Ext.create('Ext.data.TreeStore', {
                         ]
                     }
                 ]
-            },{
+            }/*,{
                 id:'parties', text: "Parties", expanded: true, collapsible: false, children: [
                     { id:'parties-add-edit', text: "Add/Edit", leaf: true }
                 ]
-            }
+            }*/
         ]
     }
 });
@@ -228,5 +228,8 @@ function editableColumnRenderer(value, metaData, record, rowIndex, colIndex, sto
     return value;
 }
 
+function isNumber (o) {
+    return ! isNaN (o-0) && o !== null && o !== "" && o !== false;
+}
 
 
