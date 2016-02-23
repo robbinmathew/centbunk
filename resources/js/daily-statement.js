@@ -2,10 +2,31 @@ var dailyStatement = {};
 var partyComboStoreLoaded = false;
 var loadedSavedTransactions = false;
 var dataLoaded = false;
+var dailyStatementLoadMask;
+var dailyStatementLoadMask1;
 
 function buildDailyStatementPanel(title, record) {
+    //Reset all values
+    dailyStatement = {};
+    partyComboStoreLoaded = false;
+    loadedSavedTransactions = false;
+    dataLoaded = false;
+
+    dailyStatementLoadMask1 = new Ext.LoadMask( Ext.getBody(), {
+            msg:"Preparing for daily statement...",
+            listeners: {
+                beforehide: function (loadMask, eOpts) {
+                    console.log("Test");
+                    return loadMask.hideMask(loadMask, eOpts);
+                }
+            }
+        });
+
+    dailyStatementLoadMask1.show();
+
+    var oilProdStore = buildAvailableProductListStore('SECONDARY_PRODUCTS', dailyStatementLoadMask);
     var oilProdCombo = new Ext.form.ComboBox({
-        store: buildAvailableProductListStore('SECONDARY_PRODUCTS'),
+        store: oilProdStore,
         valueField: "productId",
         editable: false,
         // Template for the dropdown menu.
@@ -51,18 +72,29 @@ function buildDailyStatementPanel(title, record) {
 
                     if(rowNo >= oilGridStore.getCount() -1) {
                         for (var i=0; i<5;i++) {
-                            oilGridStore.insert(rowNo+1, new FuelReceipt());
+                            oilGridStore.add(new LubeSale());
                         }
                     }
-                    gridRecord.set("productId", comboRecord.data.productId + ":" + rowNo+1);
+                    gridRecord.set("id", comboRecord.data.productId + ":" + rowNo+1);
                 }
             }
         }
     });
-    var partyStore = buildPartyListStore('ALL_ACTIVE_NON_EMPLOYEE_PARTIES');
+    var partyStore = buildPartyListStore('ALL_ACTIVE_NON_EMPLOYEE_PARTIES', dailyStatementLoadMask);
     partyStore.on('load',function (){
         partyComboStoreLoaded = true;
-        loadSavedTransactions();
+        getDataWithAjax('api/dailyStatement?date=' + bunkCache.infos.todayDate, function(response){
+            dailyStatement = Ext.decode(response.responseText);
+            Ext.getCmp('openBal-field').setValue(dailyStatement.settlement? dailyStatement.settlement.closingBal:0.0);
+            loadedSavedTransactions = true;
+            onMeterSaleUpdate();
+            loadSavedTransactions();
+            dailyStatementLoadMask1.hide();
+        },function(response){
+            dailyStatement = {};
+            console.log('failed to read info from server:' + response);
+            showFailedMask();
+        });
     });
 
     var partyCombo = new Ext.form.ComboBox({
@@ -72,12 +104,6 @@ function buildDailyStatementPanel(title, record) {
         displayField: "name",
         editable: false,
         listeners: {
-            load: {
-                fn: function() {
-                    partyComboStoreLoaded = true;
-                    loadSavedTransactions();
-                }
-            },
             select: {
                 fn: function(c, r, eopts) {
                     c.ownerCt.completeEdit();
@@ -86,6 +112,7 @@ function buildDailyStatementPanel(title, record) {
                     //Copy values to grid record
                     gridRecord.set("partyName", comboRecord.data.name);
                     gridRecord.set("partyId", comboRecord.data.id);
+                    gridRecord.set("balance", comboRecord.data.balance);
 //currentStock
                     var partyTransGridStore = Ext.getCmp('partyTransGrid').store;
 
@@ -113,9 +140,10 @@ function buildDailyStatementPanel(title, record) {
             }
         }
     });
+    var empStore = buildEmployeeListStore(dailyStatementLoadMask);
 
     var employeeCombo = new Ext.form.ComboBox({
-        store: buildEmployeeListStore(),
+        store: empStore,
         valueField: "id",
         displayField: "name",
         editable: false,
@@ -156,21 +184,6 @@ function buildDailyStatementPanel(title, record) {
         }
     });
 
-    var myMask = new Ext.LoadMask(Ext.getBody(), {msg:"Preparing for daily statement..."});
-    myMask.show();
-    getDataWithAjax('api/dailyStatement?date=' + bunkCache.infos.todayDate, function(response){
-        dailyStatement = Ext.decode(response.responseText);
-        Ext.getCmp('openBal-field').setValue(dailyStatement.settlement? dailyStatement.settlement.closingBal:0.0);
-        loadedSavedTransactions = true;
-        loadSavedTransactions();
-        myMask.hide();
-    },function(response){
-        dailyStatement = {};
-        console.log('failed to read info from server:' + response);
-        myMask.hide();
-        var failedMask = new Ext.LoadMask(Ext.getBody(), {msg:"Failed to read data from server. Please try after sometime."});
-        failedMask.show();
-    });
     var mainContent = Ext.create('Ext.form.Panel', {
         id:'dailyStmtPanel',
         title: title,
@@ -187,14 +200,70 @@ function buildDailyStatementPanel(title, record) {
             anchor: '100%'
         },
         items: [{
+            xtype:'fieldset',
+            //defaults: {anchor: '100%',height:'30px'},
+            layout: 'hbox',
+            //title:'Opening/Closing',
+            //width:'100%',
+            //height:'50px',
+            defaultType: 'textfield',
+            fieldDefaults: {
+                msgTarget: 'side',
+                labelSeparator : ' :',
+                margins: '10 10 10 0',
+                labelWidth: 100
+            },
+            items: [
+                {
+                    id:'openBal-field',
+                    fieldLabel: 'Opening balance',
+                    name: 'opBal',
+                    flex:2,
+                    readOnly: true
+                },{
+                    id:'clBal-field',
+                    fieldLabel: 'Closing balance',
+                    flex:2,
+                    readOnly: true
+                },{
+                    xtype: 'button',
+                    text: 'Save',
+                    flex:1,
+                    margins: '10 5 5 0',
+                    disabled: true,
+                    handler: function () {
+                        onDailyStmtSave();
+                    }
+                },{
+                    xtype: 'button',
+                    flex:1,
+                    margins: '10 5 5 0',
+                    text: 'Submit',
+                    handler: function () {
+                        onDailyStmtSubmit();
+                    }
+                },{
+                    xtype: 'button',
+                    flex:1,
+                    margins: '10 5 5 0',
+                    text: 'Clear',
+                    handler: function () {
+                        updateSubPanel(record);
+
+                    }
+                }
+            ]
+        },{
             xtype: 'gridpanel',
             id:'officeCashGrid',
             autoscroll: true,
             height: 'auto',
-            store: buildOfficeCashStore(),
+            store: buildOfficeCashStore(dailyStatementLoadMask),
             forceFit: true,
-            loadMask: true,
+            loadMask: false,
             viewConfig: {
+                loadMask: false,
+                markDirty:false,
                 stripeRows: true
             },
             plugins: [
@@ -253,8 +322,10 @@ function buildDailyStatementPanel(title, record) {
             height: 'auto',
             store: buildActiveMeterListStore(),
             forceFit: true,
-            loadMask: true,
+            loadMask: false,
             viewConfig: {
+                loadMask: false,
+                markDirty:false,
                 stripeRows: true
             },
             plugins: [
@@ -265,10 +336,6 @@ function buildDailyStatementPanel(title, record) {
             listeners : {
                 edit: function (editor, e, eOpts) {
                     onMeterSaleUpdate();
-                },
-                afterlayout: function () {
-                    onMeterSaleUpdate();
-                    myMask.hide();
                 }
             },
             columns:[{
@@ -319,10 +386,11 @@ function buildDailyStatementPanel(title, record) {
             xtype: 'gridpanel',
             id:'tankSaleGrid',
             height: 'auto',
-            store: buildTankReceiptStore(bunkCache.infos.todayDate),
+            store: buildTankReceiptStore(bunkCache.infos.todayDate, dailyStatementLoadMask),
             forceFit: true,
-            loadMask: true,
             viewConfig: {
+                loadMask: false,
+                markDirty:false,
                 stripeRows: true
             },
             plugins: [
@@ -392,10 +460,11 @@ function buildDailyStatementPanel(title, record) {
             xtype: 'gridpanel',
             id:'fuelSaleGrid',
             height: 'auto',
-            store: buildAvailableProductListStore('FUEL_PRODUCTS'),
+            store: buildAvailableProductListStore('FUEL_PRODUCTS', dailyStatementLoadMask),
             forceFit: true,
-            loadMask: true,
             viewConfig: {
+                loadMask: false,
+                markDirty:false,
                 stripeRows: true
             },
             columns:[{
@@ -446,8 +515,9 @@ function buildDailyStatementPanel(title, record) {
             height: 'auto',
             store: buildEmptyProductSaleStore(),
             forceFit: true,
-            loadMask: true,
             viewConfig: {
+                loadMask: false,
+                markDirty:false,
                 stripeRows: true
             },
             plugins: [
@@ -512,8 +582,9 @@ function buildDailyStatementPanel(title, record) {
             height: 'auto',
             store: buildEmptyPartyTransactionStore(),
             forceFit: true,
-            loadMask: true,
             viewConfig: {
+                loadMask: false,
+                markDirty:false,
                 stripeRows: true
             },
             plugins: [
@@ -534,12 +605,11 @@ function buildDailyStatementPanel(title, record) {
                 },
                 beforeedit: function(iView, eventDetails) {
                     //Disable the edit of saved transactions
-                    if(eventDetails.rowIdx < dailyStatement.closingStatement.partyTransactions.length) {
+                    if(eventDetails.record.data.notEditable == true) {
                         return false;
                     } else {
                         return true;
                     }
-
                 }
             },
             columns:[{
@@ -549,6 +619,14 @@ function buildDailyStatementPanel(title, record) {
                 sortable: false,
                 editor: partyCombo,
                 renderer: editableColumnRenderer
+            },{
+                text: "Opening Balance",
+                dataIndex: 'balance',
+                flex: 1,
+                sortable: false,
+                field: {
+                    allowBlank: false
+                }
             },{
                 text: "Debit detail",
                 dataIndex: 'debitDetail',
@@ -602,8 +680,9 @@ function buildDailyStatementPanel(title, record) {
             height: 'auto',
             store: buildEmptyEmployeeTransactionStore(),
             forceFit: true,
-            loadMask: true,
             viewConfig: {
+                loadMask: false,
+                markDirty:false,
                 stripeRows: true
             },
             plugins: [
@@ -671,62 +750,16 @@ function buildDailyStatementPanel(title, record) {
                 },
                 renderer: editableColumnRenderer
             }]
-        },{
-            xtype:'fieldset',
-            defaults: {anchor: '100%',height:'30px'},
-            layout: 'hbox',
-            title:'Opening/Closing',
-            //width:'100%',
-            height:'50px',
-            defaultType: 'textfield',
-            fieldDefaults: {
-                msgTarget: 'side',
-                labelWidth: 100
-            },
-            items: [
-                {
-                    id:'openBal-field',
-                    fieldLabel: 'Opening balance',
-                    name: 'opBal',
-                    flex:1,
-                    readOnly: true
-                },{
-                    id:'clBal-field',
-                    fieldLabel: 'Closing balance',
-                    flex:1,
-                    readOnly: true
-                }
-            ]
-        }
-        ],
-        buttons: [{
-            text: 'Save',
-            handler: function () {
-                onDailyStmtSave();
-            }
-        },{
-            text: 'Submit',
-            handler: function () {
-                onDailyStmtSubmit();
-            }
-        },{
-            text: 'Clear',
-            handler: function () {
-                updateSubPanel(record);
-
-            }
         }]
     });
     return mainContent;
 };
 
 function onDailyStmtSave() {
-    Ext.MessageBox.alert('Hold on', 'This feature is not implemented yet.');
-
-    return;
+    saveObj("TEMP_SAVE");
 }
 
-function validateDailyStmt() {
+function validateDailyStmt(callback) {
     var errors = [];
     var warnings = [];
 
@@ -734,48 +767,85 @@ function validateDailyStmt() {
 
     if(errors.length > 0) {
         Ext.MessageBox.alert('Error', prepareErrorMsg("Please fix the below validation errors.", errors));
-        return false;
     }
+    if(errors.length ==0 && warnings.length == 0) {
+        callback();
+    }
+
     if(warnings.length > 0) {
         var messageBox = Ext.create('Ext.window.MessageBox', {
             buttonText: {
-                ok: 'OK',
+                ok: 'Continue with submit.',
                 yes: 'Yes',
                 no: 'No',
-                cancel: 'Cancel'
+                cancel: 'Cancel, let me correct them'
             }
         });
         messageBox.show({
-            title: "Warning",
-            msg: prepareErrorMsg("Please review the below warnings", warnings, function(btn, opt){
-                    alert(btn + " et " + opt);
-            }),
+            title: "Please review the below warnings",
+            msg: prepareErrorMsg("", warnings),
             buttons: Ext.Msg.OKCANCEL,
-            icon: Ext.MessageBox.WARNING
+            icon: Ext.MessageBox.WARNING,
+            fn: function(btn){
+                if (btn == "ok"){
+                    callback();
+                }
+            }
         });
     }
     return true;
 }
 
 function onDailyStmtSubmit() {
-    Ext.MessageBox.alert('Hold on', 'This feature is not implemented yet.');
-    return;
-    /*if(!validateDailyStmt()) {
-        return;
-    }
+    var saveType = "SUBMIT";
+    validateDailyStmt( function() {
+        saveObj(saveType);
+    });
+}
+
+function saveObj(type) {
     var myMask = new Ext.LoadMask(Ext.getBody(), {msg:"Saving daily statement..."});
     myMask.show();
     //Prepare object
+    var dailyStatement = prepareObj(type);
 
     //Save
-    console.log("test");*/
+    Ext.Ajax.request({
+        url: 'api/saveDailyStatement',
+        method: 'POST',
+        jsonData:dailyStatement,
+        success: function() {
+            myMask.hide();
+            Ext.MessageBox.alert('Success', "Successfully saved the daily statement.");
+            updateSummaryPanel();
+        },
+        failure : function(response) {
+            myMask.hide();
+            Ext.Msg.alert("Error", "Failed to save the stock receipt. Please try again. <br/> " + response.responseText);
+        }
+    });
 }
 
 function prepareObj(saveType) {
     var ds = {
         date:bunkCache.infos.todayDate,
-        type:saveType
+        type:saveType,
+        closingBalance:Ext.getCmp('clBal-field').getValue()
     };
+
+    var officeCashGridStore = Ext.getCmp('officeCashGrid').store;
+    var officeCash = [];
+    officeCashGridStore.each( function(record) {
+        var offCash = {
+            id:record.data.id,
+            toOffice:record.data.toOffice,
+            paidToBank:record.data.paidToBank
+        }
+        officeCash.push(offCash);
+    });
+
+    ds['officeCash'] = officeCash;
+
     var meterSaleStore = Ext.getCmp('meterSaleGrid').store;
     var meterSales = [];
     meterSaleStore.each(function(record) {
@@ -783,7 +853,7 @@ function prepareObj(saveType) {
             meterId:record.data.meterId,
             totalSale:record.data.totalSale,
             finalReading:record.data.finalReading,
-            testAmt:record.data.finalReading
+            testSale:record.data.testSale
         }
         meterSales.push(meterClosing);
     });
@@ -791,20 +861,20 @@ function prepareObj(saveType) {
 
     var tankSaleGridStore = Ext.getCmp('tankSaleGrid').store;
     var tankSales = [];
-
     tankSaleGridStore.each(function(record) {
         var obj = {
             tankId:record.data.tankId,
+            productId:record.data.productId,
             dipStock:record.data.dipStock,
             testSale:record.data.testSale,
-            sale:record.data.sale,
-            productId:record.data.productId,
-            dipStock:record.data.dipStock
-
+            diffToday:record.data.diffToday,
+            diffThisMonth:record.data.newDiffThisMonth,
+            sale:record.data.sale
         }
         tankSales.push(obj);
     });
     ds['tankSales'] = tankSales;
+
     var fuelSaleGridStore = Ext.getCmp('fuelSaleGrid').store;
     var fuelSales = [];
     fuelSaleGridStore.each(function(record) {
@@ -812,6 +882,7 @@ function prepareObj(saveType) {
             productId : record.data.productId,
             totalSale : record.data.totalSale,
             testSale : record.data.testSale,
+            unitSellingPrice : record.data.unitSellingPrice,
             actualSale : record.data.actualSale
         }
         fuelSales.push(obj);
@@ -819,41 +890,52 @@ function prepareObj(saveType) {
     ds['fuelSales'] = fuelSales;
 
     var oilSaleGridStore = Ext.getCmp('oilSaleGrid').store;
-
     var lubesSales = [];
     oilSaleGridStore.each(function(record) {
-        var obj = {
-            productId : record.data.productId,
-            totalSale : record.data.totalSale,
-            testSale : record.data.testSale,
-            actualSale : record.data.actualSale
+        if(record.data.totalSale >0) {
+            var obj = {
+                productId : record.data.productId,
+                totalSale : record.data.totalSale,
+                discountPerUnit : record.data.discountPerUnit
+            }
+            lubesSales.push(obj);
         }
-        lubesSales.push(obj);
     });
     ds['lubesSales'] = lubesSales;
 
     var partyTransGridStore = Ext.getCmp('partyTransGrid').store;
-
+    var partyTrans = [];
     partyTransGridStore.each(function(record) {
-        if(!record.data.isChequeDebit) {
-            clBal = clBal + record.data.debitAmt;
+        if(record.data.debitAmt >0 || record.data.creditAmt>0 || !record.data.notEditable || record.data.notEditable == false) {
+            var obj = {
+                partyId: record.data.partyId,
+                debitDetail: record.data.debitDetail,
+                debitAmt: record.data.debitAmt,
+                creditDetail: record.data.creditDetail,
+                creditAmt: record.data.creditAmt,
+                isChequeDebit: record.data.isChequeDebit,
+                slNo: record.data.slNo
+            };
+            partyTrans.push(obj);
         }
-        clBal = clBal - record.data.creditAmt;
-
     });
+    ds['partyTrans'] = partyTrans;
 
     var empTransGridStore = Ext.getCmp('empTransGrid').store;
+    var empTrans = [];
     empTransGridStore.each(function(record) {
-        clBal = clBal - record.data.salaryAmt;
-        clBal = clBal - record.data.incentiveAmt;
-    });
-
-    var officeCashGridStore = Ext.getCmp('officeCashGrid').store;
-    officeCashGridStore.each( function(record) {
-        if(record.data.name == 'OFFICE CASH') {
-            clBal = clBal - record.data.toOffice;
+        if(record.data.salaryAmt >0 || record.data.incentiveAmt>0) {
+            var obj = {
+                partyId: record.data.partyId,
+                salaryDetail: record.data.salaryDetail,
+                salaryAmt: record.data.salaryAmt,
+                incentiveDetail: record.data.incentiveDetail,
+                incentiveAmt: record.data.incentiveAmt
+            };
+            empTrans.push(obj);
         }
     });
+    ds['empTrans'] = empTrans;
 
     return ds;
 }
@@ -913,6 +995,13 @@ function onEmpTransUpdate() {
             record.set("incentiveAmt", 0);
             record.set("salaryDetail", '');
             record.set("incentiveDetail", '');
+        } else {
+            if(record.data.salaryAmt < 0) {
+                record.set('salaryAmt', 0);
+            }
+            if(record.data.incentiveAmt < 0) {
+                record.set('incentiveAmt', 0);
+            }
         }
     });
 }
@@ -926,6 +1015,13 @@ function getChequeAmtFromPartyTransactions() {
             record.set("creditDetail", '');
             record.set("debitDetail", '');
             record.set("isChequeDebit", false);
+        } else {
+            if(record.data.debitAmt < 0) {
+                record.set('debitAmt', 0);
+            }
+            if(record.data.creditAmt < 0) {
+                record.set('creditAmt', 0);
+            }
         }
 
         if(record.data.isChequeDebit === true) {
@@ -937,7 +1033,12 @@ function getChequeAmtFromPartyTransactions() {
 
 
 function onMeterSaleUpdate() {
-    var clBal = parseFloat( Ext.getCmp('openBal-field').getValue());
+    var clBalText = Ext.getCmp('openBal-field').getValue();
+    if(clBalText == "" || isNaN(clBalText)) {
+        return;
+    }
+    var clBal = parseFloat( clBalText);
+
     var meterSaleStore = Ext.getCmp('meterSaleGrid').store;
     //Group amt by product
     var groupedSaleAmtByTankId = {};
@@ -1014,8 +1115,10 @@ function onMeterSaleUpdate() {
             record.set('dipStock', 0);
         }
 
-        record.set("diffToday", (record.data.dipStock - record.data.stockAfterSale).toFixed(2));
-        record.set("newDiffThisMonth", (record.data.diffThisMonth + record.data.diffToday).toFixed(2));
+        if(record.data.dipStock > 0) {
+            record.set("diffToday", (record.data.dipStock - record.data.stockAfterSale).toFixed(2));
+            record.set("newDiffThisMonth", (record.data.diffThisMonth + record.data.diffToday).toFixed(2));
+        }
     });
 
     var fuelSaleGridStore = Ext.getCmp('fuelSaleGrid').store;
@@ -1045,7 +1148,7 @@ function onMeterSaleUpdate() {
     var oilSaleGridStore = Ext.getCmp('oilSaleGrid').store;
 
     oilSaleGridStore.each(function(record) {
-        clBal = clBal + record.data.actualSaleAmt;
+        clBal = clBal + record.data.totalSaleAmt;
     });
 
     var partyTransGridStore = Ext.getCmp('partyTransGrid').store;
@@ -1071,7 +1174,13 @@ function onMeterSaleUpdate() {
         }
     });
 
-    Ext.getCmp('clBal-field').setValue(clBal.toFixed(2));
+    if(isNaN(clBal)) {
+        Ext.getCmp('clBal-field').setValue(0.00);
+    } else {
+        Ext.getCmp('clBal-field').setValue(clBal.toFixed(2));
+    }
+
+
 }
 
 function loadSavedTransactions() {
@@ -1083,24 +1192,36 @@ function loadSavedTransactions() {
     var partyTransGridStore = Ext.getCmp('partyTransGrid').store;
     var partyComboStore = Ext.getCmp('partyCombo').store;
 
-    if(dailyStatement.closingStatement && dailyStatement.closingStatement.partyTransactions) {
-        for(var i = 0 ; i < dailyStatement.closingStatement.partyTransactions.length; i++) {
-            var savedTrans = dailyStatement.closingStatement.partyTransactions[i];
-            var partyTrans = new PartyTransaction();
-            var party = partyComboStore.getById(savedTrans.partyId);
-            partyTrans.set('partyId',savedTrans.partyId);
-            if(party) {
-                partyTrans.set('partyName',party.data.name);
-            }
+    if(dailyStatement.closingStatement) {
+        if(dailyStatement.closingStatement.partyTransactions) {
+            for(var i = 0 ; i < dailyStatement.closingStatement.partyTransactions.length; i++) {
+                var savedTrans = dailyStatement.closingStatement.partyTransactions[i];
+                if(!savedTrans.partyId || savedTrans.transactionType.indexOf("_S") > 0) {
+                    continue;
+                }
 
-            if(savedTrans.transactionType.indexOf("CREDIT") >= 0) {
-                partyTrans.set('creditDetail',savedTrans.transactionDetail);
-                partyTrans.set('creditAmt',savedTrans.amount);
-            } else {
-                partyTrans.set('debitDetail',savedTrans.transactionDetail);
-                partyTrans.set('debitAmt',savedTrans.amount);
+                //Verify that the partyID is present in the dropdown
+                var partyTrans = new PartyTransaction();
+                var party = partyComboStore.getById(savedTrans.partyId);
+                partyTrans.set('partyId',savedTrans.partyId);
+                if(party) {
+                    partyTrans.set('partyName',party.data.name);
+                } else {
+                    continue;
+                }
+
+                partyTrans.set('slNo',savedTrans.slNo);
+                partyTrans.set('transactionType',savedTrans.transactionType);
+                if(savedTrans.transactionType.indexOf("CREDIT") >= 0) {
+                    partyTrans.set('creditDetail',savedTrans.transactionDetail);
+                    partyTrans.set('creditAmt',savedTrans.amount);
+                } else {
+                    partyTrans.set('debitDetail',savedTrans.transactionDetail);
+                    partyTrans.set('debitAmt',savedTrans.amount);
+                }
+                partyTrans.set('notEditable',true);
+                partyTransGridStore.insert(0, partyTrans);
             }
-            partyTransGridStore.insert(0, partyTrans);
         }
     };
 }

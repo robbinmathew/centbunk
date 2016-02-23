@@ -43,6 +43,25 @@ Ext.define('FuelReceipt', {
     idProperty: 'productId'
 });
 
+Ext.define('LubeSale', {
+    extend: 'Ext.data.Model',
+    fields: [
+        {name: 'id', type: 'int'},
+        {name: 'productId', type: 'int'},
+        'productName',
+        {name: 'unitSellingPrice', type: 'float'},
+        {name: 'marginPerUnit', type: 'float'},
+        {name: 'currentStock',mapping:'closingStock', type: 'float'},
+
+        {name: 'totalSale', type: 'float'},
+        {name: 'totalSaleAmt', type: 'float'},
+        {name: 'discountPerUnit', type: 'float'}
+    ],
+    idProperty: 'id'
+});
+
+
+
 Ext.define('MeterClosing', {
     extend: 'Ext.data.Model',
     fields: [
@@ -68,8 +87,11 @@ Ext.define('PartyTransaction', {
         'partyName',
         'debitDetail',
         'creditDetail',
+        'transactionType',
         {name: 'debitAmt', type: 'float'},
+        {name: 'balance', type: 'float'},
         {name: 'isChequeDebit', type: 'bool'},
+        {name: 'notEditable', type: 'bool'},
         {name: 'creditAmt', type: 'float'}
     ],
     idProperty: 'id'
@@ -115,8 +137,8 @@ Ext.define('OfficeCash', {
 
 //Defines all stores
 
-function buildTankReceiptStore(date) {
-    return Ext.create('Ext.data.Store', {
+function buildTankReceiptStore(date, loadMask) {
+    var store = Ext.create('Ext.data.Store', {
         //pageSize: 20,
         model: 'TankReceipt',
         autoLoad: true,
@@ -128,10 +150,14 @@ function buildTankReceiptStore(date) {
             }
         }
     });
+    if(loadMask) {
+        loadMask.bindStore(store);
+    }
+    return store;
 }
 
-function buildOfficeCashStore() {
-    return Ext.create('Ext.data.Store', {
+function buildOfficeCashStore(loadMask) {
+    var store = Ext.create('Ext.data.Store', {
         //pageSize: 20,
         model: 'OfficeCash',
         autoLoad: true,
@@ -143,11 +169,15 @@ function buildOfficeCashStore() {
             }
         }
     });
+    if(loadMask) {
+        loadMask.bindStore(store);
+    }
+    return store;
 }
 
 
-function buildAvailableProductListStore(type) {
-    return Ext.create('Ext.data.Store', {
+function buildAvailableProductListStore(type, loadMask) {
+    var store = Ext.create('Ext.data.Store', {
         //pageSize: 20,
         model: 'FuelReceipt',
         autoLoad: true,
@@ -159,10 +189,14 @@ function buildAvailableProductListStore(type) {
             }
         }
     });
+    if(loadMask) {
+        loadMask.bindStore(store);
+    }
+    return store;
 }
 
-function buildPartyListStore(type) {
-    return Ext.create('Ext.data.Store', {
+function buildPartyListStore(type, loadMask) {
+    var store = Ext.create('Ext.data.Store', {
         //pageSize: 20,
         model: 'Party',
         autoLoad: true,
@@ -174,10 +208,14 @@ function buildPartyListStore(type) {
             }
         }
     });
+    if(loadMask) {
+        loadMask.bindStore(store);
+    }
+    return store;
 }
 
-function buildEmployeeListStore() {
-    return Ext.create('Ext.data.Store', {
+function buildEmployeeListStore(loadMask) {
+    var store = Ext.create('Ext.data.Store', {
         //pageSize: 20,
         model: 'Party',
         autoLoad: true,
@@ -189,15 +227,19 @@ function buildEmployeeListStore() {
             }
         }
     });
+    if(loadMask) {
+        loadMask.bindStore(store);
+    }
+    return store;
 }
 
 function buildEmptyProductSaleStore() {
     var prodSaleStore = new Ext.data.SimpleStore({
-        model: 'FuelReceipt'
+        model: 'LubeSale'
     });
 
-    for (var i=0; i<10;i++) {
-        prodSaleStore.insert(0,new FuelReceipt());
+    for (var i=0; i<5;i++) {
+        prodSaleStore.add(new LubeSale());
     }
     return prodSaleStore;
 }
@@ -224,8 +266,8 @@ function buildEmptyEmployeeTransactionStore() {
     return partyTransactionStore;
 }
 
-function buildActiveMeterListStore() {
-    return Ext.create('Ext.data.Store', {
+function buildActiveMeterListStore(loadMask) {
+    var store = Ext.create('Ext.data.Store', {
         //pageSize: 20,
         model: 'MeterClosing',
         autoLoad: true,
@@ -237,4 +279,27 @@ function buildActiveMeterListStore() {
             }
         }
     });
+    if(loadMask) {
+        loadMask.bindStore(store);
+    }
+    return store;
+}
+
+function buildFuelsSaleSummaryStore(start, end, loadMask) {
+    var store = Ext.create('Ext.data.JsonStore', {
+        //pageSize: 20,
+        fields: ['DATE_TEXT', 'P_SALE', 'P_TEST', 'P_CL_STOCK', 'D_SALE', 'D_TEST', 'D_CL_STOCK'],
+        autoLoad: true,
+        proxy: {
+            type: 'rest',
+            url: 'api/fuelsSalesSummary?start=' + start + "&end=" + end,
+            reader: {
+                type: 'json'
+            }
+        }
+    });
+    if(loadMask) {
+        loadMask.bindStore(store);
+    }
+    return store;
 }

@@ -1,6 +1,7 @@
 Ext.require('Ext.container.Viewport');
 
 var bunkCache = {};
+var pageMask;
 
 function getDataWithAjax(urlPath, success, failure) {
     Ext.Ajax.request({
@@ -12,11 +13,26 @@ function getDataWithAjax(urlPath, success, failure) {
     });
 }
 
+function showFailedMask() {
+    if(!pageMask) {
+        pageMask = new Ext.LoadMask(Ext.getBody(), {msg:"Failed to read data from server. Please try after sometime."});
+    }
+    pageMask.show();
+}
+
+function hideFailedMask() {
+    if(pageMask) {
+        pageMask.hide();
+    }
+}
+
 var navStore = Ext.create('Ext.data.TreeStore', {
     root: {
         expanded: true,
         children: [
             {
+                id:'summary', text: "Summary", collapsible: false, leaf: true, panelbuilder: 'buildSummaryPanel'
+            },{
                 id:'daily-statement', text: "Daily statement", collapsible: false, leaf: true, panelbuilder: 'buildDailyStatementPanel'
             },{
                 id:'products', text: "Products", expanded: true, collapsible: false,
@@ -43,6 +59,10 @@ var navStore = Ext.create('Ext.data.TreeStore', {
     }
 });
 
+Ext.override(Ext.data.Connection, {
+    timeout:300000
+});
+
 Ext.application({
     name: 'bronz.bunk',
     extend: 'Ext.app.Application',
@@ -55,12 +75,12 @@ Ext.application({
             if(Ext.getCmp('userInfo')) {
                 Ext.getCmp('userInfo').body.update('<h4>Username:' + username + '<br/>Date:' + (bunkCache.infos?bunkCache.infos.todayDateDayText:'-') + '</h4>');
             }
+            updateSummaryPanel();
             myMask.hide();
         },function(response){
             console.log('failed to read info from server:' + response);
             myMask.hide();
-            var failedMask = new Ext.LoadMask(Ext.getBody(), {msg:"Failed to read data from server. Please try after sometime."});
-            failedMask.show();
+            showFailedMask();
         });
         Ext.create('Ext.container.Viewport', {
             layout:'border',
@@ -73,9 +93,9 @@ Ext.application({
                 header:false,
                 margins: '0 0 0 0',
                 cmargins: '0 0 0 0',
-                height: 75,
-                minSize: 75,
-                maxSize: 75,
+                height: 60,
+                minSize: 60,
+                maxSize: 60,
                 resize:false,
                 border: 0,
                 layout:'border',
@@ -104,12 +124,12 @@ Ext.application({
                 id: 'maincontent',
                 html:'Welcome',
                 region:'center',
-                layout:'vbox',
+                layout:'fit',
                 margins: '0 0 0 0',
                 width:'100%',
                 height:'100%',
                 autoScroll:true,
-                items : [buildSummaryPanel()]
+                items : []
             },{
                 //title: 'NavPanel',
                 header:false,
@@ -146,8 +166,6 @@ Ext.application({
 });
 
 function updateSubPanel(record) {
-    var myMask = new Ext.LoadMask(Ext.getBody(), {msg:"Loading..."});
-    myMask.show();
     var menuId = record.get('id');
     var newPanel;
     if(record.raw.panelbuilder) {
@@ -164,7 +182,6 @@ function updateSubPanel(record) {
     mainPanel.add(newPanel);
     mainPanel.doLayout();
     newPanel.doLayout();
-    myMask.hide();
 }
 
 function updateSummaryPanel() {
@@ -180,6 +197,17 @@ function updateSummaryPanel() {
 }
 
 function buildSummaryPanel() {
+    this.myDataStore = buildFuelsSaleSummaryStore(bunkCache.infos.todayDate-30,bunkCache.infos.todayDate);
+    this.tipsConfig = {
+        trackMouse: true,
+        style: 'background: #FFF',
+        height: 30,
+        width:250,
+        renderer: function (storeItem, item) {
+            var title = item.series.title;
+            this.setTitle(title + ': ' + storeItem.get(item.series.yField));
+        }
+    }
     var summaryPanel = Ext.create('Ext.form.Panel', {
         id:'summaryPanel',
         title: "Summary",
@@ -187,15 +215,146 @@ function buildSummaryPanel() {
         autoScroll:true,
         bodyStyle:'padding:0px 0px 0',
         width: '100%',
-        fieldDefaults: {
-            msgTarget: 'side',
-            labelWidth: 75
-        },
-        defaultType: 'textfield',
+        autoHieght: true,
         defaults: {
             anchor: '100%'
         },
-        html:'<h4>Summary</h4>'
+        //html:'<h4>Summary</h4>'
+        items:[{
+            xtype: 'chart',
+            width: 900,
+            height: 410,
+            padding: '10 0 0 0',
+            animate: true,
+            shadow: false,
+            style: 'background: #fff;',
+            legend: {
+                position: 'right',
+                boxStrokeWidth: 1,
+                labelFont: '12px Helvetica'
+            },
+            store: this.myDataStore,
+            insetPadding: 40,
+            items: [{
+                type: 'text',
+                text: 'Fuels sale/stock summary (Last 30 days)',
+                font: '22px Helvetica',
+                width: 100,
+                height: 30,
+                x: 40, //the sprite x position
+                y: 12  //the sprite y position
+            }],
+            axes: [{
+                type: 'numeric',
+                fields: ['P_SALE', 'P_CL_STOCK', 'D_SALE', 'D_CL_STOCK'],
+                position: 'left',
+                grid: true,
+                minimum: 0,
+                label: {
+                    renderer: function (v) {
+                        return v;
+                    }
+                }
+            }/*,{
+             type: 'numeric',
+             fields: ['P_TEST', 'D_TEST'],
+             position: 'right',
+             grid: true,
+             minimum: 0,
+             label: {
+             renderer: function (v) {
+             return v;
+             }
+             }
+             }*/, {
+                type: 'category',
+                fields: 'DATE_TEXT',
+                position: 'bottom',
+                grid: true,
+                label: {
+                    rotate: {
+                        degrees: -45
+                    }
+                }
+            }],
+            series: [{
+                type: 'line',
+                axis: 'left',
+                title: 'Petrol Sale',
+                xField: 'DATE_TEXT',
+                yField: 'P_SALE',
+                style: {
+                    'stroke-width': 4
+                },
+                markerConfig: {
+                    radius: 4
+                },
+                highlight: {
+                    fill: '#000',
+                    radius: 5,
+                    'stroke-width': 2,
+                    stroke: '#fff'
+                },
+                tips: this.tipsConfig
+            },{
+                type: 'line',
+                axis: 'left',
+                title: 'Diesel Sale',
+                xField: 'DATE_TEXT',
+                yField: 'D_SALE',
+                style: {
+                    'stroke-width': 4
+                },
+                markerConfig: {
+                    radius: 4
+                },
+                highlight: {
+                    fill: '#000',
+                    radius: 5,
+                    'stroke-width': 2,
+                    stroke: '#fff'
+                },
+                tips: this.tipsConfig
+            },{
+                type: 'line',
+                axis: 'left',
+                title: 'Diesel Closing Stock',
+                xField: 'DATE_TEXT',
+                yField: 'D_CL_STOCK',
+                style: {
+                    'stroke-width': 4
+                },
+                markerConfig: {
+                    radius: 4
+                },
+                highlight: {
+                    fill: '#000',
+                    radius: 5,
+                    'stroke-width': 2,
+                    stroke: '#fff'
+                },
+                tips: this.tipsConfig
+            },{
+                type: 'line',
+                axis: 'left',
+                title: 'Petrol Closing Stock',
+                xField: 'DATE_TEXT',
+                yField: 'P_CL_STOCK',
+                style: {
+                    'stroke-width': 4
+                },
+                markerConfig: {
+                    radius: 4
+                },
+                highlight: {
+                    fill: '#000',
+                    radius: 5,
+                    'stroke-width': 2,
+                    stroke: '#fff'
+                },
+                tips: this.tipsConfig
+            }]
+        }]
     });
     return summaryPanel;
 }
@@ -224,7 +383,9 @@ function prepareErrorMsg(msg, errors) {
 }
 
 function editableColumnRenderer(value, metaData, record, rowIndex, colIndex, store, view) {
-    metaData.style = 'background:#ffffe5 !important;';
+    if(record.data.notEditable !== true) {
+        metaData.style = 'background:#ffffe5 !important;';
+    }
     return value;
 }
 
