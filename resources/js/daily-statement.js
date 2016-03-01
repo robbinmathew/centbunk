@@ -763,36 +763,8 @@ function validateDailyStmt(callback) {
     var errors = [];
     var warnings = [];
 
-    //warnings.push('No product receipt mentioned');
 
-    if(errors.length > 0) {
-        Ext.MessageBox.alert('Error', prepareErrorMsg("Please fix the below validation errors.", errors));
-    }
-    if(errors.length ==0 && warnings.length == 0) {
-        callback();
-    }
-
-    if(warnings.length > 0) {
-        var messageBox = Ext.create('Ext.window.MessageBox', {
-            buttonText: {
-                ok: 'Continue with submit.',
-                yes: 'Yes',
-                no: 'No',
-                cancel: 'Cancel, let me correct them'
-            }
-        });
-        messageBox.show({
-            title: "Please review the below warnings",
-            msg: prepareErrorMsg("", warnings),
-            buttons: Ext.Msg.OKCANCEL,
-            icon: Ext.MessageBox.WARNING,
-            fn: function(btn){
-                if (btn == "ok"){
-                    callback();
-                }
-            }
-        });
-    }
+    checkErrorsWarningsAndProceed(errors, warnings, callback);
     return true;
 }
 
@@ -821,7 +793,7 @@ function saveObj(type) {
         },
         failure : function(response) {
             myMask.hide();
-            Ext.Msg.alert("Error", "Failed to save the stock receipt. Please try again. <br/> " + response.responseText);
+            Ext.Msg.alert("Error", "Failed to save the statement. Please try again. <br/> " + response.responseText);
         }
     });
 }

@@ -38,7 +38,13 @@ Ext.define('FuelReceipt', {
         {name: 'actualSaleAmt', type: 'float'},
         {name: 'testSale', type: 'float'},
         {name: 'testSaleAmt', type: 'float'},
-        {name: 'discountPerUnit', type: 'float'}
+        {name: 'discountPerUnit', type: 'float'},
+
+        //Rate change fields
+        {name: 'newUnitSellingPrice', type: 'float'},
+        {name: 'rateDiff', type: 'float'},
+        {name: 'margin', type: 'float'},
+        {name: 'cashDiff', type: 'float'}
     ],
     idProperty: 'productId'
 });

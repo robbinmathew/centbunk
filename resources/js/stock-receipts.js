@@ -415,5 +415,4 @@ function updateFuelReceiptAmt() {
     });
     Ext.getCmp('totalLiters-field').setValue(totalInLiters);
     Ext.getCmp('totalAmt-field').setValue(totalCost);
-
 }

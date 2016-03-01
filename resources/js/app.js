@@ -37,7 +37,7 @@ var navStore = Ext.create('Ext.data.TreeStore', {
             },{
                 id:'products', text: "Products", expanded: true, collapsible: false,
                 children: [
-                    //{ id:'prods-add-edit', text: "Add/Edit", leaf: true},
+                    { id:'prods-rate-change', text: "Change price", leaf: true, panelbuilder:'buildRateChangePanel'},
                     {
                         id:'receive-prods',
                         text: "Receive products",
@@ -210,7 +210,7 @@ function buildSummaryPanel() {
     }
     var summaryPanel = Ext.create('Ext.form.Panel', {
         id:'summaryPanel',
-        title: "Summary",
+        //title: "Summary",
         frame:true,
         autoScroll:true,
         bodyStyle:'padding:0px 0px 0',
@@ -252,7 +252,7 @@ function buildSummaryPanel() {
                 minimum: 0,
                 label: {
                     renderer: function (v) {
-                        return v;
+                        return v + ' L';
                     }
                 }
             }/*,{
@@ -284,10 +284,13 @@ function buildSummaryPanel() {
                 xField: 'DATE_TEXT',
                 yField: 'P_SALE',
                 style: {
-                    'stroke-width': 4
+                    'stroke-width': 4,
+                    stroke: '#3399ff'
                 },
                 markerConfig: {
-                    radius: 4
+                    radius: 4,
+                    type: 'circle',
+                    fill: '#3399ff'
                 },
                 highlight: {
                     fill: '#000',
@@ -303,29 +306,13 @@ function buildSummaryPanel() {
                 xField: 'DATE_TEXT',
                 yField: 'D_SALE',
                 style: {
-                    'stroke-width': 4
+                    'stroke-width': 4,
+                    stroke: '#00cc66'
                 },
                 markerConfig: {
-                    radius: 4
-                },
-                highlight: {
-                    fill: '#000',
-                    radius: 5,
-                    'stroke-width': 2,
-                    stroke: '#fff'
-                },
-                tips: this.tipsConfig
-            },{
-                type: 'line',
-                axis: 'left',
-                title: 'Diesel Closing Stock',
-                xField: 'DATE_TEXT',
-                yField: 'D_CL_STOCK',
-                style: {
-                    'stroke-width': 4
-                },
-                markerConfig: {
-                    radius: 4
+                    radius: 4,
+                    type: 'circle',
+                    fill: '#00cc66'
                 },
                 highlight: {
                     fill: '#000',
@@ -341,10 +328,126 @@ function buildSummaryPanel() {
                 xField: 'DATE_TEXT',
                 yField: 'P_CL_STOCK',
                 style: {
-                    'stroke-width': 4
+                    'stroke-width': 2,
+                    stroke: '#99ccff'
                 },
                 markerConfig: {
-                    radius: 4
+                    radius: 4,
+                    type: 'circle',
+                    fill: '#99ccff  '
+                },
+                highlight: {
+                    fill: '#000',
+                    radius: 5,
+                    'stroke-width': 2,
+                    stroke: '#fff'
+                },
+                tips: this.tipsConfig
+            },{
+                type: 'line',
+                axis: 'left',
+                title: 'Diesel Closing Stock',
+                xField: 'DATE_TEXT',
+                yField: 'D_CL_STOCK',
+                style: {
+                    'stroke-width': 2,
+                    stroke: '#9fdfbf'
+                },
+                markerConfig: {
+                    radius: 4,
+                    type: 'circle',
+                    fill: '#9fdfbf'
+                },
+                highlight: {
+                    fill: '#000',
+                    radius: 5,
+                    'stroke-width': 2,
+                    stroke: '#fff'
+                },
+                tips: this.tipsConfig
+            }]
+        },{
+            xtype: 'chart',
+            width: 900,
+            height: 410,
+            padding: '10 0 0 0',
+            animate: true,
+            shadow: false,
+            style: 'background: #fff;',
+            legend: {
+                position: 'right',
+                boxStrokeWidth: 1,
+                labelFont: '12px Helvetica'
+            },
+            store: this.myDataStore,
+            insetPadding: 40,
+            items: [{
+                type: 'text',
+                text: 'Fuel Tests Liters (Last 30 days)',
+                font: '22px Helvetica',
+                width: 100,
+                height: 30,
+                x: 40, //the sprite x position
+                y: 12  //the sprite y position
+            }],
+            axes: [{
+                type: 'numeric',
+                fields: ['P_TEST', 'D_TEST'],
+                position: 'left',
+                grid: true,
+                minimum: 0,
+                label: {
+                    renderer: function (v) {
+                        return v + ' L';
+                    }
+                }
+            }, {
+                type: 'category',
+                fields: 'DATE_TEXT',
+                position: 'bottom',
+                grid: true,
+                label: {
+                    rotate: {
+                        degrees: -45
+                    }
+                }
+            }],
+            series: [{
+                type: 'line',
+                axis: 'left',
+                title: 'Petrol Test',
+                xField: 'DATE_TEXT',
+                yField: 'P_TEST',
+                style: {
+                    'stroke-width': 2,
+                    stroke: '#99ccff'
+                },
+                markerConfig: {
+                    radius: 4,
+                    type: 'circle',
+                    fill: '#99ccff  '
+                },
+                highlight: {
+                    fill: '#000',
+                    radius: 5,
+                    'stroke-width': 2,
+                    stroke: '#fff'
+                },
+                tips: this.tipsConfig
+            },{
+                type: 'line',
+                axis: 'left',
+                title: 'Diesel Test',
+                xField: 'DATE_TEXT',
+                yField: 'D_TEST',
+                style: {
+                    'stroke-width': 2,
+                    stroke: '#9fdfbf'
+                },
+                markerConfig: {
+                    radius: 4,
+                    type: 'circle',
+                    fill: '#9fdfbf'
                 },
                 highlight: {
                     fill: '#000',
@@ -391,6 +494,39 @@ function editableColumnRenderer(value, metaData, record, rowIndex, colIndex, sto
 
 function isNumber (o) {
     return ! isNaN (o-0) && o !== null && o !== "" && o !== false;
+}
+
+
+function checkErrorsWarningsAndProceed(errors, warnings, callback) {
+    if(errors.length > 0) {
+        Ext.MessageBox.alert('Error', prepareErrorMsg("Please fix the below validation errors.", errors));
+    }
+    if(errors.length ==0 && warnings.length == 0) {
+        callback();
+    }
+
+    if(warnings.length > 0) {
+        var messageBox = Ext.create('Ext.window.MessageBox', {
+            buttonText: {
+                ok: 'Continue with submit.',
+                yes: 'Yes',
+                no: 'No',
+                cancel: 'Cancel, let me correct them'
+            }
+        });
+        messageBox.show({
+            title: "Please review the below warnings",
+            msg: prepareErrorMsg("", warnings),
+            buttons: Ext.Msg.OKCANCEL,
+            icon: Ext.MessageBox.WARNING,
+            fn: function(btn){
+                if (btn == "ok"){
+                    callback();
+                }
+            }
+        });
+    }
+    return true;
 }
 
 
