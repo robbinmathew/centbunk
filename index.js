@@ -175,9 +175,11 @@ var https_options = {
 // Redirect from http port to https
 
 http.createServer(function (req, res) {
-	var redirectURL = req.headers['host'].replace(process.env.CB_HTTP_PORT, process.env.CB_HTTPS_PORT) + req.url;
-	res.writeHead(301, { "Location": "https://" + redirectURL});
-	console.log("http request redirect: " + redirectURL);
+	if(req.headers['host']) {
+		var redirectURL = req.headers['host'].replace(process.env.CB_HTTP_PORT, process.env.CB_HTTPS_PORT) + req.url;
+		res.writeHead(301, { "Location": "https://" + redirectURL});
+		console.log("http request redirect: " + redirectURL);
+	}
 	res.end();
 }).listen(process.env.CB_HTTP_PORT);
 

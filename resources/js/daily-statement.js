@@ -53,6 +53,9 @@ function buildDailyStatementPanel(title, record) {
                     gridRecord.set("productName", comboRecord.data.productName + ' - ' + comboRecord.data.unitSellingPrice +'Rs');
                     gridRecord.set("currentStock", comboRecord.data.currentStock);
                     gridRecord.set("unitSellingPrice", comboRecord.data.unitSellingPrice);
+                    gridRecord.set("actualSale", 1);
+
+                    onOilSaleUpdate();
 //currentStock
                     var oilGridStore = Ext.getCmp('oilSaleGrid').store;
 
@@ -188,13 +191,13 @@ function buildDailyStatementPanel(title, record) {
         id:'dailyStmtPanel',
         title: title,
         //frame:true,
-        autoScroll:true,
         bodyStyle:'padding:0px 0px 0',
         width: '100%',
         fieldDefaults: {
             msgTarget: 'side',
             labelWidth: 75
         },
+        layout: 'border',
         defaultType: 'textfield',
         defaults: {
             anchor: '100%'
@@ -206,11 +209,12 @@ function buildDailyStatementPanel(title, record) {
             //title:'Opening/Closing',
             //width:'100%',
             //height:'50px',
+            region:"north",
             defaultType: 'textfield',
             fieldDefaults: {
                 msgTarget: 'side',
                 labelSeparator : ' :',
-                margins: '10 10 10 0',
+                margins: '10 10 0 0',
                 labelWidth: 100
             },
             items: [
@@ -225,7 +229,7 @@ function buildDailyStatementPanel(title, record) {
                     fieldLabel: 'Closing balance',
                     flex:2,
                     readOnly: true
-                },{
+                },/*{
                     xtype: 'button',
                     text: 'Save',
                     flex:1,
@@ -234,7 +238,7 @@ function buildDailyStatementPanel(title, record) {
                     handler: function () {
                         onDailyStmtSave();
                     }
-                },{
+                },*/{
                     xtype: 'button',
                     flex:1,
                     margins: '10 5 5 0',
@@ -254,502 +258,506 @@ function buildDailyStatementPanel(title, record) {
                 }
             ]
         },{
-            xtype: 'gridpanel',
-            id:'officeCashGrid',
+            xtype: 'panel',
             autoscroll: true,
-            height: 'auto',
-            store: buildOfficeCashStore(dailyStatementLoadMask),
-            forceFit: true,
-            loadMask: false,
-            viewConfig: {
-                loadMask: false,
-                markDirty:false,
-                stripeRows: true
-            },
-            plugins: [
-                Ext.create('Ext.grid.plugin.CellEditing', {
-                    clicksToEdit: 1
-                })
-            ],
-            listeners : {
-                edit: function (editor, e, eOpts) {
-                    onOfficeCashUpdate();
-                    return true;
-                },
-                afterlayout: function () {
-                    onOfficeCashUpdate();
-                }
-            },
-            columns:[{
-                text: "Name",
-                dataIndex: 'name',
-                flex: 1
-            },{
-                text: "Opening",
-                dataIndex: 'opBal',
-                flex: 1
-            },{
-                text: "To office",
-                dataIndex: 'toOffice',
-                flex: 1,
-                sortable: false,
-                field: {
-                    xtype: 'numberfield',
-                    allowNegative: false,
-                    allowBlank: false
-                },
-                renderer: editableColumnRenderer
-            },{
-                text: "Paid to bank",
-                dataIndex: 'paidToBank',
-                flex: 1,
-                sortable: false,
-                field: {
-                    xtype: 'numberfield',
-                    allowNegative: false,
-                    allowBlank: false
-                },
-                renderer: editableColumnRenderer
-            },{
-                text: "Closing",
-                dataIndex: 'clBal',
-                flex: 1,
-                sortable: false
-            }]
-        },{
-            xtype: 'gridpanel',
-            id:'meterSaleGrid',
-            height: 'auto',
-            store: buildActiveMeterListStore(),
-            forceFit: true,
-            loadMask: false,
-            viewConfig: {
-                loadMask: false,
-                markDirty:false,
-                stripeRows: true
-            },
-            plugins: [
-                Ext.create('Ext.grid.plugin.CellEditing', {
-                    clicksToEdit: 1
-                })
-            ],
-            listeners : {
-                edit: function (editor, e, eOpts) {
-                    onMeterSaleUpdate();
-                }
-            },
-            columns:[{
-                text: "Meter",
-                dataIndex: 'meterName',
-                flex: 1,
-                sortable: false
-            },{
-                text: "Opening reading",
-                dataIndex: 'finalReading',
-                flex: 2,
-                //align: 'right',
-                sortable: false
-            },{
-                text: "Closing reading",
-                dataIndex: 'closingReading',
-                flex: 2,
-                field: {
-                    xtype: 'numberfield',
-                    allowNegative: false,
-                    allowBlank: false
-                },
-                renderer: editableColumnRenderer,
-                sortable: false
-            },{
-                text: "Total sale",
-                dataIndex: 'totalSale',
-                flex: 2,
-                sortable: false
-            },{
-                text: "Test sale in liter",
-                dataIndex: 'testSale',
-                flex: 1,
-                field: {
-                    xtype: 'numberfield',
-                    allowNegative: false,
-                    allowBlank: false
-                },
-                renderer: editableColumnRenderer,
-                sortable: false
-            },{
-                text: "Actual sale",
-                dataIndex: 'actualSale',
-                flex: 2,
-                sortable: false
-            }]
-        },{
-            xtype: 'gridpanel',
-            id:'tankSaleGrid',
-            height: 'auto',
-            store: buildTankReceiptStore(bunkCache.infos.todayDate, dailyStatementLoadMask),
-            forceFit: true,
-            viewConfig: {
-                loadMask: false,
-                markDirty:false,
-                stripeRows: true
-            },
-            plugins: [
-                Ext.create('Ext.grid.plugin.CellEditing', {
-                    clicksToEdit: 1
-                })
-            ],
-            listeners : {
-                edit: function (editor, e, eOpts) {
-                    onMeterSaleUpdate();
-                }
-            },
-            columns:[{
-                text: "Tank name",
-                dataIndex: 'tankName',
-                flex: 1,
-                sortable: false
-            },{
-                text: "Product",
-                dataIndex: 'productType',
-                flex: 1,
-                sortable: false
-            },{
-                text: "Opening stock",
-                dataIndex: 'closingStock',
-                flex: 1,
-                //align: 'right',
-                sortable: false
-            },{
-                text: "Sale",
-                dataIndex: 'sale',
-                flex: 1,
-                sortable: false
-            },{
-                text: "Stock after sale",
-                dataIndex: 'stockAfterSale',
-                flex: 1,
-                sortable: false
-            },{
-                text: "Test",
-                dataIndex: 'testSale',
-                flex: 1,
-                sortable: false
-            },{
-                text: "Dip stock",
-                dataIndex: 'dipStock',
-                flex: 1,
-                sortable: false,
-                field: {
-                    xtype: 'numberfield',
-                    allowNegative: false,
-                    allowBlank: false
-                },
-                renderer: editableColumnRenderer
-            },{
-                text: "Diff today",
-                dataIndex: 'diffToday',
-                flex: 1,
-                sortable: false
-            },{
-                text: "Diff this month",
-                dataIndex: 'newDiffThisMonth',
-                flex: 1,
-                sortable: false
-            }]
-        },{
-            xtype: 'gridpanel',
-            id:'fuelSaleGrid',
-            height: 'auto',
-            store: buildAvailableProductListStore('FUEL_PRODUCTS', dailyStatementLoadMask),
-            forceFit: true,
-            viewConfig: {
-                loadMask: false,
-                markDirty:false,
-                stripeRows: true
-            },
-            columns:[{
-                text: "Product",
-                dataIndex: 'productName',
-                flex: 2,
-                sortable: false
-            },{
-                text: "Price",
-                dataIndex: 'unitSellingPrice',
-                flex: 1,
-                sortable: false
-            },{
-                text: "Total sale",
-                dataIndex: 'totalSale',
-                flex: 1,
-                //align: 'right',
-                sortable: false
-            },{
-                text: "Total sale amt",
-                dataIndex: 'totalSaleAmt',
-                flex: 1,
-                sortable: false
-            },{
-                text: "Test sale",
-                dataIndex: 'testSale',
-                flex: 1,
-                sortable: false
-            },{
-                text: "Test sale amt",
-                dataIndex: 'testSaleAmt',
-                flex: 1,
-                sortable: false
-            },{
-                text: "Actual sale",
-                dataIndex: 'actualSale',
-                flex: 1,
-                sortable: false
-            },{
-                text: "Actual sale amt",
-                dataIndex: 'actualSaleAmt',
-                flex: 1,
-                sortable: false
-            }]
-        },{
-            xtype: 'gridpanel',
-            id:'oilSaleGrid',
-            height: 'auto',
-            store: buildEmptyProductSaleStore(),
-            forceFit: true,
-            viewConfig: {
-                loadMask: false,
-                markDirty:false,
-                stripeRows: true
-            },
-            plugins: [
-                Ext.create('Ext.grid.plugin.CellEditing', {
-                    clicksToEdit: 1
-                })
-            ],
-            listeners : {
-                edit: function (editor, e, eOpts) {
-                    onOilSaleUpdate();
-                }
-            },
-            columns:[{
-                text: "Product",
-                dataIndex: 'productName',
-                flex: 2,
-                sortable: false,
-                editor: oilProdCombo,
-                renderer: editableColumnRenderer
-            },{
-                text: "Price",
-                dataIndex: 'unitSellingPrice',
-                flex: 1,
-                sortable: false
-            },{
-                text: "Stock",
-                dataIndex: 'currentStock',
-                flex: 1,
-                //align: 'right',
-                sortable: false
-            },{
-                text: "Total sale",
-                dataIndex: 'actualSale',
-                flex: 1,
-                sortable: false,
-                field: {
-                    xtype: 'numberfield',
-                    allowNegative: false,
-                    allowBlank: false
-                },
-                renderer: editableColumnRenderer
-            },{
-                text: "Discount per unit",
-                dataIndex: 'discountPerUnit',
-                flex: 1,
-                sortable: false,
-                field: {
-                    xtype: 'numberfield',
-                    allowNegative: false,
-                    allowBlank: false
-                },
-                renderer: editableColumnRenderer
-            },{
-                text: "Amount after discount",
-                dataIndex: 'actualSaleAmt',
-                flex: 1,
-                sortable: false
-            }]
-        },{
-            xtype: 'gridpanel',
-            id:'partyTransGrid',
-            height: 'auto',
-            store: buildEmptyPartyTransactionStore(),
-            forceFit: true,
-            viewConfig: {
-                loadMask: false,
-                markDirty:false,
-                stripeRows: true
-            },
-            plugins: [
-                Ext.create('Ext.grid.plugin.CellEditing', {
-                    clicksToEdit: 1
-                })
-            ],
-            listeners : {
-                edit: function (editor, e, eOpts) {
-                    onPartyTransUpdate();
-                },
-                aftercellclick: function(iView, iCellEl, iColIdx, iRecord, iRowEl, iRowIdx, iEvent) {
-                    var fieldName = iView.getGridColumns()[iColIdx].dataIndex;
-                    if(fieldName === 'partyName') {
-                        partyCombo.onTriggerClick();
-                    }
-                    return false;
-                },
-                beforeedit: function(iView, eventDetails) {
-                    //Disable the edit of saved transactions
-                    if(eventDetails.record.data.notEditable == true) {
-                        return false;
-                    } else {
-                        return true;
-                    }
-                }
-            },
-            columns:[{
-                text: "Party name",
-                dataIndex: 'partyName',
-                flex: 2,
-                sortable: false,
-                editor: partyCombo,
-                renderer: editableColumnRenderer
-            },{
-                text: "Opening Balance",
-                dataIndex: 'balance',
-                flex: 1,
-                sortable: false,
-                field: {
-                    allowBlank: false
-                }
-            },{
-                text: "Debit detail",
-                dataIndex: 'debitDetail',
-                flex: 2,
-                sortable: false,
-                field: {
-                    allowBlank: false
-                },
-                renderer: editableColumnRenderer
-            },{
-                text: "Debit amt",
-                dataIndex: 'debitAmt',
-                flex: 1,
-                //align: 'right',
-                sortable: false,
-                field: {
-                    xtype: 'numberfield',
-                    allowNegative: false,
-                    allowBlank: false
-                },
-                renderer: editableColumnRenderer
-            }, {
-                xtype: 'checkcolumn',
-                header: 'Cheque debit?',
-                dataIndex: 'isChequeDebit',
-                width:'20px'
-            },{
-                text: "Credit detail",
-                dataIndex: 'creditDetail',
-                flex: 2,
-                sortable: false,
-                field: {
-                    allowBlank: false
-                },
-                renderer: editableColumnRenderer
-            },{
-                text: "Credit amt",
-                dataIndex: 'creditAmt',
-                flex: 1,
-                sortable: false,
-                field: {
-                    xtype: 'numberfield',
-                    allowNegative: false,
-                    allowBlank: false
-                },
-                renderer: editableColumnRenderer
-            }]
-        },{
-            xtype: 'gridpanel',
-            id:'empTransGrid',
-            height: 'auto',
-            store: buildEmptyEmployeeTransactionStore(),
-            forceFit: true,
-            viewConfig: {
-                loadMask: false,
-                markDirty:false,
-                stripeRows: true
-            },
-            plugins: [
-                Ext.create('Ext.grid.plugin.CellEditing', {
-                    clicksToEdit: 1
-                })
-            ],
-            listeners : {
-                edit: function (editor, e, eOpts) {
-                    onEmpTransUpdate();
-                },
-                aftercellclick: function(iView, iCellEl, iColIdx, iRecord, iRowEl, iRowIdx, iEvent) {
-                    var fieldName = iView.getGridColumns()[iColIdx].dataIndex;
-                    if(fieldName === 'partyName') {
-                        partyCombo.onTriggerClick();
-                    }
-                }
-            },
-            columns:[{
-                text: "Employee name",
-                dataIndex: 'partyName',
-                flex: 2,
-                sortable: false,
-                editor: employeeCombo,
-                renderer: editableColumnRenderer
-            },{
-                text: "Salary detail",
-                dataIndex: 'salaryDetail',
-                flex: 2,
-                sortable: false,
-                field: {
-                    allowBlank: false
-                },
-                renderer: editableColumnRenderer
-            },{
-                text: "Salary amt",
-                dataIndex: 'salaryAmt',
-                flex: 1,
-                //align: 'right',
-                sortable: false,
-                field: {
-                    xtype: 'numberfield',
-                    allowNegative: false,
-                    allowBlank: false
-                },
-                renderer: editableColumnRenderer
-            },{
-                text: "Incentive detail",
-                dataIndex: 'incentiveDetail',
-                flex: 2,
-                sortable: false,
-                field: {
-                    allowBlank: false
-                },
-                renderer: editableColumnRenderer
-            },{
-                text: "Incentive amt",
-                dataIndex: 'incentiveAmt',
-                flex: 1,
-                sortable: false,
-                field: {
-                    xtype: 'numberfield',
-                    allowNegative: false,
-                    allowBlank: false
-                },
-                renderer: editableColumnRenderer
-            }]
+            region:"center",
+            overflowY: 'scroll',
+            items:[
+                {
+                    xtype: 'gridpanel',
+                    id:'officeCashGrid',
+                    autoscroll: true,
+                    height: 'auto',
+                    store: buildOfficeCashStore(dailyStatementLoadMask),
+                    forceFit: true,
+                    loadMask: false,
+                    viewConfig: {
+                        loadMask: false,
+                        markDirty:false,
+                        stripeRows: true
+                    },
+                    plugins: [
+                        Ext.create('Ext.grid.plugin.CellEditing', {
+                            clicksToEdit: 1
+                        })
+                    ],
+                    listeners : {
+                        edit: function (editor, e, eOpts) {
+                            onOfficeCashUpdate();
+                            return true;
+                        },
+                        afterlayout: function () {
+                            onOfficeCashUpdate();
+                        }
+                    },
+                    columns:[{
+                        text: "Name",
+                        dataIndex: 'name',
+                        flex: 1
+                    },{
+                        text: "Opening",
+                        dataIndex: 'opBal',
+                        flex: 1
+                    },{
+                        text: "To office",
+                        dataIndex: 'toOffice',
+                        flex: 1,
+                        sortable: false,
+                        field: {
+                            xtype: 'numberfield',
+                            allowNegative: false,
+                            allowBlank: false
+                        },
+                        renderer: editableColumnRenderer
+                    },{
+                        text: "Paid to bank",
+                        dataIndex: 'paidToBank',
+                        flex: 1,
+                        sortable: false,
+                        field: {
+                            xtype: 'numberfield',
+                            allowNegative: false,
+                            allowBlank: false
+                        },
+                        renderer: editableColumnRenderer
+                    },{
+                        text: "Closing",
+                        dataIndex: 'clBal',
+                        flex: 1,
+                        sortable: false
+                    }]
+                },{
+                    xtype: 'gridpanel',
+                    id:'meterSaleGrid',
+                    height: 'auto',
+                    store: buildActiveMeterListStore(),
+                    forceFit: true,
+                    loadMask: false,
+                    viewConfig: {
+                        loadMask: false,
+                        markDirty:false,
+                        stripeRows: true
+                    },
+                    plugins: [
+                        Ext.create('Ext.grid.plugin.CellEditing', {
+                            clicksToEdit: 1
+                        })
+                    ],
+                    listeners : {
+                        edit: function (editor, e, eOpts) {
+                            onMeterSaleUpdate();
+                        }
+                    },
+                    columns:[{
+                        text: "Meter",
+                        dataIndex: 'meterName',
+                        flex: 1,
+                        sortable: false
+                    },{
+                        text: "Opening reading",
+                        dataIndex: 'finalReading',
+                        flex: 2,
+                        //align: 'right',
+                        sortable: false
+                    },{
+                        text: "Closing reading",
+                        dataIndex: 'closingReading',
+                        flex: 2,
+                        field: {
+                            xtype: 'numberfield',
+                            allowNegative: false,
+                            allowBlank: false
+                        },
+                        renderer: editableColumnRenderer,
+                        sortable: false
+                    },{
+                        text: "Total sale",
+                        dataIndex: 'totalSale',
+                        flex: 2,
+                        sortable: false
+                    },{
+                        text: "Test sale in liter",
+                        dataIndex: 'testSale',
+                        flex: 1,
+                        field: {
+                            xtype: 'numberfield',
+                            allowNegative: false,
+                            allowBlank: false
+                        },
+                        renderer: editableColumnRenderer,
+                        sortable: false
+                    },{
+                        text: "Actual sale",
+                        dataIndex: 'actualSale',
+                        flex: 2,
+                        sortable: false
+                    }]
+                },{
+                    xtype: 'gridpanel',
+                    id:'tankSaleGrid',
+                    height: 'auto',
+                    store: buildTankReceiptStore(bunkCache.infos.todayDate, dailyStatementLoadMask),
+                    forceFit: true,
+                    viewConfig: {
+                        loadMask: false,
+                        markDirty:false,
+                        stripeRows: true
+                    },
+                    plugins: [
+                        Ext.create('Ext.grid.plugin.CellEditing', {
+                            clicksToEdit: 1
+                        })
+                    ],
+                    listeners : {
+                        edit: function (editor, e, eOpts) {
+                            onMeterSaleUpdate();
+                        }
+                    },
+                    columns:[{
+                        text: "Tank name",
+                        dataIndex: 'tankName',
+                        flex: 1,
+                        sortable: false
+                    },{
+                        text: "Product",
+                        dataIndex: 'productType',
+                        flex: 1,
+                        sortable: false
+                    },{
+                        text: "Opening stock",
+                        dataIndex: 'closingStock',
+                        flex: 1,
+                        //align: 'right',
+                        sortable: false
+                    },{
+                        text: "Sale",
+                        dataIndex: 'sale',
+                        flex: 1,
+                        sortable: false
+                    },{
+                        text: "Stock after sale",
+                        dataIndex: 'stockAfterSale',
+                        flex: 1,
+                        sortable: false
+                    },{
+                        text: "Test",
+                        dataIndex: 'testSale',
+                        flex: 1,
+                        sortable: false
+                    },{
+                        text: "Dip stock",
+                        dataIndex: 'dipStock',
+                        flex: 1,
+                        sortable: false,
+                        field: {
+                            xtype: 'numberfield',
+                            allowNegative: false,
+                            allowBlank: false
+                        },
+                        renderer: editableColumnRenderer
+                    },{
+                        text: "Diff today",
+                        dataIndex: 'diffToday',
+                        flex: 1,
+                        sortable: false
+                    },{
+                        text: "Diff this month",
+                        dataIndex: 'newDiffThisMonth',
+                        flex: 1,
+                        sortable: false
+                    }]
+                },{
+                    xtype: 'gridpanel',
+                    id:'fuelSaleGrid',
+                    height: 'auto',
+                    store: buildAvailableProductListStore('FUEL_PRODUCTS', dailyStatementLoadMask),
+                    forceFit: true,
+                    viewConfig: {
+                        loadMask: false,
+                        markDirty:false,
+                        stripeRows: true
+                    },
+                    columns:[{
+                        text: "Product",
+                        dataIndex: 'productName',
+                        flex: 2,
+                        sortable: false
+                    },{
+                        text: "Price",
+                        dataIndex: 'unitSellingPrice',
+                        flex: 1,
+                        sortable: false
+                    },{
+                        text: "Total sale",
+                        dataIndex: 'totalSale',
+                        flex: 1,
+                        //align: 'right',
+                        sortable: false
+                    },{
+                        text: "Total sale amt",
+                        dataIndex: 'totalSaleAmt',
+                        flex: 1,
+                        sortable: false
+                    },{
+                        text: "Test sale",
+                        dataIndex: 'testSale',
+                        flex: 1,
+                        sortable: false
+                    },{
+                        text: "Test sale amt",
+                        dataIndex: 'testSaleAmt',
+                        flex: 1,
+                        sortable: false
+                    },{
+                        text: "Actual sale",
+                        dataIndex: 'actualSale',
+                        flex: 1,
+                        sortable: false
+                    },{
+                        text: "Actual sale amt",
+                        dataIndex: 'actualSaleAmt',
+                        flex: 1,
+                        sortable: false
+                    }]
+                },{
+                    xtype: 'gridpanel',
+                    id:'oilSaleGrid',
+                    height: 'auto',
+                    store: buildEmptyProductSaleStore(),
+                    forceFit: true,
+                    viewConfig: {
+                        loadMask: false,
+                        markDirty:false,
+                        stripeRows: true
+                    },
+                    plugins: [
+                        Ext.create('Ext.grid.plugin.CellEditing', {
+                            clicksToEdit: 1
+                        })
+                    ],
+                    listeners : {
+                        edit: function (editor, e, eOpts) {
+                            onOilSaleUpdate();
+                        }
+                    },
+                    columns:[{
+                        text: "Product",
+                        dataIndex: 'productName',
+                        flex: 2,
+                        sortable: false,
+                        editor: oilProdCombo,
+                        renderer: editableColumnRenderer
+                    },{
+                        text: "Price",
+                        dataIndex: 'unitSellingPrice',
+                        flex: 1,
+                        sortable: false
+                    },{
+                        text: "Stock",
+                        dataIndex: 'currentStock',
+                        flex: 1,
+                        //align: 'right',
+                        sortable: false
+                    },{
+                        text: "Total sale",
+                        dataIndex: 'actualSale',
+                        flex: 1,
+                        sortable: false,
+                        field: {
+                            xtype: 'numberfield',
+                            allowNegative: false,
+                            allowBlank: false
+                        },
+                        renderer: editableColumnRenderer
+                    },{
+                        text: "Discount per unit",
+                        dataIndex: 'discountPerUnit',
+                        flex: 1,
+                        sortable: false,
+                        field: {
+                            xtype: 'numberfield',
+                            allowNegative: false,
+                            allowBlank: false
+                        },
+                        renderer: editableColumnRenderer
+                    },{
+                        text: "Amount after discount",
+                        dataIndex: 'totalSaleAmt',
+                        flex: 1,
+                        sortable: false
+                    }]
+                },{
+                    xtype: 'gridpanel',
+                    id:'partyTransGrid',
+                    height: 'auto',
+                    store: buildEmptyPartyTransactionStore(),
+                    forceFit: true,
+                    viewConfig: {
+                        loadMask: false,
+                        markDirty:false,
+                        stripeRows: true
+                    },
+                    plugins: [
+                        Ext.create('Ext.grid.plugin.CellEditing', {
+                            clicksToEdit: 1
+                        })
+                    ],
+                    listeners : {
+                        edit: function (editor, e, eOpts) {
+                            onPartyTransUpdate();
+                        },
+                        aftercellclick: function(iView, iCellEl, iColIdx, iRecord, iRowEl, iRowIdx, iEvent) {
+                            var fieldName = iView.getGridColumns()[iColIdx].dataIndex;
+                            if(fieldName === 'partyName') {
+                                partyCombo.onTriggerClick();
+                            }
+                            return false;
+                        },
+                        beforeedit: function(iView, eventDetails) {
+                            //Disable the edit of saved transactions
+                            if(eventDetails.record.data.notEditable == true) {
+                                return false;
+                            } else {
+                                return true;
+                            }
+                        }
+                    },
+                    columns:[{
+                        text: "Party name",
+                        dataIndex: 'partyName',
+                        flex: 2,
+                        sortable: false,
+                        editor: partyCombo,
+                        renderer: editableColumnRenderer
+                    },{
+                        text: "Opening Balance",
+                        dataIndex: 'balance',
+                        flex: 1,
+                        sortable: false
+                    },{
+                        text: "Debit detail",
+                        dataIndex: 'debitDetail',
+                        flex: 2,
+                        sortable: false,
+                        field: {
+                            allowBlank: false
+                        },
+                        renderer: editableColumnRenderer
+                    },{
+                        text: "Debit amt",
+                        dataIndex: 'debitAmt',
+                        flex: 1,
+                        //align: 'right',
+                        sortable: false,
+                        field: {
+                            xtype: 'numberfield',
+                            allowNegative: false,
+                            allowBlank: false
+                        },
+                        renderer: editableColumnRenderer
+                    }, {
+                        xtype: 'checkcolumn',
+                        header: 'Cheque debit?',
+                        dataIndex: 'isChequeDebit',
+                        width:'20px'
+                    },{
+                        text: "Credit detail",
+                        dataIndex: 'creditDetail',
+                        flex: 2,
+                        sortable: false,
+                        field: {
+                            allowBlank: false
+                        },
+                        renderer: editableColumnRenderer
+                    },{
+                        text: "Credit amt",
+                        dataIndex: 'creditAmt',
+                        flex: 1,
+                        sortable: false,
+                        field: {
+                            xtype: 'numberfield',
+                            allowNegative: false,
+                            allowBlank: false
+                        },
+                        renderer: editableColumnRenderer
+                    }]
+                },{
+                    xtype: 'gridpanel',
+                    id:'empTransGrid',
+                    height: 'auto',
+                    store: buildEmptyEmployeeTransactionStore(),
+                    forceFit: true,
+                    viewConfig: {
+                        loadMask: false,
+                        markDirty:false,
+                        stripeRows: true
+                    },
+                    plugins: [
+                        Ext.create('Ext.grid.plugin.CellEditing', {
+                            clicksToEdit: 1
+                        })
+                    ],
+                    listeners : {
+                        edit: function (editor, e, eOpts) {
+                            onEmpTransUpdate();
+                        },
+                        aftercellclick: function(iView, iCellEl, iColIdx, iRecord, iRowEl, iRowIdx, iEvent) {
+                            var fieldName = iView.getGridColumns()[iColIdx].dataIndex;
+                            if(fieldName === 'partyName') {
+                                partyCombo.onTriggerClick();
+                            }
+                        }
+                    },
+                    columns:[{
+                        text: "Employee name",
+                        dataIndex: 'partyName',
+                        flex: 2,
+                        sortable: false,
+                        editor: employeeCombo,
+                        renderer: editableColumnRenderer
+                    },{
+                        text: "Salary detail",
+                        dataIndex: 'salaryDetail',
+                        flex: 2,
+                        sortable: false,
+                        field: {
+                            allowBlank: false
+                        },
+                        renderer: editableColumnRenderer
+                    },{
+                        text: "Salary amt",
+                        dataIndex: 'salaryAmt',
+                        flex: 1,
+                        //align: 'right',
+                        sortable: false,
+                        field: {
+                            xtype: 'numberfield',
+                            allowNegative: false,
+                            allowBlank: false
+                        },
+                        renderer: editableColumnRenderer
+                    },{
+                        text: "Incentive detail",
+                        dataIndex: 'incentiveDetail',
+                        flex: 2,
+                        sortable: false,
+                        field: {
+                            allowBlank: false
+                        },
+                        renderer: editableColumnRenderer
+                    },{
+                        text: "Incentive amt",
+                        dataIndex: 'incentiveAmt',
+                        flex: 1,
+                        sortable: false,
+                        field: {
+                            xtype: 'numberfield',
+                            allowNegative: false,
+                            allowBlank: false
+                        },
+                        renderer: editableColumnRenderer
+                    }]
+                }]
         }]
     });
     return mainContent;
@@ -763,6 +771,23 @@ function validateDailyStmt(callback) {
     var errors = [];
     var warnings = [];
 
+
+    var meterSaleStore = Ext.getCmp('meterSaleGrid').store;
+    var saleLiters = 0;
+    meterSaleStore.each(function(record) {
+        saleLiters = saleLiters + record.data.totalSale;
+    });
+
+    if(saleLiters<=0) {
+        warnings.push("No meter sales added today.");
+    }
+
+    var partyTransGridStore = Ext.getCmp('partyTransGrid').store;
+    partyTransGridStore.each(function(record) {
+        if(record.data.isChequeDebit && (record.data.debitAmt>record.data.balance)) {
+            warnings.push("The cheque amt " + record.data.debitAmt +"Rs by " + record.data.partyName +" is higher than the amount owed " + record.data.balance + "Rs");
+        }
+    });
 
     checkErrorsWarningsAndProceed(errors, warnings, callback);
     return true;
@@ -787,9 +812,8 @@ function saveObj(type) {
         method: 'POST',
         jsonData:dailyStatement,
         success: function() {
-            myMask.hide();
             Ext.MessageBox.alert('Success', "Successfully saved the daily statement.");
-            updateSummaryPanel();
+            loadDateAndUserInfo(myMask);
         },
         failure : function(response) {
             myMask.hide();
@@ -927,11 +951,12 @@ function onOilSaleUpdate() {
         }
 
         if(record.data.actualSale > 0) {
-            record.set( 'actualSaleAmt', ((record.data.unitSellingPrice - record.data.discountPerUnit)* record.data.actualSale).toFixed(2));
+            record.set( 'totalSaleAmt', ((record.data.unitSellingPrice - record.data.discountPerUnit) * record.data.actualSale).toFixed(2));
         } else {
-            record.set( 'actualSaleAmt', 0);
+            record.set( 'totalSaleAmt', 0);
         }
     });
+    updateClosingBalance();
 
 }
 
@@ -952,7 +977,7 @@ function onOfficeCashUpdate() {
 
         record.set('clBal', (record.data.opBal + record.data.toOffice - record.data.paidToBank).toFixed(2));
     });
-
+    updateClosingBalance();
 }
 
 function onPartyTransUpdate() {
@@ -976,6 +1001,7 @@ function onEmpTransUpdate() {
             }
         }
     });
+    updateClosingBalance();
 }
 function getChequeAmtFromPartyTransactions() {
     var partyTransGridStore = Ext.getCmp('partyTransGrid').store;
@@ -1005,12 +1031,6 @@ function getChequeAmtFromPartyTransactions() {
 
 
 function onMeterSaleUpdate() {
-    var clBalText = Ext.getCmp('openBal-field').getValue();
-    if(clBalText == "" || isNaN(clBalText)) {
-        return;
-    }
-    var clBal = parseFloat( clBalText);
-
     var meterSaleStore = Ext.getCmp('meterSaleGrid').store;
     //Group amt by product
     var groupedSaleAmtByTankId = {};
@@ -1113,24 +1133,34 @@ function onMeterSaleUpdate() {
         }
         record.set("totalSale", (record.data.testSale + record.data.actualSale).toFixed(2));
         record.set("totalSaleAmt", (record.data.totalSale * record.data.unitSellingPrice).toFixed(2));
+    });
 
+    updateClosingBalance();
+}
+
+function updateClosingBalance() {
+    var clBalText = Ext.getCmp('openBal-field').getValue();
+    if(clBalText == "" || isNaN(clBalText)) {
+        return;
+    }
+    var clBal = parseFloat( clBalText);
+
+    var fuelSaleGridStore = Ext.getCmp('fuelSaleGrid').store;
+    fuelSaleGridStore.each(function(record) {
         clBal = clBal + record.data.actualSaleAmt;
     });
 
     var oilSaleGridStore = Ext.getCmp('oilSaleGrid').store;
-
     oilSaleGridStore.each(function(record) {
         clBal = clBal + record.data.totalSaleAmt;
     });
 
     var partyTransGridStore = Ext.getCmp('partyTransGrid').store;
-
     partyTransGridStore.each(function(record) {
         if(!record.data.isChequeDebit) {
             clBal = clBal + record.data.debitAmt;
         }
         clBal = clBal - record.data.creditAmt;
-
     });
 
     var empTransGridStore = Ext.getCmp('empTransGrid').store;
@@ -1151,9 +1181,9 @@ function onMeterSaleUpdate() {
     } else {
         Ext.getCmp('clBal-field').setValue(clBal.toFixed(2));
     }
-
-
 }
+
+
 
 function loadSavedTransactions() {
     if(!partyComboStoreLoaded || !loadedSavedTransactions || dataLoaded) {

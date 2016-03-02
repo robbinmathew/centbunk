@@ -203,7 +203,7 @@ function buildReceiptsPanel(title, record, prodType, panelItems, prodsPanelHeigh
         layout: 'hbox',
         //title:'Test',
         //width:'100%',
-        height:'50px',
+        //height:'50px',
         defaultType: 'textfield',
         items: [
             {
@@ -230,6 +230,38 @@ function buildReceiptsPanel(title, record, prodType, panelItems, prodsPanelHeigh
         ]
     });
 
+    panelItems.push({
+        xtype:'fieldset',
+        layout: 'hbox',
+        defaultType: 'textfield',
+        fieldDefaults: {
+            msgTarget: 'side',
+            labelSeparator : ' :',
+            margins: '10 10 10 0',
+            labelWidth: 100
+        },
+        items: [
+            {
+                xtype: 'button',
+                text: 'Save',
+                flex:1,
+                margins: '10 5 5 200',
+                handler: function () {
+                    onReceiptSave(onSaveType);
+                }
+            },{
+                xtype: 'button',
+                flex:1,
+                margins: '10 200 5 0',
+                text: 'Clear',
+                handler: function () {
+                    updateSubPanel(record);
+
+                }
+            }
+        ]
+    });
+
     var mainContent = Ext.create('Ext.form.Panel', {
         id:'fuelRecieptPanel',
         title: title,
@@ -245,29 +277,18 @@ function buildReceiptsPanel(title, record, prodType, panelItems, prodsPanelHeigh
         defaults: {
             anchor: '100%'
         },
-        items: panelItems,
-        buttons: [{
-            text: 'Save',
-            handler: function () {
-                onReceiptSave(onSaveType);
-            }
-        },{
-            text: 'Clear',
-            handler: function () {
-                updateSubPanel(record);
-
-            }
-        }]
+        items: panelItems
     });
     return mainContent;
 };
 
 function onReceiptSave(onSaveType) {
-    validateFuelReciept();
-    saveFuelReciept(onSaveType);
+    validateFuelReciept( function() {
+        saveFuelReciept(onSaveType);
+    });
 }
 
-function validateFuelReciept() {
+function validateFuelReciept(callback) {
     var errors = [];
     var warnings = [];
     if(!Ext.isNumeric(Ext.getCmp('totalLiters-field').getValue()) || Ext.getCmp('totalLiters-field').getValue() <=0) {
@@ -276,17 +297,23 @@ function validateFuelReciept() {
     if(Ext.getCmp('invNo-field').getValue().length <=0 ) {
         errors.push('Invoice number is missing.');
     }
-    if(errors.length > 0) {
-        Ext.MessageBox.alert('Error', prepareErrorMsg("Please fix the below validation errors.", errors));
-        return false;
-    }
+
+    var fuelStore = Ext.getCmp('fuelReceiptGrid').store;
+    fuelStore.each(function(record) {
+        if(record.data.receiptAmt >0 && record.data.marginPerUnit <= 0 ) {
+            errors.push("Margin for " + record.data.productName + " is zero. Review the cost on invoice");
+        }
+        if(record.data.receiptAmt>0 && record.data.costOnInv <= 0 ) {
+            warnings.push("Cost on invoice for " + record.data.productName + " is zero.");
+        }
+    });
+
+
+    checkErrorsWarningsAndProceed(errors, warnings, callback);
     return true;
 }
 
 function saveFuelReciept(onSaveType) {
-    if(!validateFuelReciept()) {
-        return;
-    }
     var myMask = new Ext.LoadMask(Ext.getBody(), {msg:"Saving receipt..."});
     myMask.show();
     //Prepare object

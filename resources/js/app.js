@@ -70,18 +70,8 @@ Ext.application({
         Ext.getBody().setStyle('overflow', 'auto');
         var myMask = new Ext.LoadMask(Ext.getBody(), {msg:"Loading..."});
         myMask.show();
-        getDataWithAjax('api/info', function(response){
-            bunkCache.infos = Ext.decode(response.responseText);
-            if(Ext.getCmp('userInfo')) {
-                Ext.getCmp('userInfo').body.update('<h4>Username:' + username + '<br/>Date:' + (bunkCache.infos?bunkCache.infos.todayDateDayText:'-') + '</h4>');
-            }
-            updateSummaryPanel();
-            myMask.hide();
-        },function(response){
-            console.log('failed to read info from server:' + response);
-            myMask.hide();
-            showFailedMask();
-        });
+        loadDateAndUserInfo(myMask);
+
         Ext.create('Ext.container.Viewport', {
             layout:'border',
             defaults: {
@@ -205,7 +195,7 @@ function buildSummaryPanel() {
         width:250,
         renderer: function (storeItem, item) {
             var title = item.series.title;
-            this.setTitle(title + ': ' + storeItem.get(item.series.yField));
+            this.setTitle(title + ': ' + (storeItem.get(item.series.yField)?storeItem.get(item.series.yField):0));
         }
     }
     var summaryPanel = Ext.create('Ext.form.Panel', {
@@ -496,6 +486,21 @@ function isNumber (o) {
     return ! isNaN (o-0) && o !== null && o !== "" && o !== false;
 }
 
+function loadDateAndUserInfo(myMask) {
+    getDataWithAjax('api/info', function(response){
+        bunkCache.infos = Ext.decode(response.responseText);
+        if(Ext.getCmp('userInfo')) {
+            Ext.getCmp('userInfo').body.update('<h4>Username:' + username + '<br/>Date:' + (bunkCache.infos?bunkCache.infos.todayDateDayText:'-') + '</h4>');
+        }
+        updateSummaryPanel();
+        myMask.hide();
+    },function(response){
+        console.log('failed to read info from server:' + response);
+        myMask.hide();
+        showFailedMask();
+    });
+}
+
 
 function checkErrorsWarningsAndProceed(errors, warnings, callback) {
     if(errors.length > 0) {
@@ -528,5 +533,7 @@ function checkErrorsWarningsAndProceed(errors, warnings, callback) {
     }
     return true;
 }
+
+
 
 
