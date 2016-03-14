@@ -29,6 +29,7 @@ function buildDailyStatementPanel(title, record) {
         store: oilProdStore,
         valueField: "productId",
         editable: false,
+        lazyInit: false,
         // Template for the dropdown menu.
         // Note the use of the "x-list-plain" and "x-boundlist-item" class,
         // this is required to make the items selectable.
@@ -40,10 +41,17 @@ function buildDailyStatementPanel(title, record) {
         // template for the content inside text field
         displayTpl: Ext.create('Ext.XTemplate',
             '<tpl for=".">',
-            '{productName} - {unitSellingPrice}Rs',
+                '<tpl if="{productName}.length &gt; 0">',
+                    '{productName} - {unitSellingPrice}Rs',
+                '</tpl>',
             '</tpl>'
         ),
         listeners: {
+            focus: {
+                fn : function(comboField) {
+                    comboField.expand();
+                }
+            },
             select: {
                 fn: function(c, r, eopts) {
                     c.ownerCt.completeEdit();
@@ -78,7 +86,7 @@ function buildDailyStatementPanel(title, record) {
                             oilGridStore.add(new LubeSale());
                         }
                     }
-                    gridRecord.set("id", comboRecord.data.productId + ":" + rowNo+1);
+                    gridRecord.set("id", comboRecord.data.productId + ":" + (lastUsedRow+1));
                 }
             }
         }
@@ -107,6 +115,11 @@ function buildDailyStatementPanel(title, record) {
         displayField: "name",
         editable: false,
         listeners: {
+            focus: {
+                fn : function(comboField) {
+                    comboField.expand();
+                }
+            },
             select: {
                 fn: function(c, r, eopts) {
                     c.ownerCt.completeEdit();
@@ -138,7 +151,7 @@ function buildDailyStatementPanel(title, record) {
                             partyTransGridStore.insert(rowNo+1, new PartyTransaction());
                         }
                     }
-                    gridRecord.set("id", comboRecord.data.id + ":" + rowNo+1);
+                    gridRecord.set("id", comboRecord.data.id + ":" + (lastUsedRow+1));
                 }
             }
         }
@@ -151,6 +164,11 @@ function buildDailyStatementPanel(title, record) {
         displayField: "name",
         editable: false,
         listeners: {
+            focus: {
+                fn : function(comboField) {
+                    comboField.expand();
+                }
+            },
             select: {
                 fn: function(c, r, eopts) {
                     c.ownerCt.completeEdit();
@@ -181,7 +199,7 @@ function buildDailyStatementPanel(title, record) {
                             employeeTransGridStore.insert(rowNo+1, new EmployeeTransaction());
                         }
                     }
-                    gridRecord.set("id", comboRecord.data.id + ":" + rowNo+1);
+                    gridRecord.set("id", comboRecord.data.id + ":" + (lastUsedRow+1));
                 }
             }
         }
@@ -303,22 +321,14 @@ function buildDailyStatementPanel(title, record) {
                         dataIndex: 'toOffice',
                         flex: 1,
                         sortable: false,
-                        field: {
-                            xtype: 'numberfield',
-                            allowNegative: false,
-                            allowBlank: false
-                        },
+                        field: numberFieldConfig(),
                         renderer: editableColumnRenderer
                     },{
                         text: "Paid to bank",
                         dataIndex: 'paidToBank',
                         flex: 1,
                         sortable: false,
-                        field: {
-                            xtype: 'numberfield',
-                            allowNegative: false,
-                            allowBlank: false
-                        },
+                        field: numberFieldConfig(),
                         renderer: editableColumnRenderer
                     },{
                         text: "Closing",
@@ -363,11 +373,7 @@ function buildDailyStatementPanel(title, record) {
                         text: "Closing reading",
                         dataIndex: 'closingReading',
                         flex: 2,
-                        field: {
-                            xtype: 'numberfield',
-                            allowNegative: false,
-                            allowBlank: false
-                        },
+                        field: numberFieldConfig(),
                         renderer: editableColumnRenderer,
                         sortable: false
                     },{
@@ -379,11 +385,7 @@ function buildDailyStatementPanel(title, record) {
                         text: "Test sale in liter",
                         dataIndex: 'testSale',
                         flex: 1,
-                        field: {
-                            xtype: 'numberfield',
-                            allowNegative: false,
-                            allowBlank: false
-                        },
+                        field: numberFieldConfig(),
                         renderer: editableColumnRenderer,
                         sortable: false
                     },{
@@ -449,11 +451,7 @@ function buildDailyStatementPanel(title, record) {
                         dataIndex: 'dipStock',
                         flex: 1,
                         sortable: false,
-                        field: {
-                            xtype: 'numberfield',
-                            allowNegative: false,
-                            allowBlank: false
-                        },
+                        field: numberFieldConfig(),
                         renderer: editableColumnRenderer
                     },{
                         text: "Diff today",
@@ -563,22 +561,14 @@ function buildDailyStatementPanel(title, record) {
                         dataIndex: 'actualSale',
                         flex: 1,
                         sortable: false,
-                        field: {
-                            xtype: 'numberfield',
-                            allowNegative: false,
-                            allowBlank: false
-                        },
+                        field: numberFieldConfig(),
                         renderer: editableColumnRenderer
                     },{
                         text: "Discount per unit",
                         dataIndex: 'discountPerUnit',
                         flex: 1,
                         sortable: false,
-                        field: {
-                            xtype: 'numberfield',
-                            allowNegative: false,
-                            allowBlank: false
-                        },
+                        field: numberFieldConfig(),
                         renderer: editableColumnRenderer
                     },{
                         text: "Amount after discount",
@@ -649,11 +639,7 @@ function buildDailyStatementPanel(title, record) {
                         flex: 1,
                         //align: 'right',
                         sortable: false,
-                        field: {
-                            xtype: 'numberfield',
-                            allowNegative: false,
-                            allowBlank: false
-                        },
+                        field: numberFieldConfig(),
                         renderer: editableColumnRenderer
                     }, {
                         xtype: 'checkcolumn',
@@ -674,11 +660,7 @@ function buildDailyStatementPanel(title, record) {
                         dataIndex: 'creditAmt',
                         flex: 1,
                         sortable: false,
-                        field: {
-                            xtype: 'numberfield',
-                            allowNegative: false,
-                            allowBlank: false
-                        },
+                        field: numberFieldConfig(),
                         renderer: editableColumnRenderer
                     }]
                 },{
@@ -730,11 +712,7 @@ function buildDailyStatementPanel(title, record) {
                         flex: 1,
                         //align: 'right',
                         sortable: false,
-                        field: {
-                            xtype: 'numberfield',
-                            allowNegative: false,
-                            allowBlank: false
-                        },
+                        field: numberFieldConfig(),
                         renderer: editableColumnRenderer
                     },{
                         text: "Incentive detail",
@@ -750,11 +728,7 @@ function buildDailyStatementPanel(title, record) {
                         dataIndex: 'incentiveAmt',
                         flex: 1,
                         sortable: false,
-                        field: {
-                            xtype: 'numberfield',
-                            allowNegative: false,
-                            allowBlank: false
-                        },
+                        field: numberFieldConfig(),
                         renderer: editableColumnRenderer
                     }]
                 }]

@@ -482,6 +482,19 @@ function editableColumnRenderer(value, metaData, record, rowIndex, colIndex, sto
     return value;
 }
 
+function numberFieldConfig() {
+    return {
+        xtype: 'numberfield',
+        allowNegative: false,
+        allowBlank: false,
+        minValue: 0,
+        // Remove spinner buttons, and arrow key and mouse wheel listeners
+        hideTrigger: true,
+        keyNavEnabled: false,
+        mouseWheelEnabled: false
+    };
+}
+
 function isNumber (o) {
     return ! isNaN (o-0) && o !== null && o !== "" && o !== false;
 }

@@ -119,11 +119,7 @@ function buildReceiptsPanel(title, record, prodType, panelItems, prodsPanelHeigh
     var receiptAmtField;
     var receiptAmtRenderer;
     if(editableReceiptAmt) {
-        receiptAmtField = {
-            xtype: 'numberfield',
-            allowNegative: false,
-            allowBlank: false
-        };
+        receiptAmtField = numberFieldConfig();
         receiptAmtRenderer=editableColumnRenderer;
     }
 
@@ -182,11 +178,7 @@ function buildReceiptsPanel(title, record, prodType, panelItems, prodsPanelHeigh
             dataIndex: 'costOnInv',
             flex: 1,
             sortable: false,
-            field: {
-                xtype: 'numberfield',
-                allowNegative: false,
-                allowBlank: false
-            },
+            field: numberFieldConfig(),
             renderer: editableColumnRenderer,
         },{
             id: 'marginPerUnit',

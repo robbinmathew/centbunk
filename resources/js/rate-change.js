@@ -66,11 +66,7 @@ function buildRateChangePanel(title, record) {
                 text: "New Price",
                 dataIndex: 'newUnitSellingPrice',
                 flex: 1,
-                field: {
-                    xtype: 'numberfield',
-                        allowNegative: false,
-                        allowBlank: false
-                },
+                field: numberFieldConfig(),
                 renderer: editableColumnRenderer,
                 sortable: false
             },{

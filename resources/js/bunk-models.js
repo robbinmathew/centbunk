@@ -52,7 +52,7 @@ Ext.define('FuelReceipt', {
 Ext.define('LubeSale', {
     extend: 'Ext.data.Model',
     fields: [
-        {name: 'id', type: 'int'},
+        {name: 'id'},
         {name: 'productId', type: 'int'},
         'productName',
         {name: 'unitSellingPrice', type: 'float'},
@@ -87,7 +87,7 @@ Ext.define('MeterClosing', {
 Ext.define('PartyTransaction', {
     extend: 'Ext.data.Model',
     fields: [
-        {name: 'id', type: 'int'},
+        {name: 'id'},
         {name: 'slNo', type: 'int'},
         {name: 'partyId', type: 'int'},
         'partyName',
@@ -106,7 +106,7 @@ Ext.define('PartyTransaction', {
 Ext.define('EmployeeTransaction', {
     extend: 'Ext.data.Model',
     fields: [
-        {name: 'id', type: 'int'},
+        {name: 'id'},
         {name: 'partyId', type: 'int'},
         'partyName',
         'salaryDetail',
