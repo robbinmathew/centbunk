@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="bronz.accounting.bunk.tankandmeter.model.TankClosingStock">
+        <id name="tankId" type="java.lang.Integer">
+            <column name="TANK_ID" />
+            <generator class="assigned"></generator>
+        </id>
+        <property name="slNo" type="java.lang.Integer">
+            <column name="SL_NO"/>
+        </property>
+        <property name="tankName" type="java.lang.String">
+            <column name="TANK_NAME" />
+        </property>
+        <property name="productId" type="java.lang.Integer">
+            <column name="PROD_ID" />
+        </property>
+        <property name="productType" type="java.lang.String">
+            <column name="PRODUCT_TYPE" />
+        </property>
+        <property name="closingStock" type="java.math.BigDecimal">
+            <column name="STOCK" />
+        </property>
+        <property name="diffThisMonth" type="java.math.BigDecimal">
+            <column name="DIFF_THIS_MONTH" />
+        </property>
+        <property name="date" type="java.lang.Integer">
+            <column name="DATE" />
+        </property>
+    </class>
+    <sql-query name="findTankClosingStock">
+		<![CDATA[
+			SELECT TA.PK_TANK_ID AS TANK_ID,
+				TA.TANK_NAME AS TANK_NAME,
+				PA.PRODUCT_NAME AS PRODUCT_TYPE,
+				TA.PRODUCT_ID AS PROD_ID,
+				TR.BALANCE AS STOCK,
+				TR.DATE AS DATE,
+				DIFF.DIFF AS DIFF_THIS_MONTH,
+				TR.PK_SLNO AS SL_NO
+			FROM (
+				SELECT MAX(TQ.PK_SLNO) AS MAX_SLNO 
+				FROM PBMS_TANK_TRANSACTIONS TQ
+				WHERE TQ.DATE <= :TODAY
+				GROUP BY TQ.TANK_ID) AS MAX_SL
+			INNER JOIN PBMS_TANK_TRANSACTIONS AS TR
+				ON MAX_SL.MAX_SLNO=TR.PK_SLNO
+			LEFT JOIN PBMS_TANK_TABLE AS TA
+				ON TR.TANK_ID=TA.PK_TANK_ID
+			LEFT JOIN PBMS_PRODUCT_TABLE PA
+				ON TA.PRODUCT_ID=PA.PK_PRODUCT_ID
+			LEFT OUTER JOIN (
+				SELECT SUM(QUANTITY) AS DIFF, TANK_ID
+				FROM PBMS_TANK_TRANSACTIONS
+				WHERE DATE >= ((:TODAY - DAYOFMONTH(FROM_DAYS(:TODAY)))+1)
+					AND TRANS_TYPE = 'DIFF'
+				GROUP BY TANK_ID) AS DIFF
+				ON DIFF.TANK_ID=TA.PK_TANK_ID
+			ORDER BY TA.TANK_NAME
+		
+		]]>
+    </sql-query>
+</hibernate-mapping>

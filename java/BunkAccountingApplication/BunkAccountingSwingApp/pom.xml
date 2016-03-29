@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>bronz.solutions.accounting</groupId>
+    <artifactId>bunk-accounting-solutions</artifactId>
+	<name>BRONZ - Bunk accounting solutions swing app</name>
+    <version>1.0</version>
+    <packaging>jar</packaging>
+    <description>Bunk Accounting Solutions swing application</description>
+	<parent>
+		<artifactId>bunk-accounting-application</artifactId>
+		<groupId>bronz.solutions.accounting</groupId>
+		<version>1.0</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+	<developers>
+		<developer>
+			<name>Prabin Mathew</name>
+			<organization>Bronz Solutions</organization>
+		</developer>
+	</developers>
+	<properties>
+		<maven.eclipse.project.name>BunkManager</maven.eclipse.project.name>
+	</properties>
+	<dependencies>
+		<dependency>
+		    <groupId>bronz.solutions</groupId>
+    		<artifactId>utilities</artifactId>
+    		<version>${bronz.version}</version>
+      		<type>jar</type>
+      	</dependency>
+		<dependency>
+		    <groupId>bronz.solutions.accounting</groupId>
+			<artifactId>bunk-accounting-logic</artifactId>
+    		<version>${bronz.version}</version>
+      		<type>jar</type>
+      	</dependency>
+		<dependency>
+      		<groupId>junit</groupId>
+      		<artifactId>junit</artifactId>
+      		<version>3.8.1</version>
+      		<scope>test</scope>
+    	</dependency>
+  	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+    			<artifactId>maven-assembly-plugin</artifactId>
+        		<version>2.2-beta-5</version>
+        		<configuration>
+          			<descriptorRefs>
+            			<descriptorRef>jar-with-dependencies</descriptorRef>
+          			</descriptorRefs>
+          			<archive>
+          				<manifestEntries>
+          					<Org-Name>Bronz Solutions</Org-Name>
+          					<SplashScreen-Image>SplashScreenBunkApp.gif</SplashScreen-Image>
+						</manifestEntries>
+			            <manifest>
+            				<mainClass>bronz.accounting.bunk.BunkApplicationLauncher</mainClass>
+            			</manifest>
+          			</archive>
+        		</configuration>
+        		<executions>
+          			<execution>
+            			<id>make-assembly</id>
+            			<phase>package</phase>
+            			<goals>
+              				<goal>single</goal>
+            			</goals>
+          			</execution>
+        		</executions>
+        	</plugin>
+		</plugins>
+	</build>
+</project>

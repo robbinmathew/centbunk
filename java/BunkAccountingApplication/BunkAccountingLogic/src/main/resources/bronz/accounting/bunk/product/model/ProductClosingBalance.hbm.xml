@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="bronz.accounting.bunk.products.model.ProductClosingBalance">
+        <id name="slNo" type="java.lang.Integer">
+            <column name="SL_NO"/>
+        </id>
+        <property name="productId" type="java.lang.Integer">
+            <column name="PRODUCT_ID" />
+        </property>
+        <property name="date" type="java.lang.Integer">
+            <column name="DATE"/>
+        </property>
+        <property name="lastLoadOn" type="java.lang.Integer">
+            <column name="LAST_LOAD"/>
+        </property>
+        <property name="productName" type="java.lang.String">
+            <column name="NAME" />
+        </property>
+        <property name="unitSellingPrice" type="java.math.BigDecimal">
+            <column name="UNIT_PRICE" />
+        </property>
+        <property name="closingStock" type="java.math.BigDecimal">
+            <column name="CLOSING_STOCK" />
+        </property>
+        <property name="margin" type="java.math.BigDecimal">
+            <column name="MARGIN" />
+        </property>
+    </class>
+</hibernate-mapping>

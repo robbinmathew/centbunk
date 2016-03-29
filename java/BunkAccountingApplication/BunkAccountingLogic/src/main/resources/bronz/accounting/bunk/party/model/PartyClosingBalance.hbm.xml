@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="bronz.accounting.bunk.party.model.PartyClosingBalance">
+        <id name="slNo" type="java.lang.Integer">
+            <column name="SL_NO" />
+        </id>
+        <property name="id" type="java.lang.Integer">
+            <column name="PARTY_ID"/>
+        </property>
+        <property name="date" type="java.lang.Integer">
+            <column name="DATE"/>
+        </property>
+        <property name="name" type="java.lang.String">
+            <column name="NAME" />
+        </property>
+        <property name="balance" type="java.math.BigDecimal">
+            <column name="BALANCE" />
+        </property>
+    </class>
+    <sql-query name="findActiveNonEmployeePartiesClosing">
+		<![CDATA[
+			SELECT PR.PK_PARTY_ID AS PARTY_ID,
+				TR.PK_SLNO AS SL_NO,
+				PR.PARTY_NAME AS NAME,
+				TR.DATE AS DATE,
+				TR.BALANCE AS BALANCE
+			FROM (
+				SELECT MAX(TQ.PK_SLNO) AS MAX_SLNO
+				FROM PBMS_PARTY_TRANSACTIONS TQ
+				WHERE TQ.DATE <= :TODAY
+				GROUP BY TQ.PARTY_ID) AS MAX_SL
+			INNER JOIN PBMS_PARTY_TRANSACTIONS AS TR
+				ON MAX_SL.MAX_SLNO=TR.PK_SLNO
+			LEFT JOIN PBMS_PARTY_TABLE AS PR
+				ON TR.PARTY_ID=PR.PK_PARTY_ID
+			WHERE (PR.PK_PARTY_ID >= 250 AND PARTY_STATUS LIKE 'ACTIVE%')
+				OR (PR.PK_PARTY_ID < 250 AND PARTY_STATUS LIKE 'ACTIVE_S')
+			ORDER BY PR.PARTY_NAME
+		]]>
+    </sql-query>
+    <sql-query name="findPartiesClosing">
+		<![CDATA[
+			SELECT PR.PK_PARTY_ID AS PARTY_ID,
+				TR.PK_SLNO AS SL_NO,
+				PR.PARTY_NAME AS NAME,
+				TR.DATE AS DATE,
+				TR.BALANCE AS BALANCE
+			FROM (
+				SELECT MAX(TQ.PK_SLNO) AS MAX_SLNO
+				FROM PBMS_PARTY_TRANSACTIONS TQ
+				WHERE TQ.DATE <= :TODAY
+					AND TQ.PARTY_ID >= :MIN
+					AND TQ.PARTY_ID < :MAX
+				GROUP BY TQ.PARTY_ID) AS MAX_SL
+			INNER JOIN PBMS_PARTY_TRANSACTIONS AS TR
+				ON MAX_SL.MAX_SLNO=TR.PK_SLNO
+			LEFT JOIN PBMS_PARTY_TABLE AS PR
+				ON TR.PARTY_ID=PR.PK_PARTY_ID
+			WHERE PARTY_STATUS LIKE :STATUS
+			ORDER BY PR.PARTY_NAME
+		]]>
+    </sql-query>
+    <sql-query name="findPartyClosingByID">
+		<![CDATA[
+			SELECT PR.PK_PARTY_ID AS PARTY_ID,
+				TR.PK_SLNO AS SL_NO,
+				PR.PARTY_NAME AS NAME,
+				TR.DATE AS DATE,
+				TR.BALANCE AS BALANCE
+			FROM (
+				SELECT MAX(TQ.PK_SLNO) AS MAX_SLNO
+				FROM PBMS_PARTY_TRANSACTIONS TQ
+				WHERE TQ.DATE <= :TODAY
+					AND TQ.PARTY_ID = :ID ) AS MAX_SL
+			INNER JOIN PBMS_PARTY_TRANSACTIONS AS TR
+				ON MAX_SL.MAX_SLNO=TR.PK_SLNO
+			LEFT JOIN PBMS_PARTY_TABLE AS PR
+				ON TR.PARTY_ID=PR.PK_PARTY_ID
+		]]>
+    </sql-query>
+</hibernate-mapping>

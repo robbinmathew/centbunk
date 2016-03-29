@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+  http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PARTY_STATEMENT" language="java" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="reportName" class="java.lang.String"/>
+	<parameter name="subReportConnection" class="java.sql.Connection"/>
+	<parameter name="subReportFolder" class="java.lang.String"/>
+	<parameter name="subReportFileName" class="java.lang.String"/>
+	<parameter name="startDate" class="java.lang.Integer"/>
+	<parameter name="endDate" class="java.lang.Integer"/>
+	<parameter name="partyId" class="java.lang.Integer"/>
+	<background>
+		<band/>
+	</background>
+	<title>
+		<band height="72">
+			<frame>
+				<reportElement mode="Opaque" x="-20" y="-20" width="595" height="92" backcolor="#FFFFFF"/>
+				<textField>
+					<reportElement x="20" y="27" width="435" height="32" forecolor="#000000"/>
+					<textElement>
+						<font fontName="Calibri" size="25" isBold="true" isItalic="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA[bronz.accounting.bunk.AppConfig.COMPANY_NAME.getStringValue()]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="20" y="59" width="435" height="20" forecolor="#999999"/>
+					<textElement>
+						<font fontName="Calibri" size="14" isBold="false" isItalic="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA[bronz.accounting.bunk.AppConfig.COMPANY_ADDRESS.getStringValue()]]></textFieldExpression>
+				</textField>
+				<image>
+					<reportElement x="455" y="10" width="120" height="82"/>
+					<imageExpression class="java.lang.String"><![CDATA["bronz/accounting/bunk/images/hpcl_logo_img.jpg"]]></imageExpression>
+				</image>
+				<line>
+					<reportElement x="0" y="91" width="595" height="1"/>
+				</line>
+			</frame>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="25">
+			<textField>
+				<reportElement x="0" y="0" width="555" height="25"/>
+				<textElement>
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$P{reportName}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="20">
+			<subreport>
+				<reportElement x="0" y="0" width="555" height="20"/>
+				<subreportParameter name="startDate">
+					<subreportParameterExpression><![CDATA[$P{startDate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="partyId">
+					<subreportParameterExpression><![CDATA[$P{partyId}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="endDate">
+					<subreportParameterExpression><![CDATA[$P{endDate}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{subReportConnection}]]></connectionExpression>
+				<subreportExpression class="java.lang.String"><![CDATA[$P{subReportFolder} + $P{subReportFileName} + ".jasper"]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+	<columnFooter>
+		<band/>
+	</columnFooter>
+	<pageFooter>
+		<band height="17">
+			<textField>
+				<reportElement mode="Opaque" x="0" y="4" width="435" height="13" backcolor="#E6E6E6"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression class="java.lang.String"><![CDATA["Page "+$V{PAGE_NUMBER}+" of"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement mode="Opaque" x="435" y="4" width="120" height="13" backcolor="#E6E6E6"/>
+				<textElement/>
+				<textFieldExpression class="java.lang.String"><![CDATA[" " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+</jasperReport>

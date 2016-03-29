@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="bronz.accounting.bunk.products.model.ProdRateChange" table="pbms_product_meter_change">
+        <id name="slNo" type="java.lang.Integer">
+            <column name="PK_SLNO" />
+            <generator class="increment"></generator>
+        </id>
+        <property name="date" type="java.lang.Integer">
+            <column name="DATE"/>
+        </property>
+        <property name="prodId" type="java.lang.Integer">
+            <column name="PRODUCT_ID"/>
+        </property>
+        <property name="comments" type="java.lang.String">
+            <column name="COMMENTS" />
+        </property>
+        <property name="oldPrice" type="java.math.BigDecimal">
+            <column name="OLD_PRICE" />
+        </property>
+        <property name="stock" type="java.math.BigDecimal">
+            <column name="STOCK" />
+        </property>
+    </class>
+</hibernate-mapping>

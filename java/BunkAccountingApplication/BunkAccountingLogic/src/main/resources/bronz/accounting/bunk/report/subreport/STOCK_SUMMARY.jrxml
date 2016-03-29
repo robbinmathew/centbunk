@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+	http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+	name="STOCK_SUMMARY" language="java" whenNoDataType="NoDataSection"
+	pageWidth="535" pageHeight="842" columnWidth="535"
+	leftMargin="0" rightMargin="0" topMargin="10" bottomMargin="0">
+	<parameter name="date" class="java.lang.Integer"/>
+	
+    <parameter name="minOilProdId" class="java.lang.Integer">
+		<defaultValueExpression>
+			<![CDATA[bronz.accounting.bunk.products.dao.ProductDao.MIN_OIL_PROD_ID]]>
+		</defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[
+            SELECT * FROM (
+				SELECT CONCAT(PR.PRODUCT_NAME, ' ID:', PR.PK_PRODUCT_ID) AS NAME,
+				  TX.TOTAL_PRICE AS UNIT_PRICE,
+				  TR.BALANCE AS CLOSING_STOCK, DATE_FORMAT(FROM_DAYS(TX.DATE), '%d %b %Y') AS LAST_LOAD,
+				  TX.MARGIN AS MARGIN, (TX.TOTAL_PRICE * TR.BALANCE) AS TOTAL_VAL
+				FROM (
+				  SELECT MAX(TQ.PK_SLNO) AS MAX_SLNO
+				  FROM PBMS_PRODUCT_TRANSACTIONS TQ
+				  WHERE TQ.DATE <= $P{date} AND TQ.PRODUCT_ID < $P{minOilProdId}
+				  GROUP BY TQ.PRODUCT_ID) AS MAX_SL
+				INNER JOIN PBMS_PRODUCT_TRANSACTIONS AS TR
+				  ON MAX_SL.MAX_SLNO=TR.PK_SLNO
+				LEFT JOIN PBMS_PRODUCT_TABLE AS PR
+				  ON TR.PRODUCT_ID=PR.PK_PRODUCT_ID
+				LEFT JOIN (
+				  SELECT MAX(TP.PK_SLNO) AS LOAD_PK_SLNO, TP.PRODUCT_ID
+				  FROM PBMS_PRODUCT_TRANSACTIONS TP
+				  WHERE TP.DATE <= $P{date} AND SELL_RECIEVE like 'R%' GROUP BY TP.PRODUCT_ID) AS LAST
+				  ON LAST.PRODUCT_ID=PR.PK_PRODUCT_ID
+				INNER JOIN PBMS_PRODUCT_TRANSACTIONS AS TX
+				  ON LAST.LOAD_PK_SLNO=TX.PK_SLNO
+				WHERE TR.BALANCE > 0 ) AS PR
+			UNION ALL
+			SELECT CONCAT(PR.PRODUCT_NAME, ' ID:', PR.PK_PRODUCT_ID) AS NAME,
+			  TX.TOTAL_PRICE AS UNIT_PRICE,
+			  TR.BALANCE AS CLOSING_STOCK, DATE_FORMAT(FROM_DAYS(TX.DATE), '%d %b %Y') AS LAST_LOAD,
+			  TX.MARGIN AS MARGIN, (TX.TOTAL_PRICE * TR.BALANCE) AS TOTAL_VAL
+			FROM (
+			  SELECT MAX(TQ.PK_SLNO) AS MAX_SLNO
+			  FROM PBMS_PRODUCT_TRANSACTIONS TQ
+			  WHERE TQ.DATE <= $P{date} AND TQ.PRODUCT_ID >= $P{minOilProdId}
+			  GROUP BY TQ.PRODUCT_ID) AS MAX_SL
+			INNER JOIN PBMS_PRODUCT_TRANSACTIONS AS TR
+			  ON MAX_SL.MAX_SLNO=TR.PK_SLNO
+			LEFT JOIN PBMS_PRODUCT_TABLE AS PR
+			  ON TR.PRODUCT_ID=PR.PK_PRODUCT_ID
+			LEFT JOIN (
+			  SELECT MAX(TP.PK_SLNO) AS LOAD_PK_SLNO, TP.PRODUCT_ID
+			  FROM PBMS_PRODUCT_TRANSACTIONS TP
+			  WHERE TP.DATE <= $P{date} AND SELL_RECIEVE like 'R%' GROUP BY TP.PRODUCT_ID) AS LAST
+			  ON LAST.PRODUCT_ID=PR.PK_PRODUCT_ID
+			INNER JOIN PBMS_PRODUCT_TRANSACTIONS AS TX
+			  ON LAST.LOAD_PK_SLNO=TX.PK_SLNO
+			WHERE TR.BALANCE > 0
+        ]]>
+	</queryString>
+	<field name="NAME" class="java.lang.String"/>
+	<field name="LAST_LOAD" class="java.lang.String"/>
+	<field name="UNIT_PRICE" class="java.math.BigDecimal"/>
+	<field name="MARGIN" class="java.math.BigDecimal"/>
+	<field name="CLOSING_STOCK" class="java.math.BigDecimal"/>
+	<field name="TOTAL_VAL" class="java.math.BigDecimal"/>
+	<variable name="serialNumber" class="java.lang.Integer" calculation="Count" resetType="Report">
+		<variableExpression><![CDATA[$V{serialNumber}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.lang.Integer(1)]]></initialValueExpression>
+	</variable>
+	<variable name="totalAmount" class="java.math.BigDecimal" calculation="Sum"  resetType="Report">
+		<variableExpression><![CDATA[$F{TOTAL_VAL}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="40" splitType="Stretch">
+			<frame>
+				<reportElement mode="Opaque" x="0" y="0" width="535" height="40" backcolor="#E6E6E6"/>
+				<line>
+					<reportElement x="0" y="0" width="535" height="1"/>
+				</line>
+				<line>
+					<reportElement x="0" y="0" width="1" height="40"/>
+				</line>
+				<line>
+					<reportElement x="534" y="0" width="1" height="40"/>
+				</line>
+				<line>
+					<reportElement x="0" y="20" width="535" height="1"/>
+				</line>
+				<line>
+					<reportElement x="0" y="39" width="535" height="1"/>
+				</line>
+				<staticText>
+					<reportElement x="0" y="0" width="535" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[STOCK SUMMARY]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="20" width="35" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Sl No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="35" y="20" width="210" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[PRODUCT]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="245" y="20" width="60" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[PRICE]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="305" y="20" width="60" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[STOCK]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="365" y="20" width="60" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[VALUE]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="425" y="20" width="50" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[MARGIN]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="475" y="20" width="60" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[LAST LOAD]]></text>
+				</staticText>
+			</frame>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<line>
+				<reportElement x="0" y="0" width="1" height="15"/>
+			</line>
+			<line>
+				<reportElement x="534" y="0" width="1" height="15"/>
+			</line>
+			<textField>
+				<reportElement x="0" y="0" width="35" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Integer"><![CDATA[$V{serialNumber}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="35" y="0" width="210" height="15"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{NAME}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="245" y="0" width="60" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{UNIT_PRICE} == null)? "0" :($F{UNIT_PRICE}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="305" y="0" width="60" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{CLOSING_STOCK} == null)? "0" :($F{CLOSING_STOCK}.setScale(3, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="365" y="0" width="60" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{TOTAL_VAL} == null)? "0" :($F{TOTAL_VAL}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="425" y="0" width="50" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{MARGIN} == null)? "0" :($F{MARGIN}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="475" y="0" width="60" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{LAST_LOAD} == null)? "-" :$F{LAST_LOAD}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="22" splitType="Stretch">
+			<textField>
+				<reportElement x="305" y="0" width="60" height="20"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Calibri" size="12"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA["Total "]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="365" y="0" width="60" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{totalAmount}.setScale(2, java.math.RoundingMode.HALF_UP )]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="0" width="1" height="22"/>
+			</line>
+			<line>
+				<reportElement x="534" y="0" width="1" height="22"/>
+			</line>
+			<line>
+				<reportElement x="0" y="21" width="535" height="1"/>
+			</line>
+		</band>
+	</columnFooter>
+	<noData>
+		<band height="20" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="535" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="true" isItalic="true" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[No product details found.!!]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

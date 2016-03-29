@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="bronz.accounting.bunk.tankandmeter.model.TankStock" table="pbms_tank_dip">
+        <id name="slNo" type="java.lang.Integer">
+            <column name="PK_SLNO" />
+        </id>
+        <property name="tankId" type="java.lang.Integer">
+            <column name="TANK_ID"/>
+        </property>
+        <property name="dip" type="java.math.BigDecimal">
+            <column name="DIP"/>
+        </property>
+        <property name="detail" type="java.lang.String">
+            <column name="DETAIL" />
+        </property>
+        <property name="actualStock" type="java.math.BigDecimal">
+            <column name="ACTUAL_STOCK" />
+        </property>
+        <property name="date" type="java.lang.Integer">
+            <column name="DATE" />
+        </property>
+        <property name="type" type="java.lang.String">
+            <column name="TRANS_TYPE" />
+        </property>
+    </class>
+</hibernate-mapping>

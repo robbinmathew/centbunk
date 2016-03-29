@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="bronz.accounting.bunk.products.model.ProductTransaction" table="pbms_product_transactions">
+        <id name="slNo" type="java.lang.Integer">
+            <column name="PK_SLNO" />
+            <generator class="increment"></generator>
+        </id>
+        <property name="productId" type="java.lang.Integer">
+            <column name="PRODUCT_ID"/>
+        </property>
+        <property name="date" type="java.lang.Integer">
+            <column name="DATE"/>
+        </property>
+        <property name="transactionType" type="java.lang.String">
+            <column name="SELL_RECIEVE" />
+        </property>
+        <property name="detail" type="java.lang.String">
+            <column name="DETAIL" />
+        </property>
+        <property name="quantity" type="java.math.BigDecimal">
+            <column name="QUANTITY" />
+        </property>
+        <property name="unitPrice" type="java.math.BigDecimal">
+            <column name="TOTAL_PRICE" />
+        </property>
+        <property name="balance" type="java.math.BigDecimal">
+            <column name="BALANCE" />
+        </property>
+        <property name="margin" type="java.math.BigDecimal">
+            <column name="MARGIN" />
+        </property>
+    </class>
+</hibernate-mapping>

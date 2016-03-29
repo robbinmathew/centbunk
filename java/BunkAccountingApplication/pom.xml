@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>bronz.solutions.accounting</groupId>
+    <artifactId>bunk-accounting-application</artifactId>
+	<name>BRONZ - Bunk accounting solutions</name>
+    <version>1.0</version>
+    <packaging>pom</packaging>
+    <description>Bunk Accounting Solutions</description>
+	<parent>
+		<artifactId>solutions</artifactId>
+		<groupId>bronz.solutions</groupId>
+		<version>1.0</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+	<developers>
+		<developer>
+			<name>Prabin Mathew</name>
+			<organization>Bronz Solutions</organization>
+		</developer>
+	</developers>
+	<properties>
+		<maven.eclipse.project.name>BunkAccountingApplication</maven.eclipse.project.name>
+	</properties>
+	<profiles>
+		<profile>
+			<id>bunkapp</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<modules>
+				<module>BunkAccountingLogic</module>
+				<module>BunkAccountingSwingApp</module>
+				<module>BunkAccountingWebService</module>
+			</modules>
+		</profile>
+	</profiles>
+</project>

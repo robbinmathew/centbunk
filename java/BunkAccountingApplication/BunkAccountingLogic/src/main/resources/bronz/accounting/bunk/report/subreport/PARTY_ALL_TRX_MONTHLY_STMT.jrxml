@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+		http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+	name="PARTY_ALL_TRX_MONTHLY_STMT" language="java"
+	pageWidth="555" pageHeight="842" columnWidth="535"
+	leftMargin="0" rightMargin="0" topMargin="10" bottomMargin="0"
+	whenNoDataType="NoDataSection">
+    <parameter name="date" class="java.lang.Integer"/>
+	<parameter name="partyId" class="java.lang.Integer"/>
+	<parameter name="title" class="java.lang.String"/>
+	<parameter name="summaryValuesMap" class="java.util.Map"> 
+  		<defaultValueExpression>
+    		<![CDATA[new java.util.HashMap()]]>
+  		</defaultValueExpression> 
+	</parameter>
+	<queryString>
+		<![CDATA[
+            SELECT DATE_FORMAT(RESULTS.DATE, '%d %b %Y') AS DATE, RESULTS.DETAILS AS DETAILS, RESULTS.DEBIT AS DEBIT,
+                        RESULTS.CREDIT AS CREDIT, RESULTS.BALANCE AS BALANCE FROM (
+                SELECT FROM_DAYS(TR.DATE) AS DATE, TR.DETAILS AS DETAILS, TR.AMOUNT AS DEBIT,
+                        NULL AS CREDIT, TR.BALANCE AS BALANCE, TR.DATE AS INT_DATE, TR.PK_SLNO AS PK_SLNO
+                FROM PBMS_PARTY_TRANSACTIONS AS TR
+                WHERE TR.CASH_CREDIT LIKE '%DEBIT%'
+                  AND TR.PARTY_ID = $P{partyId}
+                  AND TR.DATE > ($P{date} - DAYOFMONTH(FROM_DAYS($P{date})))
+                  AND TR.DATE <= TO_DAYS(LAST_DAY(FROM_DAYS($P{date})))
+                UNION SELECT FROM_DAYS(TR.DATE) AS DATE, TR.DETAILS AS DETAILS, NULL AS DEBIT,
+                        TR.AMOUNT AS CREDIT, TR.BALANCE AS BALANCE, TR.DATE AS INT_DATE, TR.PK_SLNO AS PK_SLNO
+                FROM PBMS_PARTY_TRANSACTIONS AS TR
+                WHERE TR.CASH_CREDIT LIKE '%CREDIT%'
+                  AND TR.PARTY_ID = $P{partyId}
+                  AND TR.DATE > ($P{date} - DAYOFMONTH(FROM_DAYS($P{date})))
+                  AND TR.DATE <= TO_DAYS(LAST_DAY(FROM_DAYS($P{date})))) RESULTS
+            ORDER BY RESULTS.INT_DATE, RESULTS.PK_SLNO
+			]]>
+	</queryString>
+	<field name="DATE" class="java.lang.String"/>
+	<field name="DEBIT" class="java.math.BigDecimal"/>
+	<field name="CREDIT" class="java.math.BigDecimal"/>
+	<field name="BALANCE" class="java.math.BigDecimal"/>
+	<field name="DETAILS" class="java.lang.String"/>
+	<variable name="serialNumber" class="java.lang.Integer" calculation="Count" resetType="Report">
+		<variableExpression><![CDATA[$V{serialNumber}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.lang.Integer(1)]]></initialValueExpression>
+	</variable>
+	<variable name="totalCredit" class="java.math.BigDecimal" calculation="Sum" resetType="Report">
+		<variableExpression><![CDATA[$F{CREDIT}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<variable name="totalDebit" class="java.math.BigDecimal" calculation="Sum" resetType="Report">
+		<variableExpression><![CDATA[$F{DEBIT}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="40" splitType="Stretch">
+			<frame>
+				<reportElement mode="Opaque" x="0" y="0" width="535" height="40" backcolor="#E6E6E6"/>
+				<textField>
+					<reportElement x="0" y="0" width="535" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="false" isItalic="false"/>
+					</textElement>
+					<textFieldExpression class="java.lang.String"><![CDATA[$P{title}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="20" width="35" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Sl No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="35" y="20" width="100" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="135" y="20" width="220" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Details]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="355" y="20" width="90" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Debit]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="445" y="20" width="90" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Credit]]></text>
+				</staticText>
+				<line>
+					<reportElement x="0" y="0" width="535" height="1"/>
+				</line>
+				<line>
+					<reportElement x="0" y="0" width="1" height="40"/>
+				</line>
+				<line>
+					<reportElement x="534" y="0" width="1" height="40"/>
+				</line>
+				<line>
+					<reportElement x="0" y="20" width="535" height="1"/>
+				</line>
+				<line>
+					<reportElement x="0" y="39" width="535" height="1"/>
+				</line>
+			</frame>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<line>
+				<reportElement x="0" y="0" width="1" height="15"/>
+			</line>
+			<line>
+				<reportElement x="534" y="0" width="1" height="15"/>
+			</line>
+			<textField>
+				<reportElement x="0" y="0" width="35" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Integer"><![CDATA[$V{serialNumber}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="35" y="0" width="100" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{DATE}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="135" y="0" width="220" height="15"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{DETAILS}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="355" y="0" width="90" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{DEBIT} == null)?"" :($F{DEBIT}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="445" y="0" width="90" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{CREDIT} == null)?"" :($F{CREDIT}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="25" splitType="Stretch">
+			<staticText>
+				<reportElement x="135" y="0" width="220" height="25"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Calibri" size="12" isBold="true" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Total]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="355" y="0" width="90" height="25"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($V{totalDebit} == null )? "0.00" : ($V{totalDebit}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="445" y="0" width="90" height="25"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($V{totalCredit} == null )? "0.00" : ($V{totalCredit}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="0" width="1" height="25"/>
+			</line>
+			<line>
+				<reportElement x="534" y="0" width="1" height="25"/>
+			</line>
+			<line>
+				<reportElement x="0" y="24" width="535" height="1"/>
+			</line>
+			<line> 
+			  	<reportElement x="0" y="0" width="0" height="0"> 
+			    	<printWhenExpression> 
+			      		<![CDATA[($P{summaryValuesMap}.put("CREDIT_"+ $P{title}, ($V{totalCredit} == null)? java.math.BigDecimal.ZERO :$V{totalCredit}) == null)?Boolean.FALSE:Boolean.FALSE]]> 
+			    	</printWhenExpression> 
+			  	</reportElement> 
+			</line> 
+			<line> 
+			  	<reportElement x="0" y="0" width="0" height="0"> 
+			    	<printWhenExpression> 
+			      		<![CDATA[($P{summaryValuesMap}.put("DEBIT_"+ $P{title}, ($V{totalDebit} == null)? java.math.BigDecimal.ZERO :$V{totalDebit}) == null)?Boolean.FALSE:Boolean.FALSE]]> 
+			    	</printWhenExpression> 
+			  	</reportElement> 
+			</line> 
+		</band>
+	</columnFooter>
+    <noData>
+		<band height="20" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="500" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="true" isItalic="true" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA["No transactions found for " + $P{title} + ".!!"]]></textFieldExpression>
+			</textField>
+			<line> 
+			  	<reportElement x="0" y="0" width="0" height="0"> 
+			    	<printWhenExpression> 
+			      		<![CDATA[($P{summaryValuesMap}.put("CREDIT_"+ $P{title}, java.math.BigDecimal.ZERO) == null)?Boolean.FALSE:Boolean.FALSE]]> 
+			    	</printWhenExpression> 
+			  	</reportElement> 
+			</line> 
+			<line> 
+			  	<reportElement x="0" y="0" width="0" height="0"> 
+			    	<printWhenExpression> 
+			      		<![CDATA[($P{summaryValuesMap}.put("DEBIT_"+ $P{title}, java.math.BigDecimal.ZERO ) == null)?Boolean.FALSE:Boolean.FALSE]]> 
+			    	</printWhenExpression> 
+			  	</reportElement> 
+			</line> 
+		</band>
+	</noData>
+</jasperReport>

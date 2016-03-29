@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="bronz.accounting.bunk.party.model.Settlement"  table="pbms_settlements">
+        <id name="date" type="java.lang.Integer">
+            <column name="DATE" />
+        </id>
+        <property name="closingBal" type="java.math.BigDecimal">
+            <column name="CLOSING_BAL" />
+        </property>
+        <property name="comments" type="java.lang.String">
+            <column name="COMMENTS" />
+        </property>
+        <property name="settlementType" type="java.lang.String">
+            <column name="TYPE" />
+        </property>
+        <property name="settlementDate" type="java.util.Date">
+            <column name="SETTLEMENT_DATE" />
+        </property>
+        <property name="createdBy" type="java.lang.String">
+            <column name="CREATED_BY" />
+        </property>
+        <property name="createdDate" type="java.util.Date">
+            <column name="CREATED_DATE" />
+        </property>
+    </class>
+</hibernate-mapping>

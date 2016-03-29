@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="bronz.accounting.bunk.products.model.ReceiptSummary" table="pbms_stock_receipts">
+        <id name="slNo" type="java.lang.Integer">
+            <column name="PK_SLNO" />
+            <generator class="increment"></generator>
+        </id>
+        <property name="date" type="java.lang.Integer">
+            <column name="DATE"/>
+        </property>
+        <property name="type" type="java.lang.String">
+            <column name="TYPE" />
+        </property>
+        <property name="invoiceNumber" type="java.lang.String">
+            <column name="INVOICE_NO" />
+        </property>
+        <property name="comments" type="java.lang.String">
+            <column name="COMMENTS" />
+        </property>
+        <property name="pendingAmt" type="java.math.BigDecimal">
+            <column name="PENDING_AMT" />
+        </property>
+        <property name="totalAmt" type="java.math.BigDecimal">
+            <column name="TOTAL_AMT" />
+        </property>
+    </class>
+</hibernate-mapping>

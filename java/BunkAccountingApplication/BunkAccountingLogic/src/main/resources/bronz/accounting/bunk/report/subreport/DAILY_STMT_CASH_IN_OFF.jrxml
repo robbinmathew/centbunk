@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport name="CASH_IN_OFF_SUMMARY" language="java" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="date" class="java.lang.Integer"/>
+	<parameter name="cashToOfficePartyId" class="java.lang.Integer"/>
+	<parameter name="chqToOfficePartyId" class="java.lang.Integer"/>
+	<queryString>
+		<![CDATA[
+			SELECT CONCAT(PR.PARTY_NAME, ' | ID:', PR.PK_PARTY_ID) AS NAME, TR.BALANCE AS OPENING,
+			  TP.AMOUNT AS TODAY_TO_OFF, TQ.AMOUNT AS TODAY_TO_BANK, MAX_CL.CLOSING AS CLOSING
+			FROM (
+				SELECT MAX(PK_SLNO) AS SL_NO, PARTY_ID AS MAX_NO FROM PBMS_PARTY_TRANSACTIONS OP
+				WHERE (PARTY_ID=$P{chqToOfficePartyId} OR PARTY_ID=$P{cashToOfficePartyId}) AND DATE = ($P{date} - 1)
+				GROUP BY PARTY_ID ) AS MAX_OP
+			LEFT JOIN PBMS_PARTY_TRANSACTIONS TR ON MAX_OP.SL_NO = TR.PK_SLNO
+			LEFT JOIN PBMS_PARTY_TRANSACTIONS TP ON TR.PARTY_ID = TP.PARTY_ID AND TP.CASH_CREDIT='CREDIT_S' AND TP.DATE = $P{date}
+			LEFT JOIN PBMS_PARTY_TRANSACTIONS TQ ON TR.PARTY_ID = TQ.PARTY_ID AND TQ.CASH_CREDIT='DEBIT_S' AND TQ.DATE = $P{date}
+			LEFT JOIN (
+				SELECT TR.BALANCE AS CLOSING, TR.PARTY_ID
+				FROM (
+					SELECT MAX(PK_SLNO) AS SL_NO, PARTY_ID AS MAX_NO
+					FROM PBMS_PARTY_TRANSACTIONS OP
+					WHERE (PARTY_ID=$P{chqToOfficePartyId} OR PARTY_ID=$P{cashToOfficePartyId}) AND DATE = $P{date}
+					GROUP BY PARTY_ID) AS MAX_OP
+					LEFT JOIN PBMS_PARTY_TRANSACTIONS TR ON MAX_OP.SL_NO = TR.PK_SLNO) MAX_CL ON
+				MAX_CL.PARTY_ID = TR.PARTY_ID
+			LEFT JOIN PBMS_PARTY_TABLE PR ON TR.PARTY_ID = PR.PK_PARTY_ID
+		]]>
+	</queryString>
+	<field name="NAME" class="java.lang.String"/>
+	<field name="OPENING" class="java.math.BigDecimal"/>
+	<field name="TODAY_TO_OFF" class="java.math.BigDecimal"/>
+	<field name="TODAY_TO_BANK" class="java.math.BigDecimal"/>
+	<field name="CLOSING" class="java.math.BigDecimal"/>
+	<variable name="serialNumber" class="java.lang.Integer" resetType="Report" calculation="Count">
+		<variableExpression><![CDATA[$V{serialNumber}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.lang.Integer(1)]]></initialValueExpression>
+	</variable>
+	<title>
+		<band/>
+	</title>
+	<pageHeader>
+		<band/>
+	</pageHeader>
+	<columnHeader>
+		<band height="20">
+			<frame>
+				<reportElement mode="Opaque" x="0" y="0" width="555" height="20" backcolor="#E6E6E6"/>
+				<line>
+					<reportElement x="0" y="0" width="555" height="0"/>
+				</line>
+				<staticText>
+					<reportElement x="0" y="0" width="35" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Sl No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="35" y="0" width="100" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[CASH]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="135" y="0" width="100" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Opening]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="235" y="0" width="100" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[To office]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="335" y="0" width="100" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Paid to Bank]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="435" y="0" width="100" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Balance in office]]></text>
+				</staticText>
+			</frame>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="15">
+			<textField>
+				<reportElement x="0" y="0" width="35" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Integer"><![CDATA[$V{serialNumber}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="35" y="0" width="100" height="15"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{NAME}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="135" y="0" width="100" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{OPENING} == null)?"" :($F{OPENING}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="235" y="0" width="100" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{TODAY_TO_OFF} == null)?"" :($F{TODAY_TO_OFF}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="335" y="0" width="100" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{TODAY_TO_BANK} == null)?"" :($F{TODAY_TO_BANK}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="435" y="0" width="100" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{CLOSING} == null)?"" :($F{CLOSING}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="10">
+			<line>
+				<reportElement x="0" y="9" width="555" height="0"/>
+			</line>
+		</band>
+	</columnFooter>
+	<noData>
+		<band height="20">
+			<staticText>
+				<reportElement x="0" y="0" width="500" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="true" isItalic="true" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[No bank cash payments today.]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

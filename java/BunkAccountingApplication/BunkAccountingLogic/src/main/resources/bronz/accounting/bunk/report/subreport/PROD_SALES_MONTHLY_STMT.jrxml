@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+	http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+	name="PROD_SALES_MONTHLY_STMT" language="java" whenNoDataType="NoDataSection"
+	pageWidth="535" pageHeight="842" columnWidth="535"
+	leftMargin="0" rightMargin="0" topMargin="10" bottomMargin="0">
+	
+	<parameter name="date" class="java.lang.Integer"/>
+	
+    <parameter name="minOilProdId" class="java.lang.Integer">
+		<defaultValueExpression>
+			<![CDATA[bronz.accounting.bunk.products.dao.ProductDao.MIN_OIL_PROD_ID]]>
+		</defaultValueExpression>
+	</parameter>
+	<parameter name="summaryValuesMap" class="java.util.Map"> 
+  		<defaultValueExpression>
+    		<![CDATA[new java.util.HashMap()]]>
+  		</defaultValueExpression> 
+	</parameter>
+	<queryString>
+		<![CDATA[
+            SELECT PA.PRODUCT_NAME AS NAME,
+			  CASE WHEN (OP_TX.TOTAL_PRICE = CL_STOCK.CL_PRICE)
+			    THEN TRUNCATE(OP_TX.TOTAL_PRICE,2)
+			    ELSE CONCAT(TRUNCATE(OP_TX.TOTAL_PRICE,2), '|', TRUNCATE(CL_STOCK.CL_PRICE,2))
+			  END AS PRICE,
+			  CASE WHEN (OP_TX.MARGIN = CL_STOCK.CL_MARGIN)
+			    THEN TRUNCATE(OP_TX.MARGIN,2)
+			    ELSE CONCAT(TRUNCATE(OP_TX.MARGIN,2), '|', TRUNCATE(CL_STOCK.CL_MARGIN,2))
+			  END AS MARGIN,
+			  OP_TX.BALANCE AS OP_STOCK,
+			  (OP_TX.BALANCE * (OP_TX.TOTAL_PRICE - OP_TX.MARGIN)) AS OP_STOCK_VALUE,
+			  SALES.TOTAL_SALES AS TOTAL_SALES,
+			  SALES.TOTAL_SALES_MARGIN AS TOTAL_SALES_MARGIN,
+			  RECEIPTS.TOTAL_RECEIPTS AS TOTAL_RECEIPTS,
+			  CASE WHEN (CL_ACTUAL.TANK_CL IS NULL)
+			    THEN TRUNCATE(CL_STOCK.CL_STOCK,2)
+			    ELSE TRUNCATE(CL_ACTUAL.TANK_CL,2)
+			  END AS CL_STOCK,
+			  CASE WHEN (CL_ACTUAL.TANK_CL IS NULL)
+			    THEN TRUNCATE((CL_STOCK.CL_STOCK * (CL_STOCK.CL_PRICE - CL_STOCK.CL_MARGIN)),2)
+			    ELSE TRUNCATE((CL_ACTUAL.TANK_CL * (CL_STOCK.CL_PRICE - CL_STOCK.CL_MARGIN)),2)
+			  END AS CL_STOCK_VALUE,
+			  (CL_ACTUAL.TANK_CL - CL_STOCK.CL_STOCK) AS DIFF,
+			  ((CL_STOCK.CL_PRICE - CL_STOCK.CL_MARGIN) * (CL_ACTUAL.TANK_CL - CL_STOCK.CL_STOCK)) AS DIFF_AMT
+			FROM (
+			  SELECT MAX(PK_SLNO) AS SLNO
+			  FROM PBMS_PRODUCT_TRANSACTIONS
+			  WHERE DATE <= ($P{date} - DAYOFMONTH(FROM_DAYS($P{date})))
+			    AND SELL_RECIEVE <> 'DIFF'
+			  GROUP BY PRODUCT_ID) AS OP
+			LEFT JOIN PBMS_PRODUCT_TRANSACTIONS OP_TX
+			  ON OP_TX.PK_SLNO = OP.SLNO
+			INNER JOIN PBMS_PRODUCT_TABLE PA
+			  ON OP_TX.PRODUCT_ID = PA.PK_PRODUCT_ID
+			LEFT OUTER JOIN (
+			  SELECT S_TX.PRODUCT_ID AS PRODUCT_ID,
+			    SUM(S_TX.QUANTITY) AS TOTAL_SALES,
+			    SUM(S_TX.QUANTITY*S_TX.MARGIN) AS TOTAL_SALES_MARGIN
+			  FROM pbms_product_transactions S_TX
+			  where SELL_RECIEVE = 'SALE'
+			    AND DATE > ($P{date} - DAYOFMONTH(FROM_DAYS($P{date})))
+			    AND DATE <= TO_DAYS(LAST_DAY(FROM_DAYS($P{date})))
+			  group by PRODUCT_ID) AS SALES
+			  ON OP_TX.PRODUCT_ID = SALES.PRODUCT_ID
+			LEFT OUTER JOIN (
+			  SELECT R_TX.PRODUCT_ID AS PRODUCT_ID,
+			    SUM(R_TX.QUANTITY) AS TOTAL_RECEIPTS
+			  FROM pbms_product_transactions R_TX
+			  where SELL_RECIEVE = 'RECEIPT'
+			    AND DATE > ($P{date} - DAYOFMONTH(FROM_DAYS($P{date})))
+			    AND DATE <= TO_DAYS(LAST_DAY(FROM_DAYS($P{date})))
+			  group by PRODUCT_ID
+			) AS RECEIPTS
+			ON RECEIPTS.PRODUCT_ID=OP_TX.PRODUCT_ID
+			LEFT OUTER JOIN (
+			  SELECT
+			    CL_TX.TOTAL_PRICE AS CL_PRICE,
+			    CL_TX.MARGIN AS CL_MARGIN,
+			    CL_TX.BALANCE AS CL_STOCK,
+			    CL_TX.PRODUCT_ID AS PRODUCT_ID
+			  FROM (
+			    SELECT MAX(PK_SLNO) AS SLNO
+			    FROM PBMS_PRODUCT_TRANSACTIONS
+			    WHERE DATE <= TO_DAYS(LAST_DAY(FROM_DAYS($P{date})))
+			      AND SELL_RECIEVE <> 'DIFF'
+			    GROUP BY PRODUCT_ID) AS OP
+			  LEFT JOIN PBMS_PRODUCT_TRANSACTIONS CL_TX
+			    ON CL_TX.PK_SLNO = OP.SLNO ) CL_STOCK
+			ON CL_STOCK.PRODUCT_ID = OP_TX.PRODUCT_ID
+			LEFT OUTER JOIN (
+			  SELECT TA.PRODUCT_ID AS PRODUCT_ID,
+			    SUM(TANK_TX.BALANCE) AS TANK_CL
+			  FROM (SELECT MAX(PK_SLNO) AS SLNO
+			    FROM PBMS_TANK_TRANSACTIONS
+			    WHERE DATE <= TO_DAYS(LAST_DAY(FROM_DAYS($P{date})))
+			    GROUP BY TANK_ID) AS CL_SLNO
+			  LEFT JOIN PBMS_TANK_TRANSACTIONS TANK_TX
+			    ON TANK_TX.PK_SLNO = CL_SLNO.SLNO
+			  LEFT JOIN PBMS_TANK_TABLE TA
+			    ON TANK_TX.TANK_ID = TA.PK_TANK_ID
+			  GROUP BY TA.PRODUCT_ID) AS CL_ACTUAL
+			ON CL_ACTUAL.PRODUCT_ID = OP_TX.PRODUCT_ID
+			WHERE OP_TX.BALANCE > 0
+        ]]>
+	</queryString>
+	<field name="NAME" class="java.lang.String"/>
+	<field name="PRICE" class="java.lang.String"/>
+	<field name="MARGIN" class="java.lang.String"/>
+	<field name="OP_STOCK" class="java.math.BigDecimal"/>
+	<field name="TOTAL_SALES" class="java.math.BigDecimal"/>
+	<field name="TOTAL_SALES_MARGIN" class="java.math.BigDecimal"/>
+	<field name="TOTAL_RECEIPTS" class="java.math.BigDecimal"/>
+	<field name="CL_STOCK" class="java.math.BigDecimal"/>
+	<field name="DIFF" class="java.math.BigDecimal"/>
+	<field name="DIFF_AMT" class="java.math.BigDecimal"/>
+	<field name="CL_STOCK_VALUE" class="java.math.BigDecimal"/>
+	<field name="OP_STOCK_VALUE" class="java.math.BigDecimal"/>
+	<variable name="serialNumber" class="java.lang.Integer" calculation="Count" resetType="Report">
+		<variableExpression><![CDATA[$V{serialNumber}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.lang.Integer(1)]]></initialValueExpression>
+	</variable>
+	<variable name="totalMarginSum" class="java.math.BigDecimal" calculation="Sum"  resetType="Report">
+		<variableExpression><![CDATA[$F{TOTAL_SALES_MARGIN}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<variable name="totalSale" class="java.math.BigDecimal" calculation="Sum"  resetType="Report">
+		<variableExpression><![CDATA[$F{TOTAL_SALES}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<variable name="totalDiff" class="java.math.BigDecimal" calculation="Sum"  resetType="Report">
+		<variableExpression><![CDATA[$F{DIFF}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<variable name="totalDiffAmtSum" class="java.math.BigDecimal" calculation="Sum"  resetType="Report">
+		<variableExpression><![CDATA[$F{DIFF_AMT}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<variable name="totalReceiptsSum" class="java.math.BigDecimal" calculation="Sum"  resetType="Report">
+		<variableExpression><![CDATA[$F{TOTAL_RECEIPTS}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<variable name="totalOpeningStockValue" class="java.math.BigDecimal" calculation="Sum"  resetType="Report">
+		<variableExpression><![CDATA[$F{OP_STOCK_VALUE}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<variable name="totalClosingStockValue" class="java.math.BigDecimal" calculation="Sum"  resetType="Report">
+		<variableExpression><![CDATA[$F{CL_STOCK_VALUE}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<title>
+		<band splitType="Stretch"/>
+	</title>
+	<pageHeader>
+		<band splitType="Stretch"/>
+	</pageHeader>
+	<columnHeader>
+		<band height="50" splitType="Stretch">
+			<frame>
+				<reportElement mode="Opaque" x="0" y="0" width="535" height="50" backcolor="#E6E6E6"/>
+				<line>
+					<reportElement x="0" y="0" width="535" height="1"/>
+				</line>
+				<line>
+					<reportElement x="0" y="0" width="1" height="50"/>
+				</line>
+				<line>
+					<reportElement x="534" y="0" width="1" height="50"/>
+				</line>
+				<line>
+					<reportElement x="0" y="20" width="535" height="1"/>
+				</line>
+				<line>
+					<reportElement x="0" y="49" width="535" height="1"/>
+				</line>
+				<staticText>
+					<reportElement x="0" y="0" width="535" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[MONTHLY PRODUCT SALES STATEMENT]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="20" width="30" height="30"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Sl No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="30" y="20" width="80" height="30"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[PRODUCT]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="110" y="20" width="55" height="30"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle" isStyledText="true">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[PRICE<br/><font size="6"><i>(Per unit)</i></font>]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="165" y="20" width="45" height="30"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle" isStyledText="true">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[MARGIN<br/><font size="6"><i>(Per unit)</i></font>]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="210" y="20" width="55" height="30"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[OPENING]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="265" y="20" width="55" height="30"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[RECEIPTS]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="320" y="20" width="55" height="30"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[SALE]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="375" y="20" width="55" height="30"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle" isStyledText="true">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[MARGIN <br/><font size="6"><i>Approx for total Sale</i></font>]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="430" y="20" width="55" height="30"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[CLOSING]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="485" y="20" width="50" height="30"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle" isStyledText="true">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[VARIATION <br/><font size="8"><i>(STOCK)</i></font>]]></text>
+				</staticText>
+			</frame>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<line>
+				<reportElement x="0" y="0" width="1" height="15"/>
+			</line>
+			<line>
+				<reportElement x="534" y="0" width="1" height="15"/>
+			</line>
+			<textField>
+				<reportElement x="0" y="0" width="30" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Integer"><![CDATA[$V{serialNumber}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="30" y="0" width="80" height="15"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{NAME}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="110" y="0" width="55" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{PRICE}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="165" y="0" width="45" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{MARGIN}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="210" y="0" width="55" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{OP_STOCK}.setScale(0, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="265" y="0" width="55" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{TOTAL_RECEIPTS} == null)? "" :($F{TOTAL_RECEIPTS}.setScale(0, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="320" y="0" width="55" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{TOTAL_SALES} == null)? "" :($F{TOTAL_SALES}.setScale(0, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="375" y="0" width="55" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle" isStyledText="true">
+					<font fontName="Calibri" size="8" isBold="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{TOTAL_SALES_MARGIN} == null)? "" :($F{TOTAL_SALES_MARGIN}.setScale(0, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="430" y="0" width="55" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{CL_STOCK}.setScale(0, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="485" y="0" width="50" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle" isStyledText="true">
+					<font fontName="Calibri" size="8" isBold="false" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{DIFF} == null)? "" :($F{DIFF}.setScale(0, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="80" splitType="Stretch">
+			<staticText>
+				<reportElement x="30" y="0" width="80" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="false"/>
+				</textElement>
+				<text><![CDATA[TOTAL]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="265" y="0" width="55" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($V{totalReceiptsSum} == null)? "-" :($V{totalReceiptsSum}.setScale(1, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="320" y="0" width="55" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($V{totalSale} == null)? "-" :($V{totalSale}.setScale(1, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="375" y="0" width="55" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($V{totalMarginSum} == null)? "-" :($V{totalMarginSum}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="485" y="0" width="50" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($V{totalDiff} == null)? "-" :($V{totalDiff}.setScale(1, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="20" width="265" height="20"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[TOTAL OPENING STOCK VALUE  :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="40" width="265" height="20"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[TOTAL CLOSING STOCK VALUE  :]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="60" width="265" height="20"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[VALUE OF STOCK DIFFERENCE(Approx)  :]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="265" y="20" width="110" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($V{totalOpeningStockValue} == null)? "0.00" :($V{totalOpeningStockValue}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="265" y="40" width="110" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($V{totalClosingStockValue} == null)? "0.00" :($V{totalClosingStockValue}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="265" y="60" width="110" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($V{totalDiffAmtSum} == null)? "NA" :($V{totalDiffAmtSum}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="0" width="1" height="80"/>
+			</line>
+			<line>
+				<reportElement x="534" y="0" width="1" height="80"/>
+			</line>
+			<line>
+				<reportElement x="0" y="79" width="535" height="1"/>
+			</line>
+			<line> 
+			  	<reportElement x="0" y="0" width="0" height="0"> 
+			    	<printWhenExpression> 
+			      		<![CDATA[($P{summaryValuesMap}.put("OP_STOCK_VALUE", ($V{totalOpeningStockValue} == null)? java.math.BigDecimal.ZERO :$V{totalOpeningStockValue}) == null)?Boolean.FALSE:Boolean.FALSE]]> 
+			    	</printWhenExpression> 
+			  	</reportElement> 
+			</line>
+			<line> 
+			  	<reportElement x="0" y="0" width="0" height="0"> 
+			    	<printWhenExpression> 
+			      		<![CDATA[($P{summaryValuesMap}.put("CL_STOCK_VALUE", ($V{totalClosingStockValue} == null)? java.math.BigDecimal.ZERO :$V{totalClosingStockValue}) == null)?Boolean.FALSE:Boolean.FALSE]]> 
+			    	</printWhenExpression> 
+			  	</reportElement> 
+			</line>
+			<line> 
+			  	<reportElement x="0" y="0" width="0" height="0"> 
+			    	<printWhenExpression> 
+			      		<![CDATA[($P{summaryValuesMap}.put("STOCK_SALE_MARGIN_VALUE", ($V{totalMarginSum} == null)? java.math.BigDecimal.ZERO :$V{totalMarginSum}) == null)?Boolean.FALSE:Boolean.FALSE]]> 
+			    	</printWhenExpression> 
+			  	</reportElement> 
+			</line>
+			<line> 
+			  	<reportElement x="0" y="0" width="0" height="0"> 
+			    	<printWhenExpression> 
+			      		<![CDATA[($P{summaryValuesMap}.put("STOCK_DIFF_AMT", ($V{totalDiffAmtSum} == null)? java.math.BigDecimal.ZERO :$V{totalDiffAmtSum}) == null)?Boolean.FALSE:Boolean.FALSE]]> 
+			    	</printWhenExpression> 
+			  	</reportElement> 
+			</line> 
+		</band>
+	</columnFooter>
+	<noData>
+		<band height="20" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="535" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="true" isItalic="true" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[No variation details found.!!]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

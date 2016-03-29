@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport name="DAILY_PARTY_TRANS" language="java" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="date" class="java.lang.Integer"/>
+	<parameter name="cashToOfficePartyId" class="java.lang.Integer"/>
+	<parameter name="chqToOfficePartyId" class="java.lang.Integer"/>
+	<queryString>
+		<![CDATA[
+			SELECT 'Opening balance' AS NAME, '' AS DETAILS, OP_S.CLOSING_BAL AS DEBIT,
+				null AS CREDIT, 'OP' AS TYPE FROM PBMS_SETTLEMENTS OP_S
+			WHERE DATE = ($P{date} - 1)
+			UNION SELECT 'Cash from product sales' AS NAME, '' AS DETAILS, SUM(F_COST.TOTAL_PRICE * F_COST.QUANTITY) AS DEBIT,
+					null AS CREDIT, 'F_COST' AS TYPE FROM PBMS_PRODUCT_TRANSACTIONS F_COST
+			WHERE DATE = $P{date}
+				AND F_COST.SELL_RECIEVE = 'SALE'
+			UNION SELECT * FROM (SELECT * FROM (
+				SELECT CONCAT(PR.PARTY_NAME, ' | ID:', PR.PK_PARTY_ID) AS NAME, TR.DETAILS AS DETAILS, null AS DEBIT,
+					TR.AMOUNT AS CREDIT, TR.CASH_CREDIT AS TYPE
+				FROM PBMS_PARTY_TRANSACTIONS AS TR
+				LEFT JOIN PBMS_PARTY_TABLE AS PR
+					ON TR.PARTY_ID=PR.PK_PARTY_ID
+				WHERE TR.DATE = $P{date}
+					AND TR.CASH_CREDIT NOT LIKE '%_S'
+					AND TR.CASH_CREDIT LIKE '%CREDIT%'
+				UNION SELECT CONCAT(PR.PARTY_NAME, ' | ID:', PR.PK_PARTY_ID) AS NAME, TR.DETAILS AS DETAILS,
+					TR.AMOUNT AS DEBIT, null AS CREDIT, TR.CASH_CREDIT AS TYPE
+				FROM PBMS_PARTY_TRANSACTIONS AS TR
+				LEFT JOIN PBMS_PARTY_TABLE AS PR
+					ON TR.PARTY_ID=PR.PK_PARTY_ID
+				WHERE TR.DATE = $P{date}
+					AND TR.CASH_CREDIT NOT LIKE '%_S'
+					AND TR.CASH_CREDIT LIKE '%DEBIT%'
+			) AS PARTY_TRANS
+			ORDER BY PARTY_TRANS.NAME,PARTY_TRANS.TYPE ) AS TRANS
+			UNION SELECT CONCAT(PR.PARTY_NAME, ' | ID:', PR.PK_PARTY_ID) AS NAME, TR.DETAILS AS DETAILS, null AS DEBIT,
+					TR.AMOUNT AS CREDIT, TR.CASH_CREDIT AS TYPE
+				FROM PBMS_PARTY_TRANSACTIONS AS TR
+				LEFT JOIN PBMS_PARTY_TABLE AS PR
+					ON TR.PARTY_ID=PR.PK_PARTY_ID
+				WHERE TR.DATE = $P{date}
+					AND TR.CASH_CREDIT LIKE 'CREDIT_S'
+					AND (TR.PARTY_ID LIKE $P{cashToOfficePartyId} OR TR.PARTY_ID LIKE $P{chqToOfficePartyId})
+			UNION SELECT 'Closing balance' AS NAME, '' AS DETAILS, null AS DEBIT,
+					CL_S.CLOSING_BAL AS CREDIT, 'CL' AS TYPE FROM PBMS_SETTLEMENTS CL_S
+			WHERE DATE = $P{date}
+		]]>
+	</queryString>
+	<field name="NAME" class="java.lang.String"/>
+	<field name="DEBIT" class="java.math.BigDecimal"/>
+	<field name="CREDIT" class="java.math.BigDecimal"/>
+	<field name="DETAILS" class="java.lang.String"/>
+	<variable name="serialNumber" class="java.lang.Integer" resetType="Report" calculation="Count">
+		<variableExpression><![CDATA[$V{serialNumber}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.lang.Integer(1)]]></initialValueExpression>
+	</variable>
+	<variable name="totalCredit" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{CREDIT}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<variable name="totalDebit" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{DEBIT}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<title>
+		<band/>
+	</title>
+	<pageHeader>
+		<band/>
+	</pageHeader>
+	<columnHeader>
+		<band height="20">
+			<frame>
+				<reportElement mode="Opaque" x="0" y="0" width="555" height="20" backcolor="#E6E6E6"/>
+				<staticText>
+					<reportElement x="0" y="0" width="35" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Sl No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="35" y="0" width="200" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Party]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="235" y="0" width="200" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Details]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="435" y="0" width="60" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Debit]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="495" y="0" width="60" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Credit]]></text>
+				</staticText>
+			</frame>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="15">
+			<textField>
+				<reportElement x="0" y="0" width="35" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Integer"><![CDATA[$V{serialNumber}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="35" y="0" width="200" height="15"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{NAME}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="235" y="0" width="200" height="15"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{DETAILS}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="435" y="0" width="60" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{DEBIT} == null)?"" :($F{DEBIT}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="495" y="0" width="60" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{CREDIT} == null)?"" :($F{CREDIT}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="22">
+			<textField>
+				<reportElement x="235" y="0" width="160" height="20"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Calibri" size="12"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA["Total"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="435" y="0" width="60" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($V{totalDebit}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="495" y="0" width="60" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($V{totalCredit}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="21" width="555" height="0"/>
+			</line>
+		</band>
+	</columnFooter>
+	<pageFooter>
+		<band/>
+	</pageFooter>
+</jasperReport>

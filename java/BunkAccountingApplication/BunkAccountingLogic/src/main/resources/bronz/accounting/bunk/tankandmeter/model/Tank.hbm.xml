@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="bronz.accounting.bunk.tankandmeter.model.Tank" table="pbms_tank_table">
+        <id name="tankId" type="java.lang.Integer">
+            <column name="PK_TANK_ID" />
+            <generator class="assigned"></generator>
+        </id>
+        <property name="tankName" type="java.lang.String">
+            <column name="TANK_NAME" />
+        </property>
+        <property name="productType" type="java.lang.Integer">
+            <column name="PRODUCT_ID" />
+        </property>
+        <property name="maxCapacity" type="java.math.BigDecimal">
+            <column name="CAPACITY" />
+        </property>
+        <property name="status" type="java.lang.String">
+            <column name="TANK_STATUS" />
+        </property>
+    </class>
+</hibernate-mapping>

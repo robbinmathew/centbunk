@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="bronz.accounting.bunk.party.model.Party" table="pbms_party_table">
+        <id name="partyId" type="java.lang.Integer">
+            <column name="PK_PARTY_ID" />
+            <generator class="assigned"></generator>
+        </id>
+        <property name="partyName" type="java.lang.String">
+            <column name="PARTY_NAME" />
+        </property>
+        <property name="partyDetail" type="java.lang.String">
+            <column name="PARTY_DETAIL" />
+        </property>
+        <property name="partyPhone" type="java.lang.String">
+            <column name="PARTY_PHONE" />
+        </property>
+        <property name="partyStatus" type="java.lang.String">
+            <column name="PARTY_STATUS" />
+        </property>
+    </class>
+</hibernate-mapping>

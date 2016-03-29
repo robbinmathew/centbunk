@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+ name="SALARY_MONTHLY_SUMMARY" language="java" pageWidth="555" pageHeight="842" columnWidth="535" leftMargin="0"
+  rightMargin="0" topMargin="10" bottomMargin="0" whenNoDataType="NoDataSection">
+	<parameter name="date" class="java.lang.Integer"/>
+	
+	<parameter name="minBankId" class="java.lang.Integer">
+		<defaultValueExpression>
+			<![CDATA[bronz.accounting.bunk.party.dao.PartyDao.MIN_BANK_ID]]>
+		</defaultValueExpression>
+	</parameter>
+	<parameter name="summaryValuesMap" class="java.util.Map"> 
+  		<defaultValueExpression>
+    		<![CDATA[new java.util.HashMap()]]>
+  		</defaultValueExpression> 
+	</parameter>
+	<queryString>
+		<![CDATA[
+			SELECT PARTY.NAME AS NAME,
+				INCENTIVE_TM.TOTAL AS TOL_INCE_THIS_MONTH,
+				SALARY_TM.TOTAL AS TOT_SAL_THIS_MONTH,
+				INCENTIVE_LM.TOTAL AS TOL_INCE_LAST_MONTH,
+				SALARY_LM.TOTAL AS TOT_SAL_LAST_MONTH
+			FROM (
+				SELECT PK_PARTY_ID AS ID,
+					PARTY_NAME AS NAME,
+					PARTY_STATUS AS STATUS
+				FROM PBMS_PARTY_TABLE
+				WHERE PK_PARTY_ID < $P{minBankId}
+					AND PARTY_STATUS NOT LIKE 'ACTIVE_S') AS PARTY
+			LEFT OUTER JOIN (
+				SELECT PARTY_ID AS PARTY_ID,
+			  		SUM(AMOUNT) AS TOTAL
+			  	FROM PBMS_PARTY_TRANSACTIONS
+			  	WHERE DATE <= TO_DAYS(LAST_DAY(FROM_DAYS($P{date})))
+			  		AND DATE > ($P{date} - DAYOFMONTH(FROM_DAYS($P{date})))
+			  		AND CASH_CREDIT = 'CREDIT_PAY'
+			  	GROUP BY PARTY_ID) AS SALARY_TM
+				ON SALARY_TM.PARTY_ID = PARTY.ID
+			LEFT OUTER JOIN (
+				SELECT PARTY_ID AS PARTY_ID,
+			  		SUM(AMOUNT) AS TOTAL
+			  	FROM PBMS_PARTY_TRANSACTIONS
+			  	WHERE DATE <= TO_DAYS(LAST_DAY(FROM_DAYS($P{date})))
+			  		AND DATE > ($P{date} - DAYOFMONTH(FROM_DAYS($P{date})))
+			  		AND CASH_CREDIT = 'CREDIT_INC'
+			  	GROUP BY PARTY_ID) AS INCENTIVE_TM
+				ON INCENTIVE_TM.PARTY_ID = PARTY.ID
+			LEFT OUTER JOIN (
+				SELECT PARTY_ID AS PARTY_ID,
+			  		SUM(AMOUNT) AS TOTAL
+			  	FROM PBMS_PARTY_TRANSACTIONS
+			  	WHERE DATE <= ($P{date} - DAYOFMONTH(FROM_DAYS($P{date})))
+			  		AND DATE > (($P{date} - DAYOFMONTH(FROM_DAYS($P{date}))) - DAYOFMONTH(FROM_DAYS(($P{date} - DAYOFMONTH(FROM_DAYS($P{date}))))))
+			  		AND CASH_CREDIT = 'CREDIT_INC'
+			  	GROUP BY PARTY_ID) AS INCENTIVE_LM
+				ON INCENTIVE_LM.PARTY_ID = PARTY.ID
+			LEFT OUTER JOIN (
+				SELECT PARTY_ID AS PARTY_ID,
+			  		SUM(AMOUNT) AS TOTAL
+			  	FROM PBMS_PARTY_TRANSACTIONS
+			  	WHERE DATE <= ($P{date} - DAYOFMONTH(FROM_DAYS($P{date})))
+			  		AND DATE > (($P{date} - DAYOFMONTH(FROM_DAYS($P{date}))) - DAYOFMONTH(FROM_DAYS(($P{date} - DAYOFMONTH(FROM_DAYS($P{date}))))))
+			  		AND CASH_CREDIT = 'CREDIT_PAY'
+			  	GROUP BY PARTY_ID) AS SALARY_LM
+				ON SALARY_LM.PARTY_ID = PARTY.ID
+			WHERE PARTY.STATUS LIKE 'ACTIVE%'
+				OR TRUNCATE(INCENTIVE_TM.TOTAL,0) <> 0
+				OR TRUNCATE(SALARY_TM.TOTAL,0) <> 0
+			ORDER BY PARTY.NAME
+        ]]>
+	</queryString>
+	<field name="NAME" class="java.lang.String"/>
+	<field name="TOL_INCE_THIS_MONTH" class="java.math.BigDecimal"/>
+	<field name="TOL_INCE_LAST_MONTH" class="java.math.BigDecimal"/>
+	<field name="TOT_SAL_THIS_MONTH" class="java.math.BigDecimal"/>
+	<field name="TOT_SAL_LAST_MONTH" class="java.math.BigDecimal"/>
+	
+	<variable name="serialNumber" class="java.lang.Integer" calculation="Count" resetType="Report">
+		<variableExpression><![CDATA[$V{serialNumber}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.lang.Integer(1)]]></initialValueExpression>
+	</variable>
+	<variable name="totalSalThisMonth" class="java.math.BigDecimal" calculation="Sum"  resetType="Report">
+		<variableExpression><![CDATA[$F{TOT_SAL_THIS_MONTH}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<variable name="totalSalLastMonth" class="java.math.BigDecimal" calculation="Sum" resetType="Report">
+		<variableExpression><![CDATA[$F{TOT_SAL_LAST_MONTH}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<variable name="totalInceThisMonth" class="java.math.BigDecimal" calculation="Sum"  resetType="Report">
+		<variableExpression><![CDATA[$F{TOL_INCE_THIS_MONTH}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<variable name="totalInceLastMonth" class="java.math.BigDecimal" calculation="Sum" resetType="Report">
+		<variableExpression><![CDATA[$F{TOL_INCE_LAST_MONTH}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<columnHeader>
+		<band height="40" splitType="Stretch">
+			<frame>
+				<reportElement mode="Opaque" x="0" y="0" width="535" height="40" backcolor="#E6E6E6"/>
+				<staticText>
+					<reportElement x="0" y="0" width="535" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[EMPLOYEE SALARIES MONTHLY SUMMARY]]></text>
+				</staticText>
+				<line>
+					<reportElement x="0" y="0" width="535" height="1"/>
+				</line>
+				<line>
+					<reportElement x="0" y="0" width="1" height="40"/>
+				</line>
+				<line>
+					<reportElement x="534" y="0" width="1" height="40"/>
+				</line>
+				<line>
+					<reportElement x="0" y="20" width="535" height="1"/>
+				</line>
+				<line>
+					<reportElement x="0" y="39" width="535" height="1"/>
+				</line>
+				<staticText>
+					<reportElement x="0" y="20" width="35" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Sl No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="35" y="20" width="200" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[PARTY NAME]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="235" y="20" width="80" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[SALARY]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="315" y="20" width="70" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="9" isBold="false" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[PREV MONTH]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="385" y="20" width="80" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[INCENTIVE]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="465" y="20" width="70" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="9" isBold="false" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[PREV MONTH]]></text>
+				</staticText>
+			</frame>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<line>
+				<reportElement x="0" y="0" width="1" height="15"/>
+			</line>
+			<line>
+				<reportElement x="534" y="0" width="1" height="15"/>
+			</line>
+			<textField>
+				<reportElement x="0" y="0" width="35" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Integer"><![CDATA[$V{serialNumber}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="35" y="0" width="200" height="15"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{NAME}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="235" y="0" width="80" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{TOT_SAL_THIS_MONTH} == null)? "0.00" :($F{TOT_SAL_THIS_MONTH}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="315" y="0" width="70" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="7" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{TOT_SAL_LAST_MONTH} == null)? "-" :($F{TOT_SAL_LAST_MONTH}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="385" y="0" width="80" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{TOL_INCE_THIS_MONTH} == null)? "0.00" :($F{TOL_INCE_THIS_MONTH}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="465" y="0" width="70" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="7" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($F{TOL_INCE_THIS_MONTH} == null)? "-" :($F{TOL_INCE_THIS_MONTH}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="25" splitType="Stretch">
+			<line>
+				<reportElement x="0" y="0" width="1" height="25"/>
+			</line>
+			<line>
+				<reportElement x="534" y="0" width="1" height="25"/>
+			</line>
+			<line>
+				<reportElement x="0" y="24" width="535" height="1"/>
+			</line>
+			<staticText>
+				<reportElement x="0" y="0" width="235" height="25"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Calibri" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Total ]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="235" y="0" width="80" height="25"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($V{totalSalThisMonth} == null)? "0.00" :($V{totalSalThisMonth}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="315" y="0" width="70" height="25"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($V{totalSalLastMonth} == null)? "0.00" :($V{totalSalLastMonth}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="385" y="0" width="80" height="25"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($V{totalInceThisMonth} == null)? "0.00" :($V{totalInceThisMonth}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="465" y="0" width="70" height="25"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[($V{totalInceLastMonth} == null)? "0.00" :($V{totalInceLastMonth}.setScale(2, java.math.RoundingMode.HALF_UP )).toPlainString()]]></textFieldExpression>
+			</textField>
+			<line> 
+			  	<reportElement x="0" y="0" width="0" height="0"> 
+			    	<printWhenExpression> 
+			      		<![CDATA[($P{summaryValuesMap}.put("SAL_THIS_MONTH", ($V{totalSalThisMonth} == null)? java.math.BigDecimal.ZERO :$V{totalSalThisMonth}) == null)?Boolean.FALSE:Boolean.FALSE]]> 
+			    	</printWhenExpression> 
+			  	</reportElement> 
+			</line>
+			<line> 
+			  	<reportElement x="0" y="0" width="0" height="0"> 
+			    	<printWhenExpression> 
+			      		<![CDATA[($P{summaryValuesMap}.put("INCENTIVE_THIS_MONTH", ($V{totalInceThisMonth} == null)? java.math.BigDecimal.ZERO :$V{totalInceThisMonth}) == null)?Boolean.FALSE:Boolean.FALSE]]> 
+			    	</printWhenExpression> 
+			  	</reportElement> 
+			</line> 
+		</band>
+	</columnFooter>
+	<noData>
+		<band height="20" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="535" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="true" isItalic="true" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[No Salary details found.!!]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

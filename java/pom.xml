@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>bronz.solutions</groupId>
+    <artifactId>solutions</artifactId>
+	<name>BRONZ SOLUTIONS</name>
+    <version>1.0</version>
+    <packaging>pom</packaging>
+    <description>Bronz Solutions Code base</description>
+	<developers>
+		<developer>
+			<name>Prabin Mathew</name>
+			<organization>Bronz Solutions</organization>
+		</developer>
+	</developers>
+	<repositories>
+        <repository>
+            <id>jboss</id>
+            <url>http://repository.jboss.org/maven2</url>
+        </repository>
+    </repositories>
+	<properties>
+		<bronz.version>1.0</bronz.version>
+		<reports.email.service.basefolder>C:\BunkManager\EmailService\</reports.email.service.basefolder>
+		<log4j.version>1.2.17</log4j.version>
+		<jasper.reports.version>3.5.3</jasper.reports.version>
+		<maven.test.skip>true</maven.test.skip>
+	</properties>
+	<dependencies/>
+	<build>
+		<defaultGoal>install</defaultGoal>
+		<plugins>
+			<plugin>
+	    		<groupId>org.apache.maven.plugins</groupId>
+	    		<artifactId>maven-compiler-plugin</artifactId>
+	    		<configuration>
+	     			<source>1.5</source>
+	     			<target>1.5</target>
+	    		</configuration>
+	   		</plugin>
+		</plugins>
+	</build>
+	<profiles>
+		<profile>
+			<id>bunkapp</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<modules>
+				<module>Utilities</module>
+				<module>BunkAccountingApplication</module>
+			</modules>
+		</profile>
+	</profiles>
+</project>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports
+	http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+	name="RECEIPT_SUMMARY" language="java" whenNoDataType="NoDataSection"
+	pageWidth="595" pageHeight="842" columnWidth="555"
+	leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20">
+	
+	<parameter name="startDate" class="java.lang.Integer"/>
+	<parameter name="endDate" class="java.lang.Integer"/>
+	<parameter name="receiptDetailsTemplateUrl" class="java.lang.String"/>
+	<parameter name="prodReceiptDetailsTemplateUrl" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[
+			SELECT INVOICE_NO, TYPE,TOTAL_AMT, DATE,
+			  DATE_FORMAT(FROM_DAYS(DATE), '%d %b %Y') AS DATE_TEXT
+			FROM PBMS_STOCK_RECEIPTS
+			WHERE DATE>=$P{startDate} AND DATE<=$P{endDate}
+			ORDER BY DATE,PK_SLNO
+        ]]>
+	</queryString>
+	<field name="INVOICE_NO" class="java.lang.String"/>
+	<field name="TYPE" class="java.lang.String"/>
+	<field name="TOTAL_AMT" class="java.math.BigDecimal"/>
+	<field name="DATE_TEXT" class="java.lang.String"/>
+	<field name="DATE" class="java.lang.Integer"/>
+	<variable name="serialNumber" class="java.lang.Integer" calculation="Count" resetType="Report">
+		<variableExpression><![CDATA[$V{serialNumber}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.lang.Integer(1)]]></initialValueExpression>
+	</variable>
+	<detail>
+		<band height="20">
+			<subreport>
+				<reportElement x="0" y="0" height="20" width="555" isPrintWhenDetailOverflows="false"/>
+				<subreportParameter name="prodReceiptDetailsTemplateUrl">
+					<subreportParameterExpression>
+						<![CDATA[$P{prodReceiptDetailsTemplateUrl}]]>
+					</subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="INVOICE_NO">
+					<subreportParameterExpression>
+						<![CDATA[$F{INVOICE_NO}]]>
+					</subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="TYPE">
+					<subreportParameterExpression>
+						<![CDATA[$F{TYPE}]]>
+					</subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="TOTAL_AMT">
+					<subreportParameterExpression>
+						<![CDATA[$F{TOTAL_AMT}]]>
+					</subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="DATE_TEXT">
+					<subreportParameterExpression>
+						<![CDATA[$F{DATE_TEXT}]]>
+					</subreportParameterExpression>
+				</subreportParameter>
+                <subreportParameter name="DATE">
+					<subreportParameterExpression>
+						<![CDATA[$F{DATE}]]>
+					</subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression>$P{REPORT_CONNECTION}</connectionExpression>
+				<subreportExpression class="java.lang.String">
+					<![CDATA[$P{receiptDetailsTemplateUrl}]]>
+				</subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+	<noData>
+		<band height="20">
+			<staticText>
+				<reportElement x="0" y="0" width="500" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="10" isBold="true" isItalic="true" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[No stocks receipts found.]]></text>
+			</staticText>
+		</band>
+	</noData>
+</jasperReport>

@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+          "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+          "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+<session-factory>
+	<property name="dialect">org.hibernate.dialect.MySQLDialect</property>
+   <!-- <property name="hibernate.connection.url">jdbc:mysql://localhost/PBM</property> -->
+   <property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+
+   <!-- configuration pool via c3p0 -->
+   <property name="hibernate.c3p0.acquire_increment">1</property>
+   <property name="hibernate.c3p0.idle_test_period">100</property> <!-- seconds -->
+   <property name="hibernate.c3p0.max_size">10</property>
+   <property name="hibernate.c3p0.min_size">3</property>
+   <property name="hibernate.c3p0.max_statements">0</property>
+   <property name="hibernate.c3p0.timeout">100</property> <!-- seconds -->
+
+   <!--<property name="hibernate.connection.username">root</property>
+    <property name="hibernate.connection.password">password</property> -->
+   <property name="format_sql">false</property>
+   <property name="show_sql">false</property>
+   <mapping resource="bronz/accounting/bunk/party/model/Party.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/party/model/PartyTransaction.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/party/model/PartyClosingBalance.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/party/model/EmployeeMonthlyStatus.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/party/model/Settlement.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/product/model/Product.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/product/model/ProductTransaction.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/product/model/ProductClosingBalance.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/product/model/ReceiptSummary.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/product/model/ProdRateChange.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/product/model/StockVariation.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/tankandmeter/model/Tank.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/tankandmeter/model/TankClosingStock.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/tankandmeter/model/TankTransaction.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/tankandmeter/model/Meter.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/tankandmeter/model/MeterClosingReading.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/tankandmeter/model/MeterTransaction.hbm.xml" />
+   <mapping resource="bronz/accounting/bunk/config/ReportQueries.hbm.xml" />
+</session-factory>
+</hibernate-configuration>

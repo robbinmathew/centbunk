@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+    <class name="bronz.accounting.bunk.party.model.PartyTransaction" table="pbms_party_transactions">
+        <id name="slNo" type="java.lang.Integer">
+            <column name="PK_SLNO" />
+            <generator class="increment"></generator>
+        </id>
+        <property name="partyId" type="java.lang.Integer">
+            <column name="PARTY_ID"/>
+        </property>
+        <property name="date" type="java.lang.Integer">
+            <column name="DATE"/>
+        </property>
+        <property name="transactionType" type="java.lang.String">
+            <column name="CASH_CREDIT" />
+        </property>
+        <property name="transactionDetail" type="java.lang.String">
+            <column name="DETAILS" />
+        </property>
+        <property name="amount" type="java.math.BigDecimal">
+            <column name="AMOUNT" />
+        </property>
+        <property name="balance" type="java.math.BigDecimal">
+            <column name="BALANCE" />
+        </property>
+    </class>
+    <sql-query name="findPendingChequesAtOffice">
+		<![CDATA[
+			SELECT CHQ_TRANS.* 
+			FROM PBMS_PARTY_TRANSACTIONS CHQ_TRANS
+			LEFT OUTER JOIN PBMS_PARTY_TRANSACTIONS CREDIT_TRANS
+			   ON CREDIT_TRANS.DETAILS LIKE CONCAT(:chqCreditPrefix, CHQ_TRANS.PK_SLNO, ':%')
+			   	AND CREDIT_TRANS.PARTY_ID = :officeChequePartyId
+			WHERE CHQ_TRANS.CASH_CREDIT = :chqTransType
+			   AND CREDIT_TRANS.PK_SLNO IS NULL
+               AND CHQ_TRANS.DATE <= :date
+            ORDER BY CHQ_TRANS.DATE
+		]]>
+    </sql-query>
+</hibernate-mapping>

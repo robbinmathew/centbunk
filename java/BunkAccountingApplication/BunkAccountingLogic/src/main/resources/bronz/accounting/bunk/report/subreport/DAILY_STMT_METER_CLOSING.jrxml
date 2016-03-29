@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE jasperReport PUBLIC "//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+<jasperReport name="METER_CLOSING" language="java" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="date" class="java.lang.Integer"/>
+	<queryString>
+		<![CDATA[
+			SELECT ME.PK_METER_ID AS METER_ID,
+				ME.METER_NAME AS METER_NAME,
+				OP.FINAL_READING AS OP_READING,
+				OP.DATE AS OP_DATE,
+				CL.FINAL_READING AS CL_READING,
+				CL.METER_SALE AS SALE,
+				CL.DETAIL AS TEST_DETAIL,
+				CL.DATE AS CL_DATE
+			FROM (SELECT MAX(PK_SLNO) AS SLNO FROM PBMS_CLOSING_READINGS WHERE DATE = ($P{date}-1) GROUP BY PK_METER_ID) AS OP_MAX_SL
+				INNER JOIN PBMS_CLOSING_READINGS OP ON OP.PK_SLNO = OP_MAX_SL.SLNO
+				INNER JOIN PBMS_METER_TABLE ME ON OP.PK_METER_ID = ME.PK_METER_ID
+				INNER JOIN (SELECT RE.PK_METER_ID AS METER_ID, RE.FINAL_READING AS FINAL_READING, RE.METER_SALE AS METER_SALE, RE.DETAIL AS DETAIL, RE.DATE AS DATE FROM
+					(SELECT MAX(PK_SLNO) AS SLNO FROM PBMS_CLOSING_READINGS WHERE DATE = $P{date} GROUP BY PK_METER_ID) AS CL_MAX_SL
+					INNER JOIN PBMS_CLOSING_READINGS RE ON RE.PK_SLNO = CL_MAX_SL.SLNO
+					LEFT JOIN PBMS_METER_TABLE ME ON RE.PK_METER_ID = ME.PK_METER_ID) CL
+				ON CL.METER_ID = ME.PK_METER_ID
+			ORDER BY ME.METER_NAME
+		]]>
+	</queryString>
+	<field name="METER_NAME" class="java.lang.String"/>
+	<field name="OP_READING" class="java.math.BigDecimal"/>
+	<field name="CL_READING" class="java.math.BigDecimal"/>
+	<field name="TEST_DETAIL" class="java.lang.String"/>
+	<field name="SALE" class="java.math.BigDecimal"/>
+	<variable name="serialNumber" class="java.lang.Integer" resetType="Report" calculation="Count">
+		<variableExpression><![CDATA[$V{serialNumber}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.lang.Integer(1)]]></initialValueExpression>
+	</variable>
+	<variable name="totalAmount" class="java.math.BigDecimal" resetType="Report" calculation="Sum">
+		<variableExpression><![CDATA[$F{SALE}]]></variableExpression>
+		<initialValueExpression><![CDATA[new java.math.BigDecimal(0)]]></initialValueExpression>
+	</variable>
+	<title>
+		<band/>
+	</title>
+	<pageHeader>
+		<band/>
+	</pageHeader>
+	<columnHeader>
+		<band height="20">
+			<frame>
+				<reportElement mode="Opaque" x="0" y="0" width="555" height="20" backcolor="#E6E6E6"/>
+				<staticText>
+					<reportElement x="0" y="0" width="35" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Sl No]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="35" y="0" width="100" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Meter]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="135" y="0" width="110" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Opening Reading]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="245" y="0" width="110" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Closing Reading]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="355" y="0" width="100" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Total Sale]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="455" y="0" width="100" height="20"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="10" isBold="true" isUnderline="false"/>
+					</textElement>
+					<text><![CDATA[Comments]]></text>
+				</staticText>
+			</frame>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="15">
+			<textField>
+				<reportElement x="0" y="0" width="35" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Integer"><![CDATA[$V{serialNumber}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="35" y="0" width="100" height="15"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{METER_NAME}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="135" y="0" width="110" height="15"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{OP_READING}.setScale(2, java.math.RoundingMode.HALF_UP )]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="245" y="0" width="110" height="15"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{CL_READING}.setScale(2, java.math.RoundingMode.HALF_UP )]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="355" y="0" width="100" height="15"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{SALE}.setScale(3, java.math.RoundingMode.HALF_UP )]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="455" y="0" width="100" height="15"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Calibri" size="8" isBold="false" isItalic="false"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{TEST_DETAIL}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="22">
+			<textField>
+				<reportElement x="245" y="0" width="110" height="20"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Calibri" size="12"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA["Total Sale"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="355" y="0" width="100" height="20"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Calibri" size="12" isBold="true"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$V{totalAmount}.setScale(3, java.math.RoundingMode.HALF_UP )]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="0" y="21" width="555" height="0"/>
+			</line>
+		</band>
+	</columnFooter>
+	<pageFooter>
+		<band/>
+	</pageFooter>
+</jasperReport>
