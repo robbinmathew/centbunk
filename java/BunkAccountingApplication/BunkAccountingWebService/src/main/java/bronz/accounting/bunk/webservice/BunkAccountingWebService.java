@@ -1,5 +1,12 @@
 package bronz.accounting.bunk.webservice;
 
+import org.apache.commons.lang3.StringUtils;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -14,7 +21,12 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.UriInfo;
 
 import bronz.accounting.bunk.AppConfig;
 import bronz.accounting.bunk.BunkAppInitializer;
@@ -34,6 +46,9 @@ import bronz.accounting.bunk.products.model.ProductClosingBalance;
 import bronz.accounting.bunk.products.model.ProductTransaction;
 import bronz.accounting.bunk.products.model.ReceiptSummary;
 import bronz.accounting.bunk.products.model.StockVariation;
+import bronz.accounting.bunk.reports.JRReportsCreator;
+import bronz.accounting.bunk.reports.exception.ReportException;
+import bronz.accounting.bunk.reports.model.Report;
 import bronz.accounting.bunk.tankandmeter.model.MeterClosingReading;
 import bronz.accounting.bunk.tankandmeter.model.TankClosingStock;
 import bronz.accounting.bunk.tankandmeter.model.TankTransaction;
@@ -64,10 +79,12 @@ import bronz.utilities.general.Pair;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class BunkAccountingWebService {
-    private BunkManager bunkManager;
+    private final BunkManager bunkManager;
+    private final JRReportsCreator reportsCreator;
 
     public BunkAccountingWebService() throws BunkMgmtException {
         this.bunkManager = BunkAppInitializer.getInstance().getBunkManager();
+        this.reportsCreator = BunkAppInitializer.getInstance().getReportsCreator();
     }
 
     @GET
@@ -84,8 +101,9 @@ public class BunkAccountingWebService {
         final Calendar calendar = DateUtil.getCalendarEquivalent(todayDate);
         final Map<String, Object> infoMap = new HashMap<String, Object>();
         infoMap.put("firstDate", this.bunkManager.getFirstDate());
+        infoMap.put("firstDateText", DateUtil.getSimpleDateString(this.bunkManager.getFirstDate()));
         infoMap.put("todayDate", todayDate);
-        infoMap.put("todayDateText", DateUtil.getDateString(calendar));
+        infoMap.put("todayDateText", DateUtil.getSimpleDateString(calendar));
         infoMap.put("todayDateDayText", DateUtil.getDateStringWithDay(calendar));
         for(AppConfig config : AppConfig.values()) {
             if(!config.isSecure()) {
@@ -600,4 +618,39 @@ public class BunkAccountingWebService {
         throws BunkMgmtException {
         return this.bunkManager.getFuelsSaleSummary(start, end);
     }
+
+    @GET
+    @Path("report")
+    @Produces("application/pdf")
+    public Response getReport(@Context UriInfo uriInfo, @QueryParam("type") String type)
+        throws BunkMgmtException {
+        final Report report;
+        if ( "DAILY_STMT".equals(type) ) {
+            int date;
+            if(StringUtils.isNotEmpty(uriInfo.getQueryParameters().getFirst("dateText"))) {
+                date = DateUtil.getDateFromSimpleDateString(uriInfo.getQueryParameters().getFirst("dateText"));
+            } else {
+                date = Integer.parseInt(uriInfo.getQueryParameters().getFirst("date"));
+            }
+            report = this.reportsCreator.createClosingStatement( date );
+        } else {
+            throw new UnsupportedOperationException("This report is not supported");
+        }
+
+        final StreamingOutput stream = new StreamingOutput() {
+            public void write(OutputStream os) throws IOException, WebApplicationException {
+
+                //Writer writer = new BufferedWriter(new OutputStreamWriter(os));
+                try {
+                    report.writeAsPDF(os);
+                } catch (ReportException e) {
+                    throw new IOException(e);
+                }
+                //writer.flush();
+            }
+        };
+        return Response.ok(stream).build();
+    }
+
+
 }

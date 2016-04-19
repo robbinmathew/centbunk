@@ -316,7 +316,7 @@ public class GenericHibernateDao
    @SuppressWarnings("deprecation")
    public Connection getConnection()
    {
-       return hibernateSessionFactory.openSession().connection();
+       return getSession().connection();
    }
 
    private void fillParameters( final Query query, final Object... parameters )
@@ -388,6 +388,7 @@ public class GenericHibernateDao
            try
            {
                connection.close();
+               closeSession();
            }
            catch( SQLException sqlException )
            {

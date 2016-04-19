@@ -31,7 +31,10 @@ var navStore = Ext.create('Ext.data.TreeStore', {
         expanded: true,
         children: [
             {
-                id:'summary', text: "Summary", collapsible: false, leaf: true, panelbuilder: 'buildSummaryPanel'
+                id:'summary', text: "Summary", collapsible: false, expanded: true, panelbuilder: 'buildSummaryPanel',
+                children: [
+                    { id:'reports', text: "Statements/Reports", leaf: true, collapsible: false, panelbuilder:'buildReportsPanel'}
+                ]
             },{
                 id:'daily-statement', text: "Daily statement", collapsible: false, leaf: true, panelbuilder: 'buildDailyStatementPanel'
             },{
@@ -143,7 +146,7 @@ Ext.application({
                         return false;
                     },
                     itemclick: function(view, record, item, index, evt, eOpts) {
-                        if (!record.isLeaf()) {
+                        if(!record.raw.panelbuilder) {
                             return;
                         }
                         updateSubPanel(record);
@@ -545,6 +548,24 @@ function checkErrorsWarningsAndProceed(errors, warnings, callback) {
         });
     }
     return true;
+}
+
+// parse a date in 13-12-2015 dd-mm-yyyy format
+function parseDateText(input) {
+    var parts = input.split('-');
+    // new Date(year, month [, day [, hours[, minutes[, seconds[, ms]]]]])
+    return new Date(parts[2], parts[1]-1, parts[0]); // Note: months are 0-based
+}
+
+function dateToSimpleText(date) {
+    var day = date.getDate();
+    var month = date.getMonth() + 1;
+    var year = date.getFullYear();
+    return padLeft(day, 2) + '-' + padLeft(month, 2) + '-' + year;
+}
+
+function padLeft(nr, n, str){
+    return Array(n-String(nr).length+1).join(str||'0')+nr;
 }
 
 

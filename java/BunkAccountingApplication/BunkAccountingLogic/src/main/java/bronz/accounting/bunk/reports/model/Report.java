@@ -11,6 +11,9 @@ import net.sf.jasperreports.engine.export.JRPdfExporter;
 import net.sf.jasperreports.engine.export.JRXlsExporter;
 import net.sf.jasperreports.engine.export.JRXlsExporterParameter;
 
+import java.io.OutputStream;
+import java.io.Writer;
+
 public class Report {
     private String title;
     private JasperPrint reportPrint;
@@ -69,6 +72,19 @@ public class Report {
 			throw new ReportException(e);
 		}
     }
+
+	public void writeAsPDF( final OutputStream stream )
+		throws ReportException
+	{
+		try	{
+			final JRExporter exporter = new JRPdfExporter();
+			exporter.setParameter(JRExporterParameter.JASPER_PRINT, this.reportPrint);
+			exporter.setParameter(JRExporterParameter.OUTPUT_STREAM, stream);
+			exporter.exportReport();
+		} catch (JRException e)	{
+			throw new ReportException(e);
+		}
+	}
     
     public String getHtmlText() throws ReportException
     {

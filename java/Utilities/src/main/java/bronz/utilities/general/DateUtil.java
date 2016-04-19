@@ -1,5 +1,6 @@
 package bronz.utilities.general;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -16,6 +17,7 @@ public class DateUtil
     private static final String DATE_WITH_DAY_FORMATTER = "dd-MMM-yyyy : EEE";
     
     private static final String DATE_FORMATTER = "dd-MMM-yyyy";
+    private static final String DATE_FORMAT = "dd-MM-yyyy";
     private static final String MONTH_YEAR_FORMATTER = "MMM-yyyy";
     
     public static String getDateString( final int date )
@@ -26,6 +28,27 @@ public class DateUtil
     public static String getDateString( final Calendar calendar )
     {
         return new SimpleDateFormat(DATE_FORMATTER).format(calendar.getTime());
+    }
+
+
+    public static String getSimpleDateString( final int date )
+    {
+        return new SimpleDateFormat(DATE_FORMAT).format(getDateEquivalent(date));
+    }
+
+    public static int getDateFromSimpleDateString( final String dateText ) {
+        Calendar cal = Calendar.getInstance();
+        try {
+            cal.setTime(new SimpleDateFormat(DATE_FORMAT).parse(dateText));
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Invalid date", e);
+        }
+        return getIntegerEquivalent(cal);
+    }
+
+    public static String getSimpleDateString( final Calendar calendar )
+    {
+        return new SimpleDateFormat(DATE_FORMAT).format(calendar.getTime());
     }
    
     public static String getDateStringWithDay( final int date )
