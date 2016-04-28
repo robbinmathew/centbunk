@@ -11,4 +11,6 @@ CVS/
 *~
 .com.apple.timemachine.supported
 .idea/*
-**/target/*
+**/target/
+**/*.jasper
+

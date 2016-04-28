@@ -60,6 +60,7 @@ function buildDailyStatementPanel(title, record) {
                     //Copy values to grid record
                     gridRecord.set("productName", comboRecord.data.productName + ' - ' + comboRecord.data.unitSellingPrice +'Rs');
                     gridRecord.set("currentStock", comboRecord.data.currentStock);
+                    gridRecord.set("productId", comboRecord.data.productId);
                     gridRecord.set("unitSellingPrice", comboRecord.data.unitSellingPrice);
                     gridRecord.set("actualSale", 1);
 
@@ -862,10 +863,10 @@ function prepareObj(saveType) {
     var oilSaleGridStore = Ext.getCmp('oilSaleGrid').store;
     var lubesSales = [];
     oilSaleGridStore.each(function(record) {
-        if(record.data.totalSale >0) {
+        if(record.data.actualSale >0) {
             var obj = {
                 productId : record.data.productId,
-                totalSale : record.data.totalSale,
+                totalSale : record.data.actualSale,
                 discountPerUnit : record.data.discountPerUnit
             }
             lubesSales.push(obj);
