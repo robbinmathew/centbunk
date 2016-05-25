@@ -9,7 +9,7 @@ import bronz.accounting.bunk.party.model.Settlement;
  */
 public class DailyStatementInfo {
     private Settlement settlement;
-    private SavedDailyStatement savedDailyStatement;
+    private UiDailyStatement savedDailyStatement;
     private ClosingStatement closingStatement;
 
     public Settlement getSettlement() {
@@ -20,11 +20,11 @@ public class DailyStatementInfo {
         this.settlement = settlement;
     }
 
-    public SavedDailyStatement getSavedDailyStatement() {
+    public UiDailyStatement getSavedDailyStatement() {
         return savedDailyStatement;
     }
 
-    public void setSavedDailyStatement(SavedDailyStatement savedDailyStatement) {
+    public void setSavedDailyStatement(UiDailyStatement savedDailyStatement) {
         this.savedDailyStatement = savedDailyStatement;
     }
 

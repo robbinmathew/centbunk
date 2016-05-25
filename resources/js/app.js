@@ -285,6 +285,14 @@ function buildSummaryPanel() {
                     type: 'circle',
                     fill: '#3399ff'
                 },
+                /*label:
+                {
+                    display: 'over',
+                    field: 'P_SALE',
+                    renderer: function(val) {
+                        return val + 'L';
+                    }
+                },*/
                 highlight: {
                     fill: '#000',
                     radius: 5,
@@ -498,6 +506,12 @@ function numberFieldConfig() {
     };
 }
 
+function textFieldConfig() {
+    return {
+        allowBlank: false
+    };
+}
+
 function isNumber (o) {
     return ! isNaN (o-0) && o !== null && o !== "" && o !== false;
 }
@@ -521,6 +535,7 @@ function loadDateAndUserInfo(myMask) {
 function checkErrorsWarningsAndProceed(errors, warnings, callback) {
     if(errors.length > 0) {
         Ext.MessageBox.alert('Error', prepareErrorMsg("Please fix the below validation errors.", errors));
+        return;
     }
     if(errors.length ==0 && warnings.length == 0) {
         callback();
@@ -566,6 +581,43 @@ function dateToSimpleText(date) {
 
 function padLeft(nr, n, str){
     return Array(n-String(nr).length+1).join(str||'0')+nr;
+}
+
+Date.prototype.ddmmyyyy = function() {
+    var yyyy = this.getFullYear();
+    var mm = this.getMonth() < 9 ? "0" + (this.getMonth() + 1) : (this.getMonth() + 1); // getMonth() is zero-based
+    var dd  = this.getDate() < 10 ? "0" + this.getDate() : this.getDate();
+    return "".concat(dd).concat(mm).concat(yyyy);
+};
+
+Date.prototype.ddmmyyyyhhmm = function() {
+    var yyyy = this.getFullYear();
+    var mm = this.getMonth() < 9 ? "0" + (this.getMonth() + 1) : (this.getMonth() + 1); // getMonth() is zero-based
+    var dd  = this.getDate() < 10 ? "0" + this.getDate() : this.getDate();
+    var hh = this.getHours() < 10 ? "0" + this.getHours() : this.getHours();
+    var min = this.getMinutes() < 10 ? "0" + this.getMinutes() : this.getMinutes();
+    return "".concat(dd).concat(mm).concat(yyyy).concat(hh).concat(min);
+};
+
+Date.prototype.ddmmyyyyhhmmss = function() {
+    var yyyy = this.getFullYear();
+    var mm = this.getMonth() < 9 ? "0" + (this.getMonth() + 1) : (this.getMonth() + 1); // getMonth() is zero-based
+    var dd  = this.getDate() < 10 ? "0" + this.getDate() : this.getDate();
+    var hh = this.getHours() < 10 ? "0" + this.getHours() : this.getHours();
+    var min = this.getMinutes() < 10 ? "0" + this.getMinutes() : this.getMinutes();
+    var ss = this.getSeconds() < 10 ? "0" + this.getSeconds() : this.getSeconds();
+    return "".concat(dd).concat('-').concat(mm).concat('-').concat(yyyy).concat(' ').concat(hh).concat(':').concat(min).concat(':').concat(ss);
+};
+
+
+var myVar;
+
+function myFunction() {
+    myVar = setTimeout(function(){ alert("Hello") }, 3000);
+}
+
+function myStopFunction() {
+    clearTimeout(myVar);
 }
 
 

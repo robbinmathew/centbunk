@@ -138,11 +138,10 @@ passport.use('local-signin', new LocalStrategy(
 				console.log("LOGGED IN AS: " + user);
 				req.session.success = 'You are successfully logged in ' + user+ '!';
 				done(null, user);
-			}
-			if (!user) {
+			} else {
 				console.log("COULD NOT LOG IN");
 				//inform user could not log them in
-				req.session.error = 'Could not log user in ' + user + '. Please try again.';
+				req.session.error = 'Could not log user in. Please try again.';
 				done(null, user);
 			}
 		})

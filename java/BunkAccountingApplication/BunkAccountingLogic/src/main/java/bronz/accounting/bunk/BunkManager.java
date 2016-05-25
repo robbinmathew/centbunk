@@ -49,6 +49,7 @@ public interface BunkManager {
 
     List<Product> getAllProduct() throws BunkMgmtException;
 
+    @Deprecated //Use saveStockReceipt instead
     @RequiresTransaction(failureExceptionText = "Failed to save the stock receipt")
     void saveProdDetails(List<Product> prodToBeUpdated,
                          List<ProductTransaction> prodTransToBeUpdated) throws BunkMgmtException;
@@ -72,8 +73,10 @@ public interface BunkManager {
 
     SavedDailyStatement getSavedDailyStatement(int date) throws BunkMgmtException;
 
+    @RequiresTransaction(failureExceptionText = "Failed to delete saved stmt")
     void deleteSavedDailyStatement(int date) throws BunkMgmtException;
 
+    @RequiresTransaction(failureExceptionText = "Failed to save saved stmt")
     void saveSavedDailyStatement(SavedDailyStatement savedDailyStatement) throws BunkMgmtException;
 
     List<PartyTransaction> getPartyTransactionHistory(int partyId) throws BunkMgmtException;

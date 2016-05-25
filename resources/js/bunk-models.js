@@ -49,6 +49,39 @@ Ext.define('FuelReceipt', {
     idProperty: 'productId'
 });
 
+
+Ext.define('ProdReceipt', {
+    extend: 'Ext.data.Model',
+    fields: [
+        'id',
+        {name: 'productId', type: 'int'},
+        'productName',
+        {name: 'unitSellingPrice', type: 'float'},
+        {name: 'marginPerUnit', type: 'float'},
+        {name: 'currentStock',mapping:'closingStock', type: 'float'},
+
+        {name: 'receiptAmt', type: 'float'},
+        'comment',
+        {name: 'costOnInv', type: 'float'}
+    ],
+    idProperty: 'id'
+});
+
+
+Ext.define('ProductStatus', {
+    extend: 'Ext.data.Model',
+    fields: [
+        {name: 'productId', type: 'int'},
+        'productName',
+        {name: 'unitSellingPrice', type: 'float'},
+        {name: 'margin', type: 'float'},
+        {name: 'currentStock',mapping:'closingStock', type: 'float'}
+    ],
+    idProperty: 'productId'
+});
+
+
+
 Ext.define('LubeSale', {
     extend: 'Ext.data.Model',
     fields: [
@@ -181,7 +214,7 @@ function buildOfficeCashStore(loadMask) {
     return store;
 }
 
-
+//deprecated
 function buildAvailableProductListStore(type, loadMask) {
     var store = Ext.create('Ext.data.Store', {
         //pageSize: 20,
@@ -199,6 +232,37 @@ function buildAvailableProductListStore(type, loadMask) {
         loadMask.bindStore(store);
     }
     return store;
+}
+
+function buildAvailableProductsStore(type, modelType, loadMask) {
+    var store = Ext.create('Ext.data.Store', {
+        model: modelType,
+        autoLoad: true,
+        proxy: {
+            type: 'rest',
+            url: 'api/getAvailableProductList?type=' + type,
+            reader: {
+                type: 'json'
+            }
+        }
+    });
+    if(loadMask) {
+        loadMask.bindStore(store);
+    }
+    return store;
+}
+
+function buildProdReceiptStore() {
+    var prodReceiptStore = new Ext.data.SimpleStore({
+        model: 'ProdReceipt'
+    });
+
+    for (var i=0; i<5;i++) {
+        var newLube = new ProdReceipt();
+        newLube.set('id', 'new-lube-' + i);
+        prodReceiptStore.add(newLube);
+    }
+    return prodReceiptStore;
 }
 
 function buildPartyListStore(type, loadMask) {

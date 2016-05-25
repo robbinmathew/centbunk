@@ -1,12 +1,12 @@
 package bronz.accounting.bunk.webservice;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -40,10 +42,12 @@ import bronz.accounting.bunk.party.model.Party;
 import bronz.accounting.bunk.party.model.PartyClosingBalance;
 import bronz.accounting.bunk.party.model.PartyTransaction;
 import bronz.accounting.bunk.party.model.Settlement;
+import bronz.accounting.bunk.products.dao.ProductDao;
 import bronz.accounting.bunk.products.model.ProdRateChange;
 import bronz.accounting.bunk.products.model.Product;
 import bronz.accounting.bunk.products.model.ProductClosingBalance;
 import bronz.accounting.bunk.products.model.ProductTransaction;
+import bronz.accounting.bunk.products.model.ProductType;
 import bronz.accounting.bunk.products.model.ReceiptSummary;
 import bronz.accounting.bunk.products.model.StockVariation;
 import bronz.accounting.bunk.reports.JRReportsCreator;
@@ -79,6 +83,10 @@ import bronz.utilities.general.Pair;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class BunkAccountingWebService {
+    private static final Logger LOG = LogManager.getLogger(
+        BunkAccountingWebService.class);
+    private static final ObjectMapper JSON_SERIALIZER = new ObjectMapper();
+
     private final BunkManager bunkManager;
     private final JRReportsCreator reportsCreator;
 
@@ -149,7 +157,7 @@ public class BunkAccountingWebService {
     {
         final List<PartyClosingBalance> partyClosingBalances = new ArrayList<PartyClosingBalance>();
         partyClosingBalances.add(bunkManager.getParty(AppConfig.OFFICE_CASH_PARTY_ID.getValue( Integer.class )));
-        partyClosingBalances.add(bunkManager.getParty(AppConfig.OFFICE_CHEQUE_PARTY_ID.getValue( Integer.class )));
+        partyClosingBalances.add(bunkManager.getParty(AppConfig.OFFICE_CHEQUE_PARTY_ID.getValue(Integer.class)));
         return partyClosingBalances;
     }
 
@@ -184,13 +192,6 @@ public class BunkAccountingWebService {
         return this.bunkManager.getAllProduct();
     }
 
-    @POST
-    @Path("saveProdDetails")
-    public void saveProdDetails(final Pair<List<Product>,List<ProductTransaction>> data) throws BunkMgmtException
-    {
-        bunkManager.saveProdDetails(data.getFirst(), data.getSecond());
-    }
-
     @GET
     @Path("meterClosingReading")
     public List<MeterClosingReading> getMeterList() throws BunkMgmtException
@@ -218,23 +219,27 @@ public class BunkAccountingWebService {
         final String partyTransMessage;
         final StringBuffer stockReceiptComment = new StringBuffer("Total load amount:")
             .append(uiStockReceipt.getTotalLoad()).append(" (items/liters)");
+        final ProductType productType;
 
         if(StockReceipt.FUEL_RECEIPT_TYPE.equals(uiStockReceipt.getType())) {
             typePrefix = "RF";
             partyId = AppConfig.COMPANY_PARTY_ID.getValue( Integer.class );
             partyTransType = "DEBIT_S";
             partyTransMessage = ":PROD COST";
+            productType = ProductType.FUEL_PRODUCTS;
         } else if(StockReceipt.OIL_RECEIPT_TYPE.equals(uiStockReceipt.getType())) {
             typePrefix = "RO";
             partyId = AppConfig.COMPANY_PARTY_ID.getValue( Integer.class );
             partyTransType = "DEBIT_S";
             partyTransMessage = ":PROD COST";
+            productType = ProductType.LUBE_PRODUCTS;
         } else {
             //StockReceipt.BWATER_RECEIPT_TYPE
             typePrefix = "RB";
             partyId = AppConfig.EXPENSES_PARTY_ID.getIntValue();
             partyTransType = "CREDIT";
             partyTransMessage = ":BATTERY WATER COST";
+            productType = ProductType.ADDITIONAL_PRODUCTS;
         }
 
         final String transactionType = typePrefix + uiStockReceipt.getInvoiceNo();
@@ -252,15 +257,22 @@ public class BunkAccountingWebService {
         //Add fuels transactions
         for ( UiFuelReceipt fuelReceipt : uiStockReceipt.getFuelReceipts() )
         {
-            if ( CustomDecimal.ZERO.compareTo( fuelReceipt.getReceiptAmt()) < 0 )
-            {
-                transBuilder.getProdTransBuilder().addTransWithMargin(fuelReceipt.getProductId(),
-                                                                      fuelReceipt.getReceiptAmt(),
-                                                                      fuelReceipt.getMargin(), "RECEIPT",
-                                                                      transactionType);
+            if ( CustomDecimal.ZERO.compareTo( fuelReceipt.getReceiptAmt()) < 0 ) {
+                if (fuelReceipt.getProductId() == null || fuelReceipt.getProductId() == 0) {
+                    //New product
+                    transBuilder.getProdTransBuilder().addNewProd(fuelReceipt.getProductName(), fuelReceipt.getUnitSellingPrice(),
+                        fuelReceipt.getMargin(), fuelReceipt.getReceiptAmt(), transactionType, "RECEIPT", productType);
+                } else {
+                    //Existing product
+                    transBuilder.getProdTransBuilder().addTransWithMargin(fuelReceipt.getProductId(),
+                        fuelReceipt.getReceiptAmt(),
+                        fuelReceipt.getMargin(), "RECEIPT",
+                        transactionType);
+                }
             }
         }
 
+        stockReceipt.getUpdatedProducts().addAll(transBuilder.getProdTransBuilder().getProdToBeUpdated());
         stockReceipt.getProductTransactions().addAll(transBuilder.getProdTransBuilder().getTransactions());
 
         final BigDecimal invoiceAmt = uiStockReceipt.getInvoiceAmt();
@@ -350,7 +362,7 @@ public class BunkAccountingWebService {
                           bean.getCreditAmt(), bean.getCreditDetail(), PartyTransaction.CREDIT );
                 }
                 if (bean.getDebitAmt().compareTo( CustomDecimal.ZERO ) > 0) {
-                    if(bean.isChequeDebit()) {
+                    if(bean.getIsChequeDebit()) {
                         transBuilder.getPartyTransBuilder().addTrans( bean.getPartyId(),
                               bean.getDebitAmt(), "BY CHQ:" + bean.getDebitDetail(), PartyTransaction.CHEQUE_DEBIT );
                     } else {
@@ -494,37 +506,47 @@ public class BunkAccountingWebService {
             statement.setSettlement( settlement );
             this.bunkManager.saveAndCloseStatement(statement);
         } else {
-            //Save not implemented yet
-
+            try {
+                final SavedDailyStatement savedDailyStatement = new SavedDailyStatement();
+                savedDailyStatement.setDate(uiDailyStatement.getDate());
+                savedDailyStatement.setContents(JSON_SERIALIZER.writeValueAsBytes(uiDailyStatement));
+                this.bunkManager.saveSavedDailyStatement(savedDailyStatement);
+            } catch (Exception e) {
+                LOG.error("Failed to save stmt", e);
+            }
         }
     }
 
     @GET
     @Path("closingStatement")
-    public ClosingStatement getClosingStatement( final @QueryParam("date") int date ) throws BunkMgmtException
-    {
+    public ClosingStatement getClosingStatement( final @QueryParam("date") int date ) throws BunkMgmtException {
         return this.bunkManager.getClosingStatement(date);
     }
 
     @GET
     @Path("savedDailyStatement")
-    public SavedDailyStatement getSavedDailyStatement( final @QueryParam("date") int date ) throws BunkMgmtException
+    public UiDailyStatement getSavedDailyStatement( final @QueryParam("date") int date ) throws BunkMgmtException
     {
-        return this.bunkManager.getSavedDailyStatement(date);
+        return getSavedUiDailyStmt(date);
     }
 
-    @POST
+    private UiDailyStatement getSavedUiDailyStmt(final int date) throws BunkMgmtException {
+        try {
+            final SavedDailyStatement savedStmt = this.bunkManager.getSavedDailyStatement(date);
+            if(savedStmt != null && savedStmt.getContents() != null && savedStmt.getContents().length >0) {
+                return JSON_SERIALIZER.readValue(savedStmt.getContents(), UiDailyStatement.class);
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to read saved daily statement", e);
+        }
+        return null;
+    }
+
+    @DELETE
     @Path("deleteSavedDailyStatement")
     public void deleteSavedDailyStatement( final  @QueryParam("date") int date ) throws BunkMgmtException
     {
         this.bunkManager.deleteSavedDailyStatement(date);
-    }
-
-    @POST
-    @Path("saveSavedDailyStatement")
-    public void saveSavedDailyStatement(SavedDailyStatement savedDailyStatement) throws BunkMgmtException
-    {
-        this.bunkManager.saveSavedDailyStatement(savedDailyStatement);
     }
 
     @GET
@@ -597,7 +619,7 @@ public class BunkAccountingWebService {
     {
         final DailyStatementInfo dailyStatementInfo = new DailyStatementInfo();
         dailyStatementInfo.setClosingStatement(bunkManager.getClosingStatement(date));
-        dailyStatementInfo.setSavedDailyStatement(bunkManager.getSavedDailyStatement(date));
+        dailyStatementInfo.setSavedDailyStatement(getSavedUiDailyStmt(date));
         dailyStatementInfo.setSettlement(bunkManager.getSettlement(date-1));
 
         return dailyStatementInfo;
@@ -621,8 +643,7 @@ public class BunkAccountingWebService {
 
     @GET
     @Path("report")
-    @Produces("application/pdf")
-    public Response getReport(@Context UriInfo uriInfo, @QueryParam("type") String type)
+    public Response getReport(@Context UriInfo uriInfo, @QueryParam("type") String type, @DefaultValue("pdf") @QueryParam("format") final String format)
         throws BunkMgmtException {
         final Report report;
         if ( "DAILY_STMT".equals(type) ) {
@@ -642,14 +663,26 @@ public class BunkAccountingWebService {
 
                 //Writer writer = new BufferedWriter(new OutputStreamWriter(os));
                 try {
-                    report.writeAsPDF(os);
+                    if("image".equals(format)) {
+                        report.printAsImage(os);
+                    } else {
+                        report.writeAsPDF(os);
+                    }
                 } catch (ReportException e) {
                     throw new IOException(e);
                 }
                 //writer.flush();
             }
         };
-        return Response.ok(stream).build();
+
+        Response.ResponseBuilder responseBuilder = Response.ok(stream);
+        if("image".equals(format)) {
+            responseBuilder.header("Content-Type", "image/png");
+        } else {
+            responseBuilder.header("Content-Type", "application/pdf");
+        }
+
+        return responseBuilder.build();
     }
 
 

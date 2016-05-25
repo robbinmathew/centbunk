@@ -38,7 +38,7 @@ public class UiPartyTransaction {
         this.creditAmt = creditAmt;
     }
 
-    public boolean isChequeDebit() {
+    public boolean getIsChequeDebit() {
         return isChequeDebit;
     }
 

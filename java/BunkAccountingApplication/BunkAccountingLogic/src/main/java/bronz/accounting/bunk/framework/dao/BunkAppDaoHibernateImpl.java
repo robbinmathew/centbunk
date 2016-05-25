@@ -734,7 +734,9 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
             resultSet = ps.executeQuery();
             if(resultSet.next()){
                 SerialBlob serialBlob = new SerialBlob(resultSet.getBlob("content"));
-                return JSON_SERIALIZER.readValue(serialBlob.getBytes(1, (int) serialBlob.length()), SavedDailyStatement.class);
+                final SavedDailyStatement savedDailyStatement = new SavedDailyStatement();
+                savedDailyStatement.setContents(serialBlob.getBytes(1, (int) serialBlob.length()));
+                return savedDailyStatement;
             }
         }
         catch ( Exception exception)
@@ -753,12 +755,10 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
         PreparedStatement ps = null;
         try{
             connection = getSession().connection();
-            connection.setAutoCommit(false);
             ps = connection.prepareStatement("DELETE FROM PBMS_SAVED_STATEMENT WHERE date=?");
             int n = 1;
             ps.setInt(n++, date);
             ps.executeUpdate();
-            connection.commit();
         }
         catch ( Exception exception)
         {
@@ -774,10 +774,9 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
         PreparedStatement ps = null;
         try{
             connection = getSession().connection();
-            connection.setAutoCommit(false);
             ps = connection.prepareStatement("INSERT INTO PBMS_SAVED_STATEMENT (date, content, type, lastSavedDate, " +
                     "createdDate) VALUES (?,?,?,NOW(),NOW()) ON DUPLICATE KEY UPDATE content=?, lastSavedDate=NOW()");
-            SerialBlob serialBlob = new SerialBlob(JSON_SERIALIZER.writeValueAsBytes(savedDailyStatement));
+            SerialBlob serialBlob = new SerialBlob(savedDailyStatement.getContents());
             int n = 1;
             //INSERT
             ps.setInt(n++, savedDailyStatement.getDate());
@@ -787,7 +786,6 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
             //UPDATE
             ps.setBlob(n++, serialBlob);
             ps.executeUpdate();
-            connection.commit();
         }
         catch ( Exception exception)
         {

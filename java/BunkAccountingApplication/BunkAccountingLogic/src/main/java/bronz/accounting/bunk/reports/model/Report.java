@@ -5,16 +5,24 @@ import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRExporter;
 import net.sf.jasperreports.engine.JRExporterParameter;
 import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperPrintManager;
 import net.sf.jasperreports.engine.export.JRHtmlExporter;
 import net.sf.jasperreports.engine.export.JRHtmlExporterParameter;
 import net.sf.jasperreports.engine.export.JRPdfExporter;
 import net.sf.jasperreports.engine.export.JRXlsExporter;
 import net.sf.jasperreports.engine.export.JRXlsExporterParameter;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
 
+import javax.imageio.ImageIO;
+
 public class Report {
+	private static final int PNG_IMG_PAGE_WIDTH = 955;
+	private static final int PNG_IMG_PAGE_HEIGHT = 1350;
     private String title;
     private JasperPrint reportPrint;
     
@@ -104,5 +112,24 @@ public class Report {
 			throw new ReportException(e);
 		}
     }
+
+	public void printAsImage(final OutputStream stream )
+		throws ReportException{
+		try	{
+			final int pageSize = reportPrint.getPages().size();
+			final BufferedImage result = new BufferedImage(
+				PNG_IMG_PAGE_WIDTH, PNG_IMG_PAGE_HEIGHT * pageSize, BufferedImage.TYPE_INT_RGB);
+			int y = 0;
+			final Graphics g = result.getGraphics();
+			for (int i = 0;i<pageSize; i++) {
+				BufferedImage rendered_image = (BufferedImage)JasperPrintManager.printPageToImage(reportPrint, i, 1.6f);
+				g.drawImage(rendered_image, 0, y, null);
+				y += rendered_image.getHeight();
+			}
+			ImageIO.write(result, "png", stream);
+		} catch (Exception e)	{
+			throw new ReportException(e);
+		}
+	}
 
 }

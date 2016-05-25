@@ -8,6 +8,8 @@ var receiptAmtComboBoxStore = new Ext.data.SimpleStore({
     data: getReceiptAmts()
 });
 
+var stockReceiptLoadMask;
+
 function getReceiptAmts() {
     var arr = [];
     for (var i = 0; i <= 30; i++) {
@@ -17,7 +19,18 @@ function getReceiptAmts() {
 }
 
 function buildFuelReceiptsPanel(title, record) {
-    var tankReceiptStore = buildTankReceiptStore(bunkCache.infos.todayDate);
+    stockReceiptLoadMask = new Ext.LoadMask( Ext.getBody(), {
+        msg:"Preparing for daily statement...",
+        listeners: {
+            beforehide: function (loadMask, eOpts) {
+                return loadMask.hideMask(loadMask, eOpts);
+            }
+        }
+    });
+
+    stockReceiptLoadMask.show();
+
+    var tankReceiptStore = buildTankReceiptStore(bunkCache.infos.todayDate, stockReceiptLoadMask);
     //Tank ReceiptAmt combobox
     var receiptAmtCombo = new Ext.form.ComboBox({
         store: receiptAmtComboBoxStore,
@@ -103,24 +116,57 @@ function buildFuelReceiptsPanel(title, record) {
     var panelItems = [tankPanelConfig];
 
 
-    return buildReceiptsPanel(title, record, 'FUEL_PRODUCTS', panelItems, 120, false, "FUEL");
+    return buildReceiptsPanel(title, record, 'FUEL_PRODUCTS', panelItems, false, "FUEL");
 }
 
 function buildLubesReceiptsPanel(title, record) {
-    return buildReceiptsPanel(title, record, 'OIL_PRODUCTS', [], 250, true, "LUBES");
+    return buildReceiptsPanel(title, record, 'OIL_PRODUCTS', [], true, "LUBES");
 }
 
 function buildBatteryWaterReceiptsPanel(title, record) {
-    return buildReceiptsPanel(title, record, 'ADDITIONAL_PRODUCTS', [], 250, true, "ADD_PRODS");
+    return buildReceiptsPanel(title, record, 'ADDITIONAL_PRODUCTS', [], true, "ADD_PRODS");
 }
 
-function buildReceiptsPanel(title, record, prodType, panelItems, prodsPanelHeight, editableReceiptAmt, onSaveType) {
-    var fuelProdsReceiptStore = buildAvailableProductListStore(prodType);
+function buildReceiptsPanel(title, record, prodType, panelItems, editableReceiptAmt, onSaveType) {
+
     var receiptAmtField;
     var receiptAmtRenderer;
+    var availableProdsStore;
+    var prodReceiptStore;
+    var prodNameField;
     if(editableReceiptAmt) {
+         prodReceiptStore = buildProdReceiptStore();
+
+        availableProdsStore = buildAvailableProductsStore(prodType, 'ProductStatus', stockReceiptLoadMask);
+        availableProdsStore.on('load',function (store, records, successful, eOpts ){
+            //Populate the receipt records store
+            if(prodReceiptStore) {
+                var i = 0;
+                store.each(function(record) {
+                    var nameExists = false;
+                    //Avoid duplicate names.
+                    prodReceiptStore.each(function(prodReceiptStoreRecord) {
+                        if(prodReceiptStoreRecord.data.productName == record.data.productName) {
+                            nameExists = true;
+                        }
+                    });
+
+                    if(!nameExists) {
+                        var newRecord =  new ProdReceipt();
+                        newRecord.set("productName", record.data.productName);
+                        newRecord.set("productId", record.data.productId);
+                        newRecord.set("id", 'existing-prod' + record.data.productId);
+                        prodReceiptStore.insert(i++, newRecord);
+                    }
+                });
+            }
+        });
         receiptAmtField = numberFieldConfig();
+        prodNameField = textFieldConfig();
         receiptAmtRenderer=editableColumnRenderer;
+    } else {
+        //For Fuel receipt
+        prodReceiptStore = buildAvailableProductsStore(prodType, 'ProdReceipt', stockReceiptLoadMask);
     }
 
     panelItems.push({
@@ -130,13 +176,15 @@ function buildReceiptsPanel(title, record, prodType, panelItems, prodsPanelHeigh
         height: 'auto',
         //renderTo: Ext.getBody(),
         //region: 'center',
-        store: fuelProdsReceiptStore,
+        store: prodReceiptStore,
         //multiSelect: true, // Delete this if you only need single row selection
         //stateful: true,
         forceFit: true,
         loadMask: true,
         //stateId: 'stateGrid',
         viewConfig: {
+            loadMask: false,
+            markDirty:false,
             stripeRows: true
         },
         plugins: [
@@ -146,24 +194,30 @@ function buildReceiptsPanel(title, record, prodType, panelItems, prodsPanelHeigh
         ],
         listeners : {
             edit: function (editor, e, eOpts) {
-                var costOnInv = e.record.data.costOnInv;
-                if(e.record.data.receiptAmt <=0 && costOnInv > 0) {
+                if(e.record.data.receiptAmt <=0 && e.record.data.costOnInv > 0) {
                     Ext.MessageBox.alert('Error', 'No receipt amount mentioned for this product. This wont be saved.');
                 }
                 updateFuelReceiptAmt();
+                if(onSaveType != "FUEL") {
+                    assignIdIfExists(e.record);
+                }
             }
         },
         columns:[{
             text: "Product",
             dataIndex: 'productName',
+            renderer: receiptAmtRenderer,
             flex: 2,
-            sortable: true
+            field: prodNameField,
+            sortable: false
         },{
             text: "Selling price",
             dataIndex: 'unitSellingPrice',
+            field: receiptAmtField,
             flex: 1,
             //align: 'right',
-            sortable: true
+            renderer: receiptAmtRenderer,
+            sortable: false
         },{
             id: 'receiptAmt',
             text: "Receipt amount",
@@ -182,8 +236,13 @@ function buildReceiptsPanel(title, record, prodType, panelItems, prodsPanelHeigh
             renderer: editableColumnRenderer,
         },{
             id: 'marginPerUnit',
-            text: "Margin per litre",
+            text: "Margin per unit",
             dataIndex: 'marginPerUnit',
+            flex: 1,
+            sortable: false
+        },{
+            text: "Comment",
+            dataIndex: 'comment',
             flex: 1,
             sortable: false
         }]
@@ -254,6 +313,54 @@ function buildReceiptsPanel(title, record, prodType, panelItems, prodsPanelHeigh
         ]
     });
 
+    if(editableReceiptAmt) {
+        panelItems.push({
+            xtype: 'fieldset',
+            defaults: {anchor: '100%', height: '30px'},
+            layout: 'fit',
+            title: 'Current Product stock (For reference only)',
+            //width:'100%',
+            //height:'50px',
+            defaultType: 'textfield',
+            items: [{
+                xtype: 'gridpanel',
+                id: 'prodStatusGrid',
+                autoscroll: true,
+                height: 'auto',
+                //renderTo: Ext.getBody(),
+                //region: 'center',
+                store: availableProdsStore,
+                //multiSelect: true, // Delete this if you only need single row selection
+                //stateful: true,
+                //stateId: 'stateGrid',
+                viewConfig: {
+                    stripeRows: true
+                },
+                columns: [{
+                    text: "Product",
+                    dataIndex: 'productName',
+                    flex: 2,
+                    sortable: true
+                }, {
+                    text: "Selling price",
+                    dataIndex: 'unitSellingPrice',
+                    flex: 1,
+                    sortable: true
+                }, {
+                    text: "Current Stock",
+                    dataIndex: 'currentStock',
+                    flex: 1,
+                    sortable: false
+                }, {
+                    text: "Margin",
+                    dataIndex: 'margin',
+                    flex: 1,
+                    sortable: false
+                }]
+            }]
+        });
+    }
+
     var mainContent = Ext.create('Ext.form.Panel', {
         id:'fuelRecieptPanel',
         title: title,
@@ -292,15 +399,17 @@ function validateFuelReciept(callback) {
 
     var fuelStore = Ext.getCmp('fuelReceiptGrid').store;
     fuelStore.each(function(record) {
+        if((!record.data.productName || record.data.productName.length <=0) && record.data.receiptAmt>0) {
+            errors.push("Product receipt entered without product name.");
+        }
+
         if(record.data.receiptAmt >0 && record.data.marginPerUnit <= 0 ) {
-            errors.push("Margin for " + record.data.productName + " is zero. Review the cost on invoice");
+            errors.push("Margin for " + record.data.productName + " is zero. Review the selling price/cost on invoice");
         }
         if(record.data.receiptAmt>0 && record.data.costOnInv <= 0 ) {
             warnings.push("Cost on invoice for " + record.data.productName + " is zero.");
         }
     });
-
-
     checkErrorsWarningsAndProceed(errors, warnings, callback);
     return true;
 }
@@ -332,13 +441,16 @@ function saveFuelReciept(onSaveType) {
         stockReceipt['tankReceipts'] = tankReceipts;
     }
 
-    //Add fuels transactions
+    //Add fuel/Lube transactions
     var fuelReceipts = [];
     var fuelStore = Ext.getCmp('fuelReceiptGrid').store;
     fuelStore.each(function(record) {
-        if(record.data.receiptAmt >0 ) {
+        if(record.data.receiptAmt >0) {
             fuelReceipts.push({
                 productId:record.data.productId,
+                productName:record.data.productName,
+                unitSellingPrice:record.data.unitSellingPrice,
+                costOnInv:record.data.costOnInv,
                 margin:record.data.marginPerUnit,
                 receiptAmt:record.data.receiptAmt
             });
@@ -435,3 +547,65 @@ function updateFuelReceiptAmt() {
     Ext.getCmp('totalLiters-field').setValue(totalInLiters);
     Ext.getCmp('totalAmt-field').setValue(totalCost);
 }
+
+function assignIdIfExists(receiptRecord) {
+    receiptRecord.set('productName', receiptRecord.data.productName.trim());
+    var receiptGridStore = Ext.getCmp('fuelReceiptGrid').store;
+
+    //Move the record to the last used row
+    var rowNo = receiptGridStore.indexOf(receiptRecord);
+    //Find last used row
+    var lastUsedRow = -1;
+    receiptGridStore.each(function(record, indx) {
+        if(record.data.productName.length > 0 && record !== receiptRecord) {
+            lastUsedRow = indx;
+        }
+    });
+
+    if(rowNo > lastUsedRow + 1) {
+        receiptGridStore.remove(receiptRecord);
+        receiptGridStore.insert(lastUsedRow+1, receiptRecord);
+    }
+
+    if(rowNo >= receiptGridStore.getCount() -1) {
+        for (var i=0; i<5;i++) {
+            var newLube = new ProdReceipt();
+            newLube.set('id', 'new-lube-' + (lastUsedRow + i));
+            receiptGridStore.add(newLube);
+        }
+    }
+
+    //Filter duplicates
+
+    if(!Ext.getCmp('prodStatusGrid') || receiptRecord.data.receiptAmt <=0) {
+        receiptRecord.set('comment', '');
+        return;
+    }
+
+    var prodStatusGridStore = Ext.getCmp('prodStatusGrid').store;
+
+    var prodFound = false;
+    prodStatusGridStore.each(function(record) {
+        if(record.data.productName.trim() == receiptRecord.data.productName) {
+            if( record.data.unitSellingPrice == receiptRecord.data.unitSellingPrice &&
+                record.data.margin == receiptRecord.data.marginPerUnit) {
+                //Same product found.
+                prodFound = true;
+                receiptRecord.set('comment', 'Existing product');
+                receiptRecord.set('productId', record.data.productId);
+            } else {
+                prodFound = true;
+                receiptRecord.set('comment', 'Price/Margin changed');
+                receiptRecord.set('productId', null);
+            }
+        }
+    });
+
+    if(!prodFound) {
+        receiptRecord.set('comment', 'New product');
+        receiptRecord.set('productId', null);
+    }
+
+
+}
+

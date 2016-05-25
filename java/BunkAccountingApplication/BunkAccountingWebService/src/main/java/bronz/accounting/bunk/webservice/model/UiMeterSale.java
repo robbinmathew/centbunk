@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 public class UiMeterSale {
     private int meterId;
     private BigDecimal totalSale;
-    private BigDecimal finalReading;
+    private BigDecimal closingReading;
     private BigDecimal testSale;
 
     public int getMeterId() {
@@ -27,14 +27,13 @@ public class UiMeterSale {
         this.totalSale = totalSale;
     }
 
-    public BigDecimal getFinalReading() {
-        return finalReading;
+    public BigDecimal getClosingReading() {
+        return closingReading;
     }
 
-    public void setFinalReading(BigDecimal finalReading) {
-        this.finalReading = finalReading;
+    public void setClosingReading(BigDecimal closingReading) {
+        this.closingReading = closingReading;
     }
-
 
     public BigDecimal getTestSale() {
         return testSale;

@@ -145,14 +145,14 @@ public class BunkManagerImpl implements BunkManager {
     	final ReceiptSummary duplicateReceipt =
     			this.productDao.getReceiptSummary( completeInvNumber );
     	
-    	if ( null != duplicateReceipt)
-    	{
+    	if ( null != duplicateReceipt) {
     		//Trim the first two characters
     		final String invNum = completeInvNumber.substring(2);
     		throw new BunkValidationException("Duplicate invoice number!!! " +
     				"Stock receipt with invoice number '" + invNum +
     				"' is already saved on " + duplicateReceipt.getDateText() );
     	}
+        this.productDao.saveProducts( stockReceipt.getUpdatedProducts() );
         this.productDao.saveStockReceipt(stockReceipt.getReceiptSummary());
         this.productDao.saveProductTransactions(stockReceipt.getProductTransactions());
         this.tankAndMeterDao.saveTankTransactions(stockReceipt.getTankTransactions());

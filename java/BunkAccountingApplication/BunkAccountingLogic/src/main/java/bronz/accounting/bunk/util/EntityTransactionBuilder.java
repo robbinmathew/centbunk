@@ -13,13 +13,17 @@ import bronz.accounting.bunk.framework.exceptions.BunkMgmtException;
 import bronz.accounting.bunk.party.dao.PartyDao;
 import bronz.accounting.bunk.party.model.PartyClosingBalance;
 import bronz.accounting.bunk.party.model.PartyTransaction;
+import bronz.accounting.bunk.products.dao.ProductDao;
+import bronz.accounting.bunk.products.model.Product;
 import bronz.accounting.bunk.products.model.ProductClosingBalance;
 import bronz.accounting.bunk.products.model.ProductTransaction;
+import bronz.accounting.bunk.products.model.ProductType;
 import bronz.accounting.bunk.tankandmeter.model.MeterClosingReading;
 import bronz.accounting.bunk.tankandmeter.model.MeterTransaction;
 import bronz.accounting.bunk.tankandmeter.model.TankClosingStock;
 import bronz.accounting.bunk.tankandmeter.model.TankStock;
 import bronz.accounting.bunk.tankandmeter.model.TankTransaction;
+import bronz.utilities.custom.CustomDecimal;
 
 public class EntityTransactionBuilder
 {
@@ -225,10 +229,27 @@ public class EntityTransactionBuilder
     public static class ProductTransactionBuilder extends AbstractEntityTransactionBuilder<ProductClosingBalance, ProductTransaction>
     {
         private static final int DECIMAL_COUNT = 2;
-        
-        public ProductTransactionBuilder( final List<ProductClosingBalance> entitiesList, final int date )
-        {
+
+        private int nextOilId = ProductDao.MIN_OIL_PROD_ID;
+        private int nextAddionalProdId = ProductDao.MIN_ADDITIONAL_PROD_ID;
+        private final List<Product> prodToBeUpdated = new ArrayList<Product>();
+
+        public ProductTransactionBuilder( final List<ProductClosingBalance> entitiesList, final int date ) {
             super( entitiesList, date, DECIMAL_COUNT, ProductTransaction.CREDIT_TRANS_TYPES );
+            for (ProductClosingBalance product : entitiesList) {
+                if (product.getProductId() > nextOilId &&
+                    product.getProductId() < ProductDao.MIN_ADDITIONAL_PROD_ID) {
+                    nextOilId = product.getProductId();
+                }
+                if (product.getProductId() > nextAddionalProdId &&
+                    product.getProductId() > ProductDao.MIN_ADDITIONAL_PROD_ID) {
+                    nextAddionalProdId = product.getProductId();
+                }
+            }
+        }
+
+        public List<Product> getProdToBeUpdated() {
+            return this.prodToBeUpdated;
         }
         
         public void addTransWithDiscount( final int entityId, final BigDecimal amount, final BigDecimal discount,
@@ -247,7 +268,7 @@ public class EntityTransactionBuilder
         {
             String detail = "";
             final ProductTransaction transaction = addTrans( entityId, amount, detail, transType );
-            if ( transaction.getMargin().compareTo( margin) != 0 )
+            if ( transaction.getMargin().compareTo(margin) != 0 )
             {
                 transaction.setDetail( detailPrefix + ":Margin updated from " + transaction.getMargin().toPlainString() +
                         " to " + margin.toPlainString());
@@ -270,18 +291,44 @@ public class EntityTransactionBuilder
         }
 
         protected ProductTransaction createTransactionInstance( final ProductClosingBalance entity, final int date,
-                final BigDecimal amount, final BigDecimal balance, final String detail, final String transType )
+                final BigDecimal amount, final BigDecimal balance, final String detail, final String transType ) {
+            return createTransactionInstance(entity.getProductId(), date, amount, balance, detail, transType,
+                entity.getUnitSellingPrice(), entity.getMargin());
+        }
+
+        protected ProductTransaction createTransactionInstance( final int entityId, final int date,
+            final BigDecimal amount, final BigDecimal balance, final String detail, final String transType,
+            final BigDecimal unitSellingPrice, final BigDecimal margin )
         {
             final ProductTransaction transaction = new ProductTransaction();
-            transaction.setProductId( entity.getProductId() );
+            transaction.setProductId( entityId );
             transaction.setQuantity( amount );
             transaction.setBalance( balance );
             transaction.setDate( date );
             transaction.setDetail( detail );
             transaction.setTransactionType( transType );
-            transaction.setUnitPrice( entity.getUnitSellingPrice() );
-            transaction.setMargin( entity.getMargin() );
+            transaction.setUnitPrice( unitSellingPrice );
+            transaction.setMargin( margin );
             return transaction;
+        }
+
+        public void addNewProd(final String productName, final BigDecimal sellingPrice, final BigDecimal margin,
+            final BigDecimal amount, final String detail, final String transType,
+            final ProductType type) throws BunkMgmtException {
+            final Product product = new Product();
+            if(type == ProductType.ADDITIONAL_PRODUCTS) {
+                product.setProductId( nextAddionalProdId++ );
+            } else if(type == ProductType.LUBE_PRODUCTS) {
+                product.setProductId( nextOilId++ );
+            } else {
+                throw new IllegalStateException("New products for " + type + " not handled");
+            }
+            product.setProductName(productName);
+            prodToBeUpdated.add( product );
+
+            final ProductTransaction productTransaction = createTransactionInstance(product.getProductId(),
+                date, amount, amount, detail, transType, sellingPrice, margin);
+            this.transactions.add( productTransaction );
         }
     }
     

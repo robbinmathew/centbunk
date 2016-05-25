@@ -89,22 +89,73 @@ function buildReportsPanel(title, record) {
 function onShowReport() {
     var selectedDate = Ext.getCmp('startDate').getValue();
 
-    var url = '/api/report?type=DAILY_STMT&dateText=' + dateToSimpleText(selectedDate);
+    var url = '/api/report?type=DAILY_STMT&format=image&dateText=' + dateToSimpleText(selectedDate);
+    var reportWindowHeight = Ext.getBody().getViewSize().height-100;
+    var reportWindowWidth = Ext.getBody().getViewSize().width-100;
+
+    var image = Ext.create('Ext.Img', {
+        src: url,
+        listeners : {
+            load : {
+                element : 'el',  //the rendered img element
+                fn : setimg
+            }
+        }
+    });
+
+    function setimg() {
+        if(reportWindowWidth > image.getEl().dom.naturalWidth) {
+            image.getEl().dom.height = image.getEl().dom.naturalHeight;
+            image.getEl().dom.width = image.getEl().dom.naturalWidth;
+            var window = Ext.getCmp('report-window');
+            window.setWidth(image.getEl().dom.naturalWidth);
+            window.doLayout();
+            window.center();
+        } else {
+            var minimumWidth = (reportWindowWidth<560) ? 560: reportWindowWidth;
+            var ratio = minimumWidth/image.getEl().dom.naturalWidth;
+            image.getEl().dom.height = image.getEl().dom.naturalHeight * ratio;
+            image.getEl().dom.width = image.getEl().dom.naturalWidth * ratio;
+        }
+    }
 
     //url
     var popUp = Ext.create('Ext.window.Window', {
         //header:false,
-        height: 750,
+        height: reportWindowHeight,
+        width:  reportWindowWidth,
         modal:true,
-        width: 1000,
+        id:'report-window',
         layout: 'vbox',
         anchor:"100% 95%",
+        //autoScroll:true,
         title:'Report',
         maximizable: false,
-        minimizable: false
+        minimizable: false,
+        items:[{
+            //layout:'fit',
+            margins: '0 0 0 0',
+            width:'100%',
+            height:(reportWindowHeight - 65),
+            autoScroll:true,
+            items : [image]
+        },{
+            xtype: 'button',
+            text: 'Close Window',
+            width: '100%',
+            height: 30,
+            cls: 'close-button',
+            handler: function(){
+                var win = Ext.WindowManager.getActive();
+                if (win) {
+                    win.close();
+                }
+            }
+        }]
     });
-    popUp.add({html: '<iframe height="670", width="995" src="'+ url +'"></iframe>'});
-    popUp.add({
+    //popUp.add({html: '<iframe height="' + (reportWindowHeight - 65) + '", width="' + (reportWindowWidth - 5) + '" src="'+ url +'"></iframe>'});
+    //popUp.add({html:'<img src="'+ url +'" height="' + (reportWindowHeight - 65) + '", width="' + (reportWindowWidth - 5) + '" />'});
+    /*popUp.add({
         xtype: 'button',
         text: 'Close Window',
         width: '100%',
@@ -116,6 +167,6 @@ function onShowReport() {
                 win.close();
             }
         }
-    });
+    });*/
     popUp.show();
 }
