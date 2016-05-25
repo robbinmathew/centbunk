@@ -135,7 +135,7 @@ public class DailyStatementPanel extends BasePublicPanel
 	
 	private void postLaunchTasks()
 	{
-        if(savedDailyStatement != null){
+        /*if(savedDailyStatement != null){
             int savedTranxCount = 0;
             savedTranxCount = savedTranxCount + savedDailyStatement.getEmployeeTransactionsMap().size();
             savedTranxCount = savedTranxCount + savedDailyStatement.getCreditedChequeDetails().size();
@@ -147,7 +147,7 @@ public class DailyStatementPanel extends BasePublicPanel
             if(savedTranxCount>0){
                 UiUtil.confirmUserChoiceWithCustomOptions(this, "Loaded the transactions from the statement saved on :" + savedDailyStatement.getMessage(), "OK", "OK");
             }
-        }
+        }*/
 	    if ( DateUtil.isLastDayOfMonth( this.todayInteger + 2 ) || DateUtil.isLastDayOfMonth( this.todayInteger + 1 ) )
         {
 	        SwingUtil.notifyInfoMsg( this, "Last 3 days of this month. Please pay the employee salaries before end of the month." );
@@ -266,7 +266,7 @@ public class DailyStatementPanel extends BasePublicPanel
 
     private void loadSavedData() throws BunkMgmtException
     {
-        if(this.savedDailyStatement != null){
+       /* if(this.savedDailyStatement != null){
             //Iterate through table and pick values from the map
             AbstractDataTable offCashTable = this.getComp( OFFICE_CASH_TABLE, AbstractDataTable.class );
             if(offCashTable != null && this.savedDailyStatement.getOfficeCashMap() != null ){
@@ -416,7 +416,7 @@ public class DailyStatementPanel extends BasePublicPanel
                     }
                 }
             }
-        }
+        }*/
     }
 	
 	private void repopulatePartyEditorAndData() throws BunkMgmtException
@@ -708,7 +708,7 @@ public class DailyStatementPanel extends BasePublicPanel
 
     protected void saveRequest(String message) throws BunkMgmtException
     {
-        final SavedDailyStatement savedDailyStatement = new SavedDailyStatement();
+        /*final SavedDailyStatement savedDailyStatement = new SavedDailyStatement();
         savedDailyStatement.setDate(todayInteger);
         savedDailyStatement.setMessage(message);
 
@@ -777,7 +777,7 @@ public class DailyStatementPanel extends BasePublicPanel
                         bean.getAmountToday(), bean.getPaidToBank());
             }
         }
-        this.bunkManager.saveSavedDailyStatement(savedDailyStatement);
+        this.bunkManager.saveSavedDailyStatement(savedDailyStatement);*/
     }
 
 	
