@@ -633,6 +633,12 @@ public class BunkAccountingWebService {
         return this.bunkManager.getStockVariation(date);
     }
 
+    @DELETE
+    @Path("clearDsr")
+    public void clearDsr(final @QueryParam("date") int date) throws BunkMgmtException {
+        this.bunkManager.clearTransactions(date);
+    }
+
 
     @GET
     @Path("fuelsSalesSummary")
