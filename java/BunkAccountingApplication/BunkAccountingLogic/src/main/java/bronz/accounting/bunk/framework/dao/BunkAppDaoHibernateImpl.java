@@ -334,7 +334,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
                 "ON LAST.PRODUCT_ID=PR.PK_PRODUCT_ID " +
                 "INNER JOIN PBMS_PRODUCT_TRANSACTIONS AS TX " +
                 "    ON LAST.LOAD_PK_SLNO=TX.PK_SLNO " +
-                "WHERE TR.BALANCE > 0 " +
+                "WHERE TR.BALANCE > 0 OR PR.PK_PRODUCT_ID=3 " +
                 "ORDER BY PR.PRODUCT_NAME"
                 ).addEntity( ProductClosingBalance.class );
         
