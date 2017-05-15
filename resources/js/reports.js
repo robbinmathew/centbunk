@@ -45,9 +45,9 @@ function buildReportsPanel(title, record) {
                     vertical: true,
                     items: [
                         { boxLabel: 'Daily Statement', name: 'reportTypeGroup', inputValue: 'DAILY_STMT', checked: true},
+                        //{ boxLabel: 'Credit Status', name: 'reportTypeGroup', inputValue: 'CREDIT_STATUS'},
+                        //{ boxLabel: 'Cash Summary', name: 'reportTypeGroup', inputValue: 'CASH_SUMMARY'},
                         { boxLabel: 'Stock Status', name: 'reportTypeGroup', inputValue: 'STOCK_STATUS'},
-                        { boxLabel: 'Credit Status', name: 'reportTypeGroup', inputValue: 'CREDIT_STATUS'},
-                        { boxLabel: 'Cash Summary', name: 'reportTypeGroup', inputValue: 'CASH_SUMMARY'}
                     ]
                 },{
                     xtype: 'label',
