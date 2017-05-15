@@ -1,8 +1,11 @@
 package bronz.accounting.bunk.model.dao;
 
 import java.util.List;
+import java.util.Map;
 
+import bronz.accounting.bunk.framework.dao.SavedQuery;
 import bronz.accounting.bunk.framework.exceptions.BunkMgmtException;
+import bronz.accounting.bunk.model.QueryResults;
 import bronz.accounting.bunk.model.SavedDailyStatement;
 
 /**
@@ -17,5 +20,6 @@ public interface SavedStatementDao {
     SavedDailyStatement getSavedDailyStatement(int date) throws BunkMgmtException;
     void saveOrUpdateSavedDailyStatement(SavedDailyStatement savedDailyStatement) throws BunkMgmtException;
     void deleteSavedDailyStatement(int date) throws BunkMgmtException;
-    List getFuelsSalesSummary(final int startDate, final int endDate ) throws BunkMgmtException;
+    QueryResults getResult(final String savedQueryName, final Map<String, Object> params) throws BunkMgmtException;
+
 }

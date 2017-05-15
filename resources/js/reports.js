@@ -27,7 +27,7 @@ function buildReportsPanel(title, record) {
             //defaults: {anchor: '100%',height:'30px'},
             layout: 'vbox',
             title:'Select report type',
-            //width:'100%',
+            width:'100%',
             defaultType: 'textfield',
             fieldDefaults: {
                 msgTarget: 'side',
@@ -37,26 +37,17 @@ function buildReportsPanel(title, record) {
             },
             items: [
                 {
-                    xtype      : 'fieldcontainer',
-                    fieldLabel : '',
-                    defaultType: 'radiofield',
-                    defaults: {
-                        flex: 1
-                    },
-                    layout: 'vbox',
+                    xtype: 'radiogroup',
+                    fieldLabel: 'Report type',
+                    id:"reportType",
+                    // Arrange radio buttons into two columns, distributed vertically
+                    columns: 1,
+                    vertical: true,
                     items: [
-                        {
-                            boxLabel  : 'Daily Statement',
-                            name      : 'size',
-                            checked:true,
-                            inputValue: 'm',
-                            id        : 'radio1'
-                        }/*, {
-                            boxLabel  : 'Other',
-                            name      : 'size',
-                            inputValue: 'l',
-                            id        : 'radio2'
-                        }*/
+                        { boxLabel: 'Daily Statement', name: 'reportTypeGroup', inputValue: 'DAILY_STMT', checked: true},
+                        { boxLabel: 'Stock Status', name: 'reportTypeGroup', inputValue: 'STOCK_STATUS'},
+                        { boxLabel: 'Credit Status', name: 'reportTypeGroup', inputValue: 'CREDIT_STATUS'},
+                        { boxLabel: 'Cash Summary', name: 'reportTypeGroup', inputValue: 'CASH_SUMMARY'}
                     ]
                 },{
                     xtype: 'label',
@@ -88,8 +79,9 @@ function buildReportsPanel(title, record) {
 
 function onShowReport() {
     var selectedDate = Ext.getCmp('startDate').getValue();
+    var reportType = Ext.getCmp('reportType').getValue();
 
-    var url = '/api/report?type=DAILY_STMT&format=image&dateText=' + dateToSimpleText(selectedDate);
+    var url = '/api/report?type=' + reportType.reportTypeGroup + '&format=image&dateText=' + dateToSimpleText(selectedDate);
     var reportWindowHeight = Ext.getBody().getViewSize().height-100;
     var reportWindowWidth = Ext.getBody().getViewSize().width-100;
 
@@ -124,7 +116,7 @@ function onShowReport() {
         //header:false,
         height: reportWindowHeight,
         width:  reportWindowWidth,
-        modal:true,
+        modal:false,
         id:'report-window',
         layout: 'vbox',
         anchor:"100% 95%",

@@ -5,7 +5,7 @@ package bronz.accounting.bunk.party.model;
  */
 public class Party
 {
-	private int partyId;
+	private Integer partyId;
 	private String partyName;
 	private String partyDetail;
 	private String partyPhone;
@@ -17,6 +17,14 @@ public class Party
 	public Party()
 	{
 		super();
+	}
+
+	public Party(final Party party)	{
+		this.partyId = party.partyId;
+		this.partyName = party.partyName;
+		this.partyDetail = party.partyDetail;
+		this.partyPhone = party.partyPhone;
+		this.partyStatus = party.partyStatus;
 	}
 
 	/**
@@ -44,7 +52,7 @@ public class Party
 	 *
 	 * @return partyId
 	 */
-	public int getPartyId()
+	public Integer getPartyId()
 	{
 		return partyId;
 	}
@@ -54,7 +62,7 @@ public class Party
 	 *
 	 * @param partyId the partyId to set
 	 */
-	public void setPartyId( final int partyId)
+	public void setPartyId( final Integer partyId)
 	{
 		this.partyId = partyId;
 	}
@@ -120,17 +128,6 @@ public class Party
 	}
 	
 	/**
-	 * Gets the description of the party.
-	 *
-	 * @return String description.
-	 */
-	public String getPartyDescription()
-	{
-		return "Party ID:" + this.partyId + " Party Name:" +
-				this.partyName;
-	}
-	
-	/**
 	 * Overrides toString method.
 	 *
 	 * @return The String.
@@ -138,5 +135,17 @@ public class Party
 	public String toString()
 	{
 		return this.partyName;
+	}
+
+	public boolean equals(Party party) {
+		if (party.partyId.equals(this.partyId) &&
+			party.partyName.equals(this.partyName) &&
+			party.partyDetail.equals(this.partyDetail) &&
+			party.partyPhone.equals(this.partyPhone) &&
+			party.partyStatus.equals(this.partyStatus)) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }

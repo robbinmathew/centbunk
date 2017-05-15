@@ -1,5 +1,7 @@
 package bronz.accounting.bunk.webservice;
 
+import com.google.common.collect.ImmutableMap;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -21,11 +23,13 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
@@ -35,11 +39,14 @@ import bronz.accounting.bunk.BunkAppInitializer;
 import bronz.accounting.bunk.BunkManager;
 import bronz.accounting.bunk.framework.exceptions.BunkMgmtException;
 import bronz.accounting.bunk.model.ClosingStatement;
+import bronz.accounting.bunk.model.QueryResults;
 import bronz.accounting.bunk.model.SavedDailyStatement;
 import bronz.accounting.bunk.model.StockReceipt;
+import bronz.accounting.bunk.party.dao.PartyDao;
 import bronz.accounting.bunk.party.model.EmployeeMonthlyStatus;
 import bronz.accounting.bunk.party.model.Party;
 import bronz.accounting.bunk.party.model.PartyClosingBalance;
+import bronz.accounting.bunk.party.model.PartyResult;
 import bronz.accounting.bunk.party.model.PartyTransaction;
 import bronz.accounting.bunk.party.model.Settlement;
 import bronz.accounting.bunk.products.dao.ProductDao;
@@ -72,6 +79,7 @@ import bronz.accounting.bunk.webservice.model.UiRateChange;
 import bronz.accounting.bunk.webservice.model.UiStockReceipt;
 import bronz.accounting.bunk.webservice.model.UiTankReceipt;
 import bronz.accounting.bunk.webservice.model.UiTankSale;
+import bronz.accounting.bunk.webservice.model.UiUpdateParties;
 import bronz.utilities.custom.CustomDecimal;
 import bronz.utilities.general.DateUtil;
 import bronz.utilities.general.Pair;
@@ -123,16 +131,79 @@ public class BunkAccountingWebService {
 
     @POST
     @Path("savePartyDetails")
-    public void savePartyDetails(final Pair<List<Party>,List<PartyTransaction>> data) throws BunkMgmtException
-    {
-        bunkManager.savePartyDetails(data.getFirst(), data.getSecond());
+    public void savePartyDetails(final UiUpdateParties data) throws BunkMgmtException {
+        final int todayDate = bunkManager.getTodayDate();
+        Map<Integer, Party> currentPartyMap = bunkManager.getAllParties();
+
+        int nextEmpId = PartyDao.MIN_EMP_ID;
+        int nextBankId = PartyDao.MIN_BANK_ID;
+        int nextPartyId = PartyDao.MIN_PARTY_ID;
+        for (Party party : currentPartyMap.values())
+        {
+            if (PartyDao.MIN_EMP_ID <= party.getPartyId() && PartyDao.MIN_BANK_ID > party.getPartyId() &&
+                party.getPartyId()> nextEmpId )
+            {
+                nextEmpId = party.getPartyId();
+            }
+            if (PartyDao.MIN_BANK_ID <= party.getPartyId() && PartyDao.MIN_PARTY_ID > party.getPartyId() &&
+                party.getPartyId()> nextBankId )
+            {
+                nextBankId = party.getPartyId();
+            }
+            if (PartyDao.MIN_PARTY_ID <= party.getPartyId() && party.getPartyId()> nextPartyId )
+            {
+                nextPartyId = party.getPartyId();
+            }
+        }
+        final List<Party> partyToBeUpdated = new ArrayList<Party>();
+        final List<PartyTransaction> partyTransToBeUpdated = new ArrayList<PartyTransaction>();
+
+        for ( Party uiParty : data.getEmployees() ) {
+            Party currentPartyRecord = currentPartyMap.get(uiParty.getPartyId());
+            if (currentPartyRecord == null) {
+                uiParty.setPartyId(++nextEmpId);
+                final PartyTransaction transaction = new PartyTransaction();
+                transaction.setPartyId( uiParty.getPartyId() );
+                transaction.setAmount( CustomDecimal.ZERO );
+                transaction.setBalance( CustomDecimal.ZERO );
+                transaction.setDate( todayDate );
+                transaction.setTransactionDetail( "New party" );
+                transaction.setTransactionType( "CREDIT_S" );
+                partyTransToBeUpdated.add(transaction);
+
+                partyToBeUpdated.add(uiParty);
+            } else if (!currentPartyRecord.equals(uiParty)){
+                partyToBeUpdated.add(uiParty);
+            }
+        }
+
+        for ( Party uiParty : data.getParties() ) {
+            Party currentPartyRecord = currentPartyMap.get(uiParty.getPartyId());
+            if (currentPartyRecord == null) {
+                uiParty.setPartyId(++nextPartyId);
+                final PartyTransaction transaction = new PartyTransaction();
+                transaction.setPartyId( uiParty.getPartyId() );
+                transaction.setAmount( CustomDecimal.ZERO );
+                transaction.setBalance( CustomDecimal.ZERO );
+                transaction.setDate( todayDate );
+                transaction.setTransactionDetail( "New party" );
+                transaction.setTransactionType( "CREDIT_S" );
+                partyTransToBeUpdated.add(transaction);
+
+                partyToBeUpdated.add(uiParty);
+            } else if (!currentPartyRecord.equals(uiParty)){
+                partyToBeUpdated.add(uiParty);
+            }
+        }
+
+        bunkManager.savePartyDetails(partyToBeUpdated, partyTransToBeUpdated);
     }
 
     @GET
     @Path("parties")
-    public List<Party> getAllParties() throws BunkMgmtException
+    public List<PartyResult> getParties(final @QueryParam("type") String type) throws BunkMgmtException
     {
-        return this.bunkManager.getAllParties();
+        return this.bunkManager.getParties(type);
     }
 
     @GET
@@ -641,10 +712,16 @@ public class BunkAccountingWebService {
 
 
     @GET
-    @Path("fuelsSalesSummary")
-    public List getFuelsSalesSummary(final @QueryParam("start") int start, final @QueryParam("end") int end)
+    @Path("result/{queryName}")
+    public QueryResults getFuelsSalesSummary(final @PathParam("queryName") String queryName,
+        @Context UriInfo uriInfo)
         throws BunkMgmtException {
-        return this.bunkManager.getFuelsSaleSummary(start, end);
+        final MultivaluedMap<String, String> queryParams = uriInfo.getQueryParameters();
+        ImmutableMap.Builder<String, Object> builder = ImmutableMap.<String, Object>builder();
+        for(String key : queryParams.keySet()) {
+            builder.put(key.toUpperCase(),queryParams.getFirst(key));
+        }
+        return this.bunkManager.getResult(queryName, builder.build());
     }
 
     @GET
@@ -653,13 +730,13 @@ public class BunkAccountingWebService {
         throws BunkMgmtException {
         final Report report;
         if ( "DAILY_STMT".equals(type) ) {
-            int date;
-            if(StringUtils.isNotEmpty(uriInfo.getQueryParameters().getFirst("dateText"))) {
-                date = DateUtil.getDateFromSimpleDateString(uriInfo.getQueryParameters().getFirst("dateText"));
-            } else {
-                date = Integer.parseInt(uriInfo.getQueryParameters().getFirst("date"));
-            }
-            report = this.reportsCreator.createClosingStatement( date );
+            report = this.reportsCreator.createClosingStatement( getDate(uriInfo) );
+        } else if ( "STOCK_STATUS".equals(type) ) {
+            report = this.reportsCreator.createStockStatusReport( getDate(uriInfo) );
+        } else if ( "CREDIT_STATUS".equals(type) ) {
+            report = this.reportsCreator.createCreditStatusReport( getDate(uriInfo) );
+        } else if ( "CASH_SUMMARY".equals(type) ) {
+            report = this.reportsCreator.createCashSummaryStatement( getDate(uriInfo) );
         } else {
             throw new UnsupportedOperationException("This report is not supported");
         }
@@ -689,6 +766,16 @@ public class BunkAccountingWebService {
         }
 
         return responseBuilder.build();
+    }
+
+    private int getDate(UriInfo uriInfo) {
+        int date;
+        if(StringUtils.isNotEmpty(uriInfo.getQueryParameters().getFirst("dateText"))) {
+            date = DateUtil.getDateFromSimpleDateString(uriInfo.getQueryParameters().getFirst("dateText"));
+        } else {
+            date = Integer.parseInt(uriInfo.getQueryParameters().getFirst("date"));
+        }
+        return date;
     }
 
 

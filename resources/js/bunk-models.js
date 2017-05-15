@@ -160,6 +160,22 @@ Ext.define('Party', {
     idProperty: 'id'
 });
 
+
+Ext.define('PartyResult', {
+    extend: 'Ext.data.Model',
+    fields: [
+        {name: 'partyId', type: 'int'},
+        {name: 'date', type: 'int'},
+        {name: 'slNo', type: 'int'},
+        'partyName',
+        'partyDetail',
+        'partyPhone',
+        'partyStatus',
+        {name: 'balance', type: 'float'}
+    ],
+    idProperty: 'partyId'
+});
+
 Ext.define('OfficeCash', {
     extend: 'Ext.data.Model',
     fields: [
@@ -284,6 +300,59 @@ function buildPartyListStore(type, loadMask) {
     return store;
 }
 
+function buildAllPartyResultStores(type, loadMask, callback) {
+    getDataWithAjax('api/parties?type=' + type,
+        function (response) {
+            var responseJson = Ext.decode(response.responseText);
+            if (responseJson) {
+
+                var parties = new Ext.data.SimpleStore({
+                    model: 'PartyResult'
+                });
+                var employees = new Ext.data.SimpleStore({
+                    model: 'PartyResult'
+                });
+                var banks = new Ext.data.SimpleStore({
+                    model: 'PartyResult'
+                });
+                var storesArr = [parties, employees, banks];
+                var arrayLength = responseJson.length;
+                for (var i = 0; i < arrayLength; i++) {
+                    var item = responseJson[i];
+
+                    if(item.partyStatus == "INACTIVE_S") {
+                        continue; // These are hidden system parties.
+                    }
+
+                    var party = new PartyResult();
+                    party.set('partyId', item.partyId);
+                    party.set('date', item.date);
+                    party.set('slNo', item.slNo);
+                    party.set('partyName', item.partyName);
+                    party.set('partyDetail', item.partyDetail);
+                    party.set('partyPhone', item.partyPhone);
+                    party.set('partyStatus', item.partyStatus);
+                    party.set('balance', item.balance);
+                    party.commit();
+
+
+
+                    if (item.partyId >= 1 && item.partyId < 250) {
+                        employees.add(party);
+                    } else if (item.partyId >= 250 && item.partyId < 300) {
+                        banks.add(party);
+                    } else {
+                        parties.add(party);
+                    }
+                }
+                window[callback](storesArr, loadMask);
+            }
+        },
+        function (response) {
+            console.log('failed to read info from server for buildAllPartyResultStores ' + type + ', response' + response);
+        });
+}
+
 function buildEmployeeListStore(loadMask) {
     var store = Ext.create('Ext.data.Store', {
         //pageSize: 20,
@@ -355,21 +424,164 @@ function buildActiveMeterListStore(loadMask) {
     return store;
 }
 
-function buildFuelsSaleSummaryStore(start, end, loadMask) {
-    var store = Ext.create('Ext.data.JsonStore', {
-        //pageSize: 20,
-        fields: ['DATE_TEXT', 'P_SALE', 'P_TEST', 'P_CL_STOCK', 'D_SALE', 'D_TEST', 'D_CL_STOCK'],
-        autoLoad: true,
-        proxy: {
-            type: 'rest',
-            url: 'api/fuelsSalesSummary?start=' + start + "&end=" + end,
-            reader: {
-                type: 'json'
-            }
-        }
+function buildJsonStoreWithData(data, fields, groupByFields, loadMask) {
+    var allFields = groupByFields.concat(fields);
+    var store = new Ext.data.JsonStore({
+        autoLoad: false,
+        sorters: [{
+            property: 'DATE',
+            direction: 'ASC'
+        }],
+        sortOnLoad: true,
+        remoteSort: false,
+        fields: allFields
     });
+
+    store.loadData(data);
     if(loadMask) {
         loadMask.bindStore(store);
     }
     return store;
 }
+
+function addReportPanel(path, params, title, targetPanel, unit, colSize, position ) {
+    this.path = path;
+    this.params = params;
+    this.title = title;
+    this.targetPanel = targetPanel;
+    this.unit = unit;
+    var self = this;
+    getDataWithAjax(path + "?" + paramsToQuery(params),
+        function (response) {
+
+            var responseJson = Ext.decode(response.responseText);
+            var resultsStore = buildJsonStoreWithData(responseJson.results, responseJson.fields, responseJson.groupByFields);
+            var targetPanel = Ext.getCmp(self.targetPanel);
+
+            this.tipsConfig = {
+                trackMouse: true,
+                style: 'background: #FFF;line-height: 50%',
+                height: 20 * responseJson.fields.length,
+                width: 250,
+                renderer: function (storeItem, item) {
+                    var seriesTitle = item.series.title;
+                    var text = "";
+                    for(var i=0; i< responseJson.fields.length; i++) {
+                        var fieldName = responseJson.fields[i];
+
+                        text = text + "<p>";
+                        if(fieldName == seriesTitle) {
+                            text = text + "<mark>";
+                        }
+                        text = text + fieldName + ': ' + (storeItem.get(fieldName) ? storeItem.get(fieldName) : 0) + unit;
+                        if(fieldName == seriesTitle) {
+                            text = text + "</mark>";
+                        }
+                        text = text + "</p>";
+                    }
+                    this.setTitle(text);
+                }
+            };
+
+            var seriesArray = [];
+            for(var i=0; i< responseJson.fields.length; i++) {
+                seriesArray.push({
+                    type: 'line',
+                    axis: 'left',
+                    title: responseJson.fields[i],
+                    xField: 'DATE_TEXT',
+                    yField: responseJson.fields[i],
+                    style: {
+                        'stroke-width': 4,
+                        stroke: graphColorArray[i]
+                    },
+                    markerConfig: {
+                        radius: 4,
+                        type: 'circle',
+                        fill: graphColorArray[i]
+                    },
+                    /*label:
+                     {
+                     display: 'over',
+                     field: 'P_SALE',
+                     renderer: function(val) {
+                     return val + 'L';
+                     }
+                     },*/
+                    highlight: {
+                        fill: '#000',
+                        radius: 5,
+                        'stroke-width': 2,
+                        stroke: '#fff'
+                    },
+                    tips: this.tipsConfig
+                });
+            }
+
+
+            var chartPanel = Ext.create('Ext.chart.Chart', {
+                xtype: 'chart',
+                //forceFit: true,
+                //padding: '10 0 0 0',
+                animate: true,
+                columnWidth: colSize,
+                shadow: false,
+                height:415,
+                style: 'background: #fff;',
+                store: resultsStore,
+                legend: {
+                    position: 'right',
+                    boxStrokeWidth: 1,
+                    labelFont: '12px Helvetica'
+                },
+                insetPadding: 40,
+                items: [{
+                    type: 'text',
+                    text: title,
+                    font: '22px Helvetica',
+                    width: 100,
+                    height: 30,
+                    x: 20, //the sprite x position
+                    y: 19  //the sprite y position
+                }],
+                axes: [{
+                    type: 'numeric',
+                    fields: responseJson.fields,
+                    position: 'left',
+                    grid: true,
+                    minimum: 0,
+                    label: {
+                        renderer: function (v) {
+                            return v + unit;
+                        }
+                    }
+                }, {
+                    type: 'category',
+                    fields: "DATE_TEXT",
+                    position: 'bottom',
+                    grid: true,
+                    label: {
+                        rotate: {
+                            degrees: -45
+                        }
+                    }
+                }],
+                series: seriesArray
+            });
+
+            if(position != undefined) {
+                targetPanel.add(position, chartPanel);
+            } else {
+                targetPanel.add(chartPanel);
+            }
+
+            targetPanel.doLayout();
+        },
+        function (response) {
+            console.log('failed to read info from server for report ' + title + ', response' + response);
+        });
+}
+
+
+
+

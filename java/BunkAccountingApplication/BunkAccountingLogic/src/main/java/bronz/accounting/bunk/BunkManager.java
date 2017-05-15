@@ -1,14 +1,17 @@
 package bronz.accounting.bunk;
 
 import java.util.List;
+import java.util.Map;
 
 import bronz.accounting.bunk.framework.exceptions.BunkMgmtException;
 import bronz.accounting.bunk.model.ClosingStatement;
+import bronz.accounting.bunk.model.QueryResults;
 import bronz.accounting.bunk.model.SavedDailyStatement;
 import bronz.accounting.bunk.model.StockReceipt;
 import bronz.accounting.bunk.party.model.EmployeeMonthlyStatus;
 import bronz.accounting.bunk.party.model.Party;
 import bronz.accounting.bunk.party.model.PartyClosingBalance;
+import bronz.accounting.bunk.party.model.PartyResult;
 import bronz.accounting.bunk.party.model.PartyTransaction;
 import bronz.accounting.bunk.party.model.Settlement;
 import bronz.accounting.bunk.products.model.ProdRateChange;
@@ -33,7 +36,9 @@ public interface BunkManager {
     @RequiresTransaction(failureExceptionText = "Failed to save the stock receipt")
     void savePartyDetails(List<Party> partyToBeUpdated, List<PartyTransaction> partyTransToBeUpdated) throws BunkMgmtException;
 
-    List<Party> getAllParties() throws BunkMgmtException;
+    Map<Integer, Party> getAllParties() throws BunkMgmtException;
+
+    List<PartyResult> getParties(String type) throws BunkMgmtException;
 
     List<PartyTransaction> getPendingChequesAtOffice() throws BunkMgmtException;
 
@@ -99,5 +104,5 @@ public interface BunkManager {
 
     List<StockVariation> getStockVariation(int date) throws BunkMgmtException;
 
-    List getFuelsSaleSummary(final int start, final int end) throws BunkMgmtException;
+    QueryResults getResult(final String savedQueryName, final Map<String, Object> params) throws BunkMgmtException;
 }

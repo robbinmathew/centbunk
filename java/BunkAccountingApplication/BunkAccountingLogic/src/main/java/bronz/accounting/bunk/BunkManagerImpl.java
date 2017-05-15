@@ -1,9 +1,13 @@
 package bronz.accounting.bunk;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
+import bronz.accounting.bunk.model.QueryResults;
 import bronz.accounting.bunk.model.SavedDailyStatement;
 import bronz.accounting.bunk.model.dao.SavedStatementDao;
 import org.apache.log4j.LogManager;
@@ -18,6 +22,7 @@ import bronz.accounting.bunk.party.dao.PartyDao;
 import bronz.accounting.bunk.party.model.EmployeeMonthlyStatus;
 import bronz.accounting.bunk.party.model.Party;
 import bronz.accounting.bunk.party.model.PartyClosingBalance;
+import bronz.accounting.bunk.party.model.PartyResult;
 import bronz.accounting.bunk.party.model.PartyTransaction;
 import bronz.accounting.bunk.party.model.Settlement;
 import bronz.accounting.bunk.products.dao.ProductDao;
@@ -77,9 +82,24 @@ public class BunkManagerImpl implements BunkManager {
         this.partyDao.saveParties( partyToBeUpdated );
         this.partyDao.savePartyTransactions( partyTransToBeUpdated );
     }
-    public List<Party> getAllParties() throws BunkMgmtException
+    public Map<Integer, Party> getAllParties() throws BunkMgmtException
     {
-        return this.partyDao.getAllParties();
+        final Map<Integer, Party> partyMap = new HashMap<Integer, Party>();
+        for ( Party party : partyDao.getAllParties() )
+        {
+            partyMap.put( party.getPartyId(), party);
+        }
+        return partyMap;
+    }
+
+    public List<PartyResult> getParties(String type) throws BunkMgmtException {
+        List<PartyClosingBalance> partyClosingBalances = getPartyList(type);
+        Map<Integer, Party> parties = getAllParties();
+        List<PartyResult> results = new ArrayList<PartyResult>();
+        for (PartyClosingBalance closingBalance : partyClosingBalances) {
+            results.add(new PartyResult(parties.get(closingBalance.getId()), closingBalance));
+        }
+        return results;
     }
     
     public List<PartyTransaction> getPendingChequesAtOffice() throws BunkMgmtException
@@ -360,8 +380,8 @@ public class BunkManagerImpl implements BunkManager {
 		return this.productDao.getStockVariation(date);
 	}
 
-    public List getFuelsSaleSummary(final int start, final int end) throws BunkMgmtException {
-        return savedStatementDao.getFuelsSalesSummary(start, end);
+    public QueryResults getResult(final String savedQueryName, final Map<String, Object> params) throws BunkMgmtException {
+        return savedStatementDao.getResult(savedQueryName, params);
     }
 
 }

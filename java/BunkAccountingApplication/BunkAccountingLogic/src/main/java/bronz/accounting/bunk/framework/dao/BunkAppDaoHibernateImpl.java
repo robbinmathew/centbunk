@@ -2,13 +2,19 @@ package bronz.accounting.bunk.framework.dao;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import bronz.accounting.bunk.framework.exceptions.BunkValidationException;
+import bronz.accounting.bunk.model.QueryResults;
 import bronz.accounting.bunk.model.SavedDailyStatement;
 import bronz.accounting.bunk.model.dao.SavedStatementDao;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -17,7 +23,9 @@ import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.type.FloatType;
+import org.hibernate.type.LiteralType;
 import org.hibernate.type.StringType;
+import org.hibernate.type.Type;
 
 import bronz.accounting.bunk.AppConfig;
 import bronz.accounting.bunk.framework.exceptions.BunkMgmtException;
@@ -193,10 +201,12 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
     public List<PartyTransaction> getTransByDate( final int startDate, final int endDate,
             final String transTypeFilter, final String detailFilter ) throws PartyDaoException
     {
-        return getByQuery( PartyTransaction.class, "from PartyTransaction " +
-                "where date >= ? and date <= ? and transactionType like ?  and transactionDetail like ? " +
-                "order by partyId, date, slNo", startDate, endDate, overrideNullFilter( transTypeFilter),
-                overrideNullFilter(detailFilter ));
+        return getByQuery(PartyTransaction.class, "from PartyTransaction " +
+                                                  "where date >= ? and date <= ? and transactionType like ?  and transactionDetail like ? "
+                                                  +
+                                                  "order by partyId, date, slNo", startDate, endDate,
+            overrideNullFilter(transTypeFilter),
+            overrideNullFilter(detailFilter));
     }
     
     public List<PartyTransaction> getPendingChequeAtOffice(final int date) throws PartyDaoException
@@ -500,9 +510,9 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
     public List<ProductTransaction> getAllProductTransByDetail(
             final String transactionType )
     {
-        return getByQuery( ProductTransaction.class, "from ProductTransaction" +
-                " where detail like ? order by productId, date, slNo",
-                transactionType +'%' );
+        return getByQuery(ProductTransaction.class, "from ProductTransaction" +
+                                                    " where detail like ? order by productId, date, slNo",
+            transactionType + '%');
     }
     
     public List<ProductClosingBalance> getProdClosingByDate( final int date )
@@ -529,7 +539,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
                 "ORDER BY PR.PRODUCT_NAME"
                 ).addEntity( ProductClosingBalance.class );
         
-        return query.setInteger( "TODAY", date ).list();
+        return query.setInteger("TODAY", date).list();
     }
     
     public List<Tank> getAllTanks() throws TankAndMeterDaoException
@@ -541,7 +551,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
             throws TankAndMeterDaoException
     {
 		final Query query = getSavedSQLQuery("findTankClosingStock").addEntity(
-						TankClosingStock.class).setInteger( "TODAY", date );
+						TankClosingStock.class).setInteger("TODAY", date);
 		return query.list();
     }
     
@@ -568,7 +578,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
         final Session session = getSession();
         for ( final TankTransaction transaction : tankTransactions )
         {
-            session.save( transaction );
+            session.save(transaction);
         }
     }
 
@@ -698,7 +708,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
         finally
         {
             closeStatement(statement );
-            closeResultSet(resultSet );
+            closeResultSet(resultSet);
         }
         return date;
     }
@@ -796,18 +806,82 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
         }
     }
 
-    public List getFuelsSalesSummary(final int startDate, final int endDate ) {
-        final SQLQuery query = getSavedSQLQuery("fuelsSalesSummary");
+    public QueryResults getResult(final String savedQueryName, final Map<String, Object> params) throws BunkMgmtException{
+        final SavedQuery savedQuery = SavedQuery.findQuery(savedQueryName);
+        if(savedQuery == null){
+            throw new BunkValidationException("Unknown query:" + savedQueryName);
+        }
+        final QueryResults queryResults = new QueryResults();
+        final SQLQuery query = getSavedSQLQuery(savedQuery.getSavedQueryName());
         query.setResultTransformer(Criteria.ALIAS_TO_ENTITY_MAP);
-        query.addScalar("DATE_TEXT", new StringType());
-        query.addScalar("P_SALE", new FloatType());
-        query.addScalar("D_SALE", new FloatType());
-        query.addScalar("P_TEST", new FloatType());
-        query.addScalar("D_TEST", new FloatType());
-        query.addScalar("P_CL_STOCK", new FloatType());
-        query.addScalar("D_CL_STOCK", new FloatType());
-        return query.setParameter(
-            "START", startDate).setParameter(
-            "END", endDate ).list();
+        for(Map.Entry<String, ? extends Type> type: savedQuery.getTypeMap().entrySet()) {
+            query.addScalar(type.getKey(), type.getValue());
+        }
+        for(String param: query.getNamedParameters()) {
+            query.setParameter(param, params.get(param));
+        }
+
+        final List rawResults = query.list();
+        final Map<String, String> pivotFields = savedQuery.getPivotFields();
+        if(pivotFields == null || pivotFields.isEmpty()) {
+            for(Map.Entry<String, ? extends Type> type: savedQuery.getTypeMap().entrySet()) {
+                queryResults.getFields().add(type.getKey());
+            }
+            queryResults.setResults(rawResults);
+        } else {
+            final Map<String, Map> pivotMap = new HashMap();
+            queryResults.getGroupByFields().addAll(savedQuery.getGroupByFields());
+            for (Map<String, Object> rawRecord : (List<Map<String, Object>>)rawResults) {
+                //Prepare key
+                StringBuilder keyBuilder = new StringBuilder();
+                for(int i =0; i < savedQuery.getGroupByFields().size();i++) {
+                    if(i>0){
+                        keyBuilder.append("_"); //Separator
+                    }
+                    keyBuilder.append(rawRecord.get(savedQuery.getGroupByFields().get(i)));
+                }
+
+                String key = keyBuilder.toString();
+
+                Map pivotRecord = pivotMap.get(key);
+                if(pivotRecord == null) {
+                   pivotRecord = new HashMap();
+                    pivotMap.put(key, pivotRecord);
+                }
+
+                for (Map.Entry<String, Object> entry : rawRecord.entrySet()) {
+                    if (entry.getValue() != null && !savedQuery.getIgnoreFields().contains(entry.getKey())) {
+                        if(savedQuery.getPivotFields().containsKey(entry.getKey())) {
+                            pivotRecord.put(entry.getValue(), rawRecord.get(savedQuery.getPivotFields().get(
+                                entry.getKey())));
+                            String fieldName = entry.getValue().toString();
+                            if(!savedQuery.getGroupByFields().contains(fieldName)) {
+                                queryResults.getFields().add(fieldName);
+                            }
+
+                        } else {
+                            pivotRecord.put(entry.getKey(), entry.getValue());
+
+                            String fieldName = entry.getKey();
+                            if(!savedQuery.getGroupByFields().contains(fieldName)) {
+                                queryResults.getFields().add(fieldName);
+                            }
+                        }
+
+                    }
+                }
+            }
+            Set<String> fields = queryResults.getFields();
+            for (Map pivotRecord : pivotMap.values()) {
+                for (String field: fields) {
+                    if (!pivotRecord.containsKey(field)) {
+                        pivotRecord.put(field, 0); //default to zero for missing fieldsß
+                    }
+                }
+
+            }
+            queryResults.setResults(pivotMap.values());
+        }
+        return queryResults;
     }
 }

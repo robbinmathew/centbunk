@@ -21,6 +21,15 @@ public class PartyClosingBalance
 		super();
 	}
 
+    public PartyClosingBalance(final Integer slNo, final int id, final String name,
+        final int date, final BigDecimal balance) {
+        this.slNo= slNo;
+        this.id = id;
+        this.name = name;
+        this.date = date;
+        this.balance = balance;
+    }
+
     public Integer getSlNo()
     {
         return slNo;

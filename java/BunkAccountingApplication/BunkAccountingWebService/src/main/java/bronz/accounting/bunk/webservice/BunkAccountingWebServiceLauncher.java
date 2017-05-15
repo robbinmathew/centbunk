@@ -1,7 +1,6 @@
 package bronz.accounting.bunk.webservice;
 
 import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -47,6 +46,12 @@ public class BunkAccountingWebServiceLauncher
            jerseyServlet.setInitParameter(
                "jersey.config.server.provider.classnames",
                BunkAccountingWebService.class.getCanonicalName());
+           jerseyServlet.setInitParameter(
+               "jersey.config.server.provider.packages","org.codehaus.jackson.jaxrs");
+
+           jerseyServlet.setInitParameter(
+               "jersey.config.server.disableMoxyJson", "true");
+
 
            try {
                jettyServer.start();

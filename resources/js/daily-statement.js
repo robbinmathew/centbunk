@@ -1,6 +1,9 @@
 var savedDailyStmt = {};
 var partyComboStoreLoaded = false;
+var empComboStoreLoaded = false;
+var oilComboStoreLoaded = false;
 var loadedSavedTransactions = false;
+var loadingSavedTransactions = false;
 var dataLoaded = false;
 var dailyStatementLoadMask;
 var lastSavedDate;
@@ -13,7 +16,10 @@ var autoSaveFailureCount = 0;
 function buildDailyStatementPanel(title, record) {
     //Reset all values
     savedDailyStmt = {};
+    loadingSavedTransactions = false;
     partyComboStoreLoaded = false;
+    empComboStoreLoaded = false;
+    oilComboStoreLoaded = false;
     loadedSavedTransactions = false;
     lastEditDate = null;
     dataLoaded = false;
@@ -40,6 +46,12 @@ function buildDailyStatementPanel(title, record) {
     dailyStatementLoadMask.show();
 
     var oilProdStore = buildAvailableProductListStore('SECONDARY_PRODUCTS');
+
+    oilProdStore.on('load',function (store, records, options){
+        oilComboStoreLoaded = true;
+        getSavedTransactions();
+    });
+
     var oilProdCombo = new Ext.form.ComboBox({
         store: oilProdStore,
         valueField: "productId",
@@ -109,20 +121,11 @@ function buildDailyStatementPanel(title, record) {
         }
     });
     var partyStore = buildPartyListStore('ALL_ACTIVE_NON_EMPLOYEE_PARTIES');
-    partyStore.on('load',function (){
+
+    partyStore.on('load',function (store, records, options){
         partyComboStoreLoaded = true;
-        getDataWithAjax('api/dailyStatement?date=' + bunkCache.infos.todayDate, function(response){
-            savedDailyStmt = Ext.decode(response.responseText);
-            Ext.getCmp('openBal-field').setValue(savedDailyStmt.settlement? savedDailyStmt.settlement.closingBal:0.0);
-            loadedSavedTransactions = true;
-            onMeterSaleUpdate();
-            loadSavedTransactions();
-            dailyStatementLoadMask.hide();
-        },function(response){
-            savedDailyStmt = {};
-            console.log('failed to read info from server:' + response);
-            showFailedMask();
-        });
+        notifyAndRemoveStalePartyTransactions();
+        getSavedTransactions();
     });
 
     var partyCombo = new Ext.form.ComboBox({
@@ -175,8 +178,15 @@ function buildDailyStatementPanel(title, record) {
     });
     var empStore = buildEmployeeListStore();
 
+    empStore.on('load',function (store, records, options){
+        empComboStoreLoaded = true;
+        notifyAndRemoveStaleEmpTransactions();
+        getSavedTransactions();
+    });
+
     var employeeCombo = new Ext.form.ComboBox({
         store: empStore,
+        id:'empCombo',
         valueField: "id",
         displayField: "name",
         editable: false,
@@ -1247,16 +1257,95 @@ function updateClosingBalance() {
     }
 }
 
+function notifyAndRemoveStalePartyTransactions() {
+    notifyAndRemoveStaleTransactions(Ext.getCmp('partyTransGrid'), Ext.getCmp('partyCombo').store, "partyId", "partyName", "party[s]");
+}
+
+function notifyAndRemoveStaleEmpTransactions() {
+    notifyAndRemoveStaleTransactions(Ext.getCmp('empTransGrid'), Ext.getCmp('empCombo').store, "partyId", "partyName", "employee[s]");
+}
+
+function notifyAndRemoveStaleTransactions(grid, comboStore, idField, nameField, label) {
+    if(grid) {
+        var store = grid.store;
+        var recordsToBeRemoved = [];
+        var removedMsg = "";
+
+        store.each(function(record) {
+            if(record.get(idField) && record.get(idField)>0) {
+                var item = comboStore.getById(record.get(idField));
+                if(!item) {
+                    //Party no longer there. Was potentially deactivated.Remove the record.
+                    recordsToBeRemoved.push(record);
+
+                    if(removedMsg.length > 0) {
+                        //Check if the party is already mentioned
+                        if(removedMsg.indexOf(record.get(nameField)) < 0) {
+                            removedMsg = removedMsg + ", " + record.get(nameField);
+                        }
+                    } else {
+                        removedMsg = removedMsg + record.get(nameField);
+                    }
+                }
+            }
+        });
+
+        for(var i = 0 ; i < recordsToBeRemoved.length; i++) {
+            store.remove(recordsToBeRemoved[i]);
+        }
+        if(removedMsg.length > 0) {
+            Ext.create('Ext.window.MessageBox', {
+                // set closeAction to 'destroy' if this instance is not
+                // intended to be reused by the application
+                closeAction: 'destroy'
+            }).show({
+                title: 'Alert',
+                buttons: Ext.Msg.OK,
+                msg: "Removing the transactions for " + removedMsg + " since these " + label + "are deactivated. Closing balance will be updated accordingly"
+            });
+
+            //Ext.Msg.alert("Alert", "Removing the transactions for " + removedMsg + " since these " + label + "are deactivated. Closing balance will be updated accordingly");
+            updateClosingBalance();
+        }
+    }
+}
+
+function getSavedTransactions() {
+    if (!loadingSavedTransactions && !loadedSavedTransactions) {
+        loadingSavedTransactions = true;
+        getDataWithAjax('api/dailyStatement?date=' + bunkCache.infos.todayDate, function(response){
+            loadedSavedTransactions = true;
+            loadingSavedTransactions = false;
+            savedDailyStmt = Ext.decode(response.responseText);
+            var opBalField = Ext.getCmp('openBal-field');
+            if(opBalField) {
+                opBalField.setValue(savedDailyStmt.settlement? savedDailyStmt.settlement.closingBal:0.0);
+            }
+            onMeterSaleUpdate();
+            loadSavedTransactions();
+            if(dailyStatementLoadMask) {
+                dailyStatementLoadMask.hide();
+            }
+        },function(response){
+            loadingSavedTransactions = false;
+            savedDailyStmt = {};
+            console.log('failed to read info from server:' + response);
+            showFailedMask();
+        });
+    }
+}
 
 
 function loadSavedTransactions() {
-    if(!partyComboStoreLoaded || !loadedSavedTransactions || dataLoaded) {
+    if(!partyComboStoreLoaded || !loadedSavedTransactions || !empComboStoreLoaded  || !oilComboStoreLoaded || dataLoaded) {
         //One of the data is not loaded. Defer this load
         return;
     }
     dataLoaded = true;
     var partyTransGridStore = Ext.getCmp('partyTransGrid').store;
+    var empTransGridStore = Ext.getCmp('empTransGrid').store;
     var partyComboStore = Ext.getCmp('partyCombo').store;
+    var empComboStore = Ext.getCmp('empCombo').store;
 
 
     if(savedDailyStmt.closingStatement) {
@@ -1351,6 +1440,7 @@ function loadSavedTransactions() {
         //Fuel sales.
 
 
+        var insertIndex = 0;
         //Lube sales
         if(savedDailyStatement.lubesSales) {
             var oilSaleGridStore = Ext.getCmp('oilSaleGrid').store;
@@ -1362,26 +1452,25 @@ function loadSavedTransactions() {
                 }
 
                 //Verify that the partyID is present in the dropdown
-                var oilTrans = new FuelReceipt();
-                var prod = oilSaleGridStore.getById(savedTrans.productId);
+                var oilTrans = new LubeSale();
+                var prod = lubeComboStore.getById(savedTrans.productId);
                 oilTrans.set('productId',savedTrans.productId);
-                if(prod) {
-                    oilTrans.set('productName',prod.data.name);
-                } else {
+                if(!prod) {
                     continue;
                 }
 
-                oilTrans.set("productName", prod.productName + ' - ' + prod.unitSellingPrice +'Rs');
-                oilTrans.set("currentStock", prod.currentStock);
-                oilTrans.set("productId", prod.productId);
-                oilTrans.set("unitSellingPrice", prod.unitSellingPrice);
+                oilTrans.set("productName", prod.data.productName + ' - ' + prod.data.unitSellingPrice +'Rs');
+                oilTrans.set("currentStock", prod.data.currentStock);
+                oilTrans.set("productId", prod.data.productId);
+                oilTrans.set("unitSellingPrice", prod.data.unitSellingPrice);
                 oilTrans.set("actualSale", savedTrans.actualSale);
                 oilTrans.set("discountPerUnit", savedTrans.discountPerUnit);
 
-                oilSaleGridStore.insert(i+1, oilTrans);
+                oilSaleGridStore.insert(insertIndex++, oilTrans);
             }
         }
 
+        insertIndex = 0;
         //Load party transactions
         if(savedDailyStatement.partyTrans) {
             for(var i = 0 ; i < savedDailyStatement.partyTrans.length; i++) {
@@ -1409,8 +1498,35 @@ function loadSavedTransactions() {
                     partyTrans.set('debitAmt',savedTrans.debitAmt);
                     partyTrans.set('isChequeDebit',savedTrans.isChequeDebit);
                 }
-                partyTransGridStore.insert(i+1, partyTrans);
+                partyTransGridStore.insert(insertIndex++, partyTrans);
             }
+        }
+
+        insertIndex = 0;
+        //Load employee transactions
+        if(savedDailyStatement.empTrans) {
+            for(var i = 0 ; i < savedDailyStatement.empTrans.length; i++) {
+                var savedTrans = savedDailyStatement.empTrans[i];
+                if(!savedTrans.partyId) {
+                    continue;
+                }
+
+                //Verify that the partyID is present in the dropdown
+                var empTrans = new EmployeeTransaction();
+                var employee = empComboStore.getById(savedTrans.partyId);
+                empTrans.set('partyId',savedTrans.partyId);
+                if(employee) {
+                    empTrans.set('partyName',employee.data.name);
+                } else {
+                    continue;
+                }
+                empTrans.set('salaryDetail',savedTrans.salaryDetail);
+                empTrans.set('salaryAmt',savedTrans.salaryAmt);
+                empTrans.set('incentiveDetail',savedTrans.incentiveDetail);
+                empTrans.set('incentiveAmt',savedTrans.incentiveAmt);
+                empTransGridStore.insert(insertIndex++, empTrans);
+            }
+
         }
         onOfficeCashUpdate();
         onMeterSaleUpdate();

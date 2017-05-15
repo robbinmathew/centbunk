@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -37,7 +38,7 @@ public class EditPartiesPanel extends BasePanel implements ActionListener
 	private static final String SUBMIT_BUTTON = "SUBMIT_BUTTON";
 	
 	private final BunkManager bunkManager;
-	private final List<Party> parties;
+	private final Map<Integer, Party> parties;
     private final JDialog dialog;
     private final ActionListener actionListener;
     private final AbstractDataTable<PartyWrapper> employeesTable;
@@ -106,7 +107,7 @@ public class EditPartiesPanel extends BasePanel implements ActionListener
        int nextEmpId = PartyDao.MIN_EMP_ID;
        int nextBankId = PartyDao.MIN_BANK_ID;
        int nextPartyId = PartyDao.MIN_PARTY_ID;
-       for (Party party : this.parties)
+       for (Party party : this.parties.values())
        {
            if (PartyDao.MIN_EMP_ID <= party.getPartyId() && PartyDao.MIN_BANK_ID > party.getPartyId() &&
                    party.getPartyId()> nextEmpId )

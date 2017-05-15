@@ -232,15 +232,9 @@ public class EntityConverter
         return beans;
     }
     
-    public static void convertToPartyWrapper( final List<Party> parties, final List<PartyClosingBalance> partyClosingBalances,
+    public static void convertToPartyWrapper( final Map<Integer, Party> partyMap, final List<PartyClosingBalance> partyClosingBalances,
             final List<PartyWrapper> employees,final List<PartyWrapper> banks, final List<PartyWrapper> creditParties )
     {
-        final Map<Integer, Party> partyMap = new HashMap<Integer, Party>();
-        for (Party party : parties )
-        {
-            partyMap.put( party.getPartyId(), party );
-        }
-        
         for (PartyClosingBalance party : partyClosingBalances )
         {
             if (PartyDao.MIN_EMP_ID <= party.getId() && PartyDao.MIN_BANK_ID > party.getId())

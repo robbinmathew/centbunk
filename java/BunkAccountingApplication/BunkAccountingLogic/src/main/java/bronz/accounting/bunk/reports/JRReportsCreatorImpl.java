@@ -226,7 +226,7 @@ public class JRReportsCreatorImpl implements JRReportsCreator
         {
         	reportTemplateInputStream = getCompiledReportAsStream(
         			"bronz/accounting/bunk/report/GENERIC_TEMPLATE_WITH_TITLE");
-        	report.setTitle( String.format( "Credit summary on %1$S", DateUtil.getDateString( date ) ) );
+        	report.setTitle( String.format( "Stock summary on %1$S", DateUtil.getDateString( date ) ) );
             connection = this.dbUtil.getConnection();
             final Map<String, Object> subReportParameterMap = new HashMap<String, Object>();
             subReportParameterMap.put("date", date);
