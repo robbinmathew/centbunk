@@ -875,7 +875,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
             for (Map pivotRecord : pivotMap.values()) {
                 for (String field: fields) {
                     if (!pivotRecord.containsKey(field)) {
-                        pivotRecord.put(field, 0); //default to zero for missing fieldsß
+                        pivotRecord.put(field, 0); //default to zero for missing fields
                     }
                 }
 

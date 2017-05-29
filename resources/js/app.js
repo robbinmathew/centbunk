@@ -242,7 +242,7 @@ function buildSummaryPanel() {
     });
 
     addReportPanel("api/result/fuelsSalesSummaryV2", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Fuels sale summary (Last 30 days)", "summaryPanel" , ' L', 1, 0);
-    addReportPanel("api/result/fuelsTestSummary", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Fuels test summary (Last 30 days)", "summaryPanel" , ' L', 0.5);
+    addReportPanel("api/result/fuelsTestSummary", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Fuels test summary (Last 30 days)", "summaryPanel" , ' L', 1);
 
     return summaryPanel;
 }
@@ -399,6 +399,42 @@ function paramsToQuery(data) {
     }).join("&");
 }
 
+
+function getRowActionsColumns(modelName, callback) {
+    return {
+        xtype:'actioncolumn',
+            width:50,
+        items: [{
+        icon: 'assets/add-row.gif',  // Use a URL in the icon config
+        tooltip: 'Insert row below',
+        handler: function(grid, rowIndex, colIndex) {
+            var store = grid.getStore();
+            store.insert(rowIndex + 1, Ext.create(modelName));
+            callback();
+        }
+    },{
+        icon: 'assets/rm-row.png',
+        tooltip: 'Delete row',
+        handler: function(grid, rowIndex, colIndex) {
+            var store = grid.getStore();
+            var rec = store.getAt(rowIndex);
+
+            //Disable the removal of saved transactions
+            if(rec && rec.data.notEditable == true) {
+                Ext.MessageBox.alert('Stop', "This transaction cannot be removed.");
+                return;
+            }
+
+            store.removeAt(rowIndex);
+            if(store.count() <=0 ) {
+                //Add an empty row if the store becomes empty after removing a row.
+                store.add(Ext.create(modelName));
+            }
+            callback();
+        }
+    }]
+    }
+}
 
 
 

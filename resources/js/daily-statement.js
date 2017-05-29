@@ -617,7 +617,7 @@ function buildDailyStatementPanel(title, record) {
                         dataIndex: 'totalSaleAmt',
                         flex: 1,
                         sortable: false
-                    }]
+                    },getRowActionsColumns("LubeSale", updateClosingBalance )]
                 },{
                     xtype: 'gridpanel',
                     id:'partyTransGrid',
@@ -704,7 +704,7 @@ function buildDailyStatementPanel(title, record) {
                         sortable: false,
                         field: numberFieldConfig(),
                         renderer: editableColumnRenderer
-                    }]
+                    },getRowActionsColumns("PartyTransaction", onPartyTransUpdate )]
                 },{
                     xtype: 'gridpanel',
                     id:'empTransGrid',
@@ -772,7 +772,7 @@ function buildDailyStatementPanel(title, record) {
                         sortable: false,
                         field: numberFieldConfig(),
                         renderer: editableColumnRenderer
-                    }]
+                    },getRowActionsColumns("EmployeeTransaction", onEmpTransUpdate )]
                 }]
         }]
     });
@@ -1022,11 +1022,7 @@ function onOilSaleUpdate() {
             record.set('discountPerUnit', 0);
         }
 
-        if(record.data.actualSale > 0) {
-            record.set( 'totalSaleAmt', ((record.data.unitSellingPrice - record.data.discountPerUnit) * record.data.actualSale).toFixed(2));
-        } else {
-            record.set( 'totalSaleAmt', 0);
-        }
+        setOilTransTotalSaleAmt(record);
     });
     updateClosingBalance();
 
@@ -1463,8 +1459,10 @@ function loadSavedTransactions() {
                 oilTrans.set("currentStock", prod.data.currentStock);
                 oilTrans.set("productId", prod.data.productId);
                 oilTrans.set("unitSellingPrice", prod.data.unitSellingPrice);
-                oilTrans.set("actualSale", savedTrans.actualSale);
+                oilTrans.set("actualSale", savedTrans.totalSale);
                 oilTrans.set("discountPerUnit", savedTrans.discountPerUnit);
+
+                setOilTransTotalSaleAmt(oilTrans);
 
                 oilSaleGridStore.insert(insertIndex++, oilTrans);
             }
@@ -1531,6 +1529,14 @@ function loadSavedTransactions() {
         onOfficeCashUpdate();
         onMeterSaleUpdate();
         onEmpTransUpdate();
+    }
+}
+
+function setOilTransTotalSaleAmt(oilTrans) {
+    if(oilTrans.data.actualSale > 0) {
+        oilTrans.set( 'totalSaleAmt', ((oilTrans.data.unitSellingPrice - oilTrans.data.discountPerUnit) * oilTrans.data.actualSale).toFixed(2));
+    } else {
+        oilTrans.set( 'totalSaleAmt', 0);
     }
 }
 
