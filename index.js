@@ -37,20 +37,22 @@ app.use(session({secret: 'asdfasdf123123', saveUninitialized: true, resave: fals
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use('/api*', proxy('localhost:8081', {
-	forwardPath: function(req, res) {
-		return require('url').parse(req.originalUrl).path;
-	}
-}));
-
 app.use(logger('combined')); /*combined is the apache format for logging*/
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(/\/((?!api).)*/, bodyParser.urlencoded({ extended: false }));
+app.use(/\/((?!api).)*/, bodyParser.json());
+//app.use(bodyParser.json());
 app.use(methodOverride('X-HTTP-Method-Override'));
 
 
 // Session-persisted message middleware
 app.use(function(req, res, next){
+	if (!req.user && req.originalUrl != "/" && req.originalUrl != "/login" && !req.originalUrl.startsWith('/css') && !req.originalUrl.startsWith('/ext-theme-classic')) {
+		// IF A USER ISN'T LOGGED IN, THEN REDIRECT THEM SOMEWHERE
+		res.redirect('/');
+		return;
+	}
+
+
 	var err = req.session.error;
 	var success = req.session.success;
 	var notice = req.session.notice;
@@ -77,6 +79,22 @@ app.use(function(req, res, next){
 });
 
 
+app.use('/api*', proxy('localhost:8081', {
+	/*proxyReqPnathResolver: function(req) {
+		return require('url').parse(req.url).path;
+	},
+	proxyReqOptDecorator: function (reqOpt, req) {
+		if (req.user) {
+			req.headers['user'] = req.user[0];
+			req.headers['userrole'] = req.user[2];
+		}
+		return req;
+	}*/
+	forwardPath: function(req, res) {
+		return require('url').parse(req.originalUrl).path;
+	}
+}));
+
 
 
 
@@ -95,7 +113,10 @@ app.set('view engine', 'handlebars');
 /*===============Routes setup ==================*/
 
 app.get('/', function(req, res){
-	res.render('home', {user: req.user});
+	var userName = (req.user) ? req.user[0] : undefined;
+	var userRole = (req.user) ? req.user[2] : undefined;
+
+	res.render('home', {user: userName, role: userRole});
 });
 
 app.get('/unauth', function(req, res){
@@ -109,8 +130,8 @@ app.post('/login', passport.authenticate('local-signin', {
 );
 
 app.get('/logout', function(req, res){
-	var name = req.user.username;
-  	console.log("LOGGIN OUT " + req.user.username)
+	var name = req.user[0];
+  	console.log("LOGGIN OUT " + name)
   	req.logout();
   	res.redirect('/');
   	req.session.notice = "You have successfully been logged out " + name + "!";
@@ -135,8 +156,8 @@ passport.use('local-signin', new LocalStrategy(
     		cbAuth.localAuth(username, password)
     		.then(function (user) {
 			if (user) {
-				console.log("LOGGED IN AS: " + user);
-				req.session.success = 'You are successfully logged in ' + user+ '!';
+				console.log("LOGGED IN AS: " + user[0]);
+				req.session.success = 'You are successfully logged in ' + user[0]+ '!';
 				done(null, user);
 			} else {
 				console.log("COULD NOT LOG IN");
@@ -153,11 +174,12 @@ passport.use('local-signin', new LocalStrategy(
 
 passport.serializeUser(function(user, done) {
 	console.log("SERIALIZING " + user);
-  	done(null, user);
+  	done(null, user[0]);
 });
 
-passport.deserializeUser(function(user, done) {
-  	console.log("DESERIALIZING " + user);
+passport.deserializeUser(function(userName, done) {
+  	console.log("DESERIALIZING " + userName);
+	var user = cbAuth.findUserByName(userName);
   	done(null, user);
 });
 /*===============Passport setup end ==================*/

@@ -29,6 +29,15 @@ public enum SavedQuery {
             .put("D_TEST", new FloatType())
             .put("P_CL_STOCK", new FloatType())
             .put("D_CL_STOCK", new FloatType()).build(), null, null),
+    RATE_CHANGE_HISTORY("rateChangeHistory",
+        ImmutableMap.<String, Type>builder()
+            .put("DATE", new IntegerType())
+            .put("DATE_TEXT", new StringType())
+            .put("PRODUCT_NAME", new StringType())
+            .put("PRODUCT_ID", new FloatType())
+            .put("STOCK", new FloatType())
+            .put("PRICE_CHANGE", new FloatType())
+            .put("TOTAL", new FloatType()).build(), null, null),
     FUEL_SALE_V2("fuelsSalesSummaryV2",
         //TRX.DATE DATE, DATE_FORMAT(FROM_DAYS(TRX.DATE), '%d %b') AS DATE_TEXT, TRX.ID, TRX.T VALUE, CONCAT(CONVERT(CAST(CONVERT(PT.PRODUCT_NAME USING latin1) AS BINARY) using utf8), " ", TRX.DETAIL) DETAIL
         ImmutableMap.<String, Type>builder()

@@ -169,4 +169,21 @@ SELECT
     LEFT JOIN PBMS_PRODUCT_TABLE PT ON PT.PK_PRODUCT_ID=TRX.ID
         ]]>
     </sql-query>
+    <sql-query name="rateChangeHistory">
+        <![CDATA[
+    SELECT
+        MC.PRODUCT_ID PRODUCT_ID, MC.OLD_PRICE OLD_PRICE, MC.DATE DATE,
+        P.PRODUCT_NAME,
+        MC.STOCK,
+        DATE_FORMAT(FROM_DAYS(MC.DATE), '%d %b') AS DATE_TEXT,
+        ROUND(CAST(SUBSTRING(MC.COMMENTS, 20) AS DECIMAL (11 , 2 )) / STOCK,2) PRICE_CHANGE,
+        CAST(SUBSTRING(MC.COMMENTS, 20) AS DECIMAL (11 , 2 )) AS TOTAL
+    FROM
+        pbms_product_meter_change MC
+            LEFT JOIN
+        pbms_product_table P ON MC.PRODUCT_ID = P.PK_PRODUCT_ID
+    WHERE
+        MC.DATE >= :START AND MC.DATE <= :END
+        ]]>
+    </sql-query>
 </hibernate-mapping>

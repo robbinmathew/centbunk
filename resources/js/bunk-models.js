@@ -444,11 +444,28 @@ function buildJsonStoreWithData(data, fields, groupByFields, loadMask) {
     return store;
 }
 
-function addReportPanel(path, params, title, targetPanel, unit, colSize, position ) {
+function addReportPanel(path, params, title, targetPanel, unit, colSize, renderType ) {
     this.path = path;
     this.params = params;
     this.title = title;
-    this.targetPanel = targetPanel;
+    this.renderType = renderType;
+
+    var summaryPanel = Ext.create('Ext.form.Panel', {
+        title: title,
+        frame: true,
+        autoScroll: true,
+        bodyStyle: 'padding:0px 0px 0',
+        columnWidth: colSize,
+        height:350,
+        layout: 'column',
+        defaults: {
+            anchor: '100%'
+        },
+        items: []
+
+    });
+    targetPanel.add(summaryPanel);
+
     this.unit = unit;
     var self = this;
     getDataWithAjax(path + "?" + paramsToQuery(params),
@@ -456,126 +473,156 @@ function addReportPanel(path, params, title, targetPanel, unit, colSize, positio
 
             var responseJson = Ext.decode(response.responseText);
             var resultsStore = buildJsonStoreWithData(responseJson.results, responseJson.fields, responseJson.groupByFields);
-            var targetPanel = Ext.getCmp(self.targetPanel);
 
-            this.tipsConfig = {
-                trackMouse: true,
-                style: 'background: #FFF;line-height: 50%',
-                height: 20 * responseJson.fields.length,
-                width: 250,
-                renderer: function (storeItem, item) {
-                    var seriesTitle = item.series.title;
-                    var text = "";
-                    for(var i=0; i< responseJson.fields.length; i++) {
-                        var fieldName = responseJson.fields[i];
 
-                        text = text + "<p>";
-                        if(fieldName == seriesTitle) {
-                            text = text + "<mark>";
+            if (renderType == "chart") {
+                this.tipsConfig = {
+                    trackMouse: true,
+                    style: 'background: #FFF;line-height: 50%',
+                    height: 20 * responseJson.fields.length,
+                    width: 250,
+                    renderer: function (storeItem, item) {
+                        var seriesTitle = item.series.title;
+                        var text = "";
+                        for(var i=0; i< responseJson.fields.length; i++) {
+                            var fieldName = responseJson.fields[i];
+
+                            text = text + "<p>";
+                            if(fieldName == seriesTitle) {
+                                text = text + "<mark>";
+                            }
+                            text = text + fieldName + ': ' + (storeItem.get(fieldName) ? storeItem.get(fieldName) : 0) + unit;
+                            if(fieldName == seriesTitle) {
+                                text = text + "</mark>";
+                            }
+                            text = text + "</p>";
                         }
-                        text = text + fieldName + ': ' + (storeItem.get(fieldName) ? storeItem.get(fieldName) : 0) + unit;
-                        if(fieldName == seriesTitle) {
-                            text = text + "</mark>";
-                        }
-                        text = text + "</p>";
+                        this.setTitle(text);
                     }
-                    this.setTitle(text);
+                };
+
+                var i=0;
+
+                var seriesArray = [];
+                for(var i=0; i< responseJson.fields.length; i++) {
+                    seriesArray.push({
+                        type: 'line',
+                        axis: 'left',
+                        title: responseJson.fields[i],
+                        xField: 'DATE_TEXT',
+                        yField: responseJson.fields[i],
+                        style: {
+                            'stroke-width': 4,
+                            stroke: graphColorArray[i]
+                        },
+                        markerConfig: {
+                            radius: 4,
+                            type: 'circle',
+                            fill: graphColorArray[i]
+                        },
+                        /*label:
+                         {
+                         display: 'over',
+                         field: 'P_SALE',
+                         renderer: function(val) {
+                         return val + 'L';
+                         }
+                         },*/
+                        highlight: {
+                            fill: '#000',
+                            radius: 5,
+                            'stroke-width': 2,
+                            stroke: '#fff'
+                        },
+                        tips: this.tipsConfig
+                    });
                 }
-            };
 
-            var seriesArray = [];
-            for(var i=0; i< responseJson.fields.length; i++) {
-                seriesArray.push({
-                    type: 'line',
-                    axis: 'left',
-                    title: responseJson.fields[i],
-                    xField: 'DATE_TEXT',
-                    yField: responseJson.fields[i],
-                    style: {
-                        'stroke-width': 4,
-                        stroke: graphColorArray[i]
+
+                var chartPanel = Ext.create('Ext.chart.Chart', {
+                    xtype: 'chart',
+                    //forceFit: true,
+                    //padding: '10 0 0 0',
+                    animate: true,
+                    columnWidth: 1,
+                    shadow: false,
+                    height:300,
+                    style: 'background: #fff;',
+                    store: resultsStore,
+                    legend: {
+                        position: 'right',
+                        boxStrokeWidth: 1,
+                        labelFont: '12px Helvetica'
                     },
-                    markerConfig: {
-                        radius: 4,
-                        type: 'circle',
-                        fill: graphColorArray[i]
-                    },
-                    /*label:
-                     {
-                     display: 'over',
-                     field: 'P_SALE',
-                     renderer: function(val) {
-                     return val + 'L';
-                     }
-                     },*/
-                    highlight: {
-                        fill: '#000',
-                        radius: 5,
-                        'stroke-width': 2,
-                        stroke: '#fff'
-                    },
-                    tips: this.tipsConfig
+                    axes: [{
+                        type: 'numeric',
+                        fields: responseJson.fields,
+                        position: 'left',
+                        grid: true,
+                        minimum: 0,
+                        label: {
+                            renderer: function (v) {
+                                return v + unit;
+                            }
+                        }
+                    }, {
+                        type: 'category',
+                        fields: "DATE_TEXT",
+                        position: 'bottom',
+                        grid: true,
+                        label: {
+                            rotate: {
+                                degrees: -90
+                            }
+                        }
+                    }],
+                    series: seriesArray
                 });
-            }
-
-
-            var chartPanel = Ext.create('Ext.chart.Chart', {
-                xtype: 'chart',
-                //forceFit: true,
-                //padding: '10 0 0 0',
-                animate: true,
-                columnWidth: colSize,
-                shadow: false,
-                height:415,
-                style: 'background: #fff;',
-                store: resultsStore,
-                legend: {
-                    position: 'right',
-                    boxStrokeWidth: 1,
-                    labelFont: '12px Helvetica'
-                },
-                insetPadding: 40,
-                items: [{
-                    type: 'text',
-                    text: title,
-                    font: '22px Helvetica',
-                    width: 100,
-                    height: 30,
-                    x: 20, //the sprite x position
-                    y: 19  //the sprite y position
-                }],
-                axes: [{
-                    type: 'numeric',
-                    fields: responseJson.fields,
-                    position: 'left',
-                    grid: true,
-                    minimum: 0,
-                    label: {
-                        renderer: function (v) {
-                            return v + unit;
-                        }
-                    }
-                }, {
-                    type: 'category',
-                    fields: "DATE_TEXT",
-                    position: 'bottom',
-                    grid: true,
-                    label: {
-                        rotate: {
-                            degrees: -45
-                        }
-                    }
-                }],
-                series: seriesArray
-            });
-
-            if(position != undefined) {
-                targetPanel.add(position, chartPanel);
+                summaryPanel.add(chartPanel);
             } else {
-                targetPanel.add(chartPanel);
+                //Table
+
+                var i=0;
+                var allFields = [];
+                if (responseJson.groupByFields) {
+                    allFields = allFields.concat(responseJson.groupByFields);
+                }
+                if (responseJson.fields) {
+                    allFields = allFields.concat(responseJson.fields);
+                }
+
+                var colArray = [];
+                for(var i=0; i< allFields.length; i++) {
+                    var field = allFields[i];
+                    if(field == "DATE" || field.endsWith("_ID")) {
+                        continue;
+                    }
+                    colArray.push({
+                        text: field,
+                        dataIndex: field,
+                        sortable: false,
+                        flex: 1
+                    });
+                }
+
+
+                var gridPanel = Ext.create('Ext.grid.Panel', {
+                    xtype: 'gridpanel',
+                    //forceFit: true,
+                    //padding: '10 0 0 0',
+                    animate: true,
+                    columnWidth: 1,
+                    shadow: false,
+                    height:300,
+                    style: 'background: #fff;',
+                    store: resultsStore,
+                    columns:colArray
+                });
+                summaryPanel.add(gridPanel);
             }
 
-            targetPanel.doLayout();
+
+            summaryPanel.doLayout();
         },
         function (response) {
             console.log('failed to read info from server for report ' + title + ', response' + response);

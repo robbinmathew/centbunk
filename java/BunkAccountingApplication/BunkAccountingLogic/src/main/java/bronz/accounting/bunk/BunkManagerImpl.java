@@ -35,6 +35,7 @@ import bronz.accounting.bunk.products.model.StockVariation;
 import bronz.accounting.bunk.tankandmeter.dao.TankAndMeterDao;
 import bronz.accounting.bunk.tankandmeter.model.MeterClosingReading;
 import bronz.accounting.bunk.tankandmeter.model.TankClosingStock;
+import bronz.accounting.bunk.util.EntityNameCache;
 import bronz.utilities.general.DateUtil;
 
 public class BunkManagerImpl implements BunkManager {
@@ -80,7 +81,8 @@ public class BunkManagerImpl implements BunkManager {
                                  final List<PartyTransaction> partyTransToBeUpdated) throws BunkMgmtException
     {
         this.partyDao.saveParties( partyToBeUpdated );
-        this.partyDao.savePartyTransactions( partyTransToBeUpdated );
+        this.partyDao.savePartyTransactions(partyTransToBeUpdated);
+        EntityNameCache.readNames(this.partyDao);
     }
     public Map<Integer, Party> getAllParties() throws BunkMgmtException
     {
@@ -146,7 +148,8 @@ public class BunkManagerImpl implements BunkManager {
                                 final List<ProductTransaction> prodTransToBeUpdated) throws BunkMgmtException
     {
         this.productDao.saveProducts( prodToBeUpdated );
-        this.productDao.saveProductTransactions( prodTransToBeUpdated );
+        this.productDao.saveProductTransactions(prodTransToBeUpdated);
+        EntityNameCache.readNames(this.productDao);
     }
     
     public List<MeterClosingReading> getMeterList() throws BunkMgmtException

@@ -241,8 +241,9 @@ function buildSummaryPanel() {
 
     });
 
-    addReportPanel("api/result/fuelsSalesSummaryV2", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Fuels sale summary (Last 30 days)", "summaryPanel" , ' L', 1, 0);
-    addReportPanel("api/result/fuelsTestSummary", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Fuels test summary (Last 30 days)", "summaryPanel" , ' L', 1);
+    addReportPanel("api/result/fuelsSalesSummaryV2", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Fuels sale summary (Last 30 days)", summaryPanel , ' L', 1, "chart");
+    addReportPanel("api/result/fuelsTestSummary", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Fuels test summary (Last 30 days)", summaryPanel , ' L', 0.5, "chart");
+    addReportPanel("api/result/rateChangeHistory", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Rate change history (Last 30 days)", summaryPanel , ' Rs', 0.5, "table");
 
     return summaryPanel;
 }

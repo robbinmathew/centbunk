@@ -22,6 +22,9 @@
   	<logger name="net.sf.jasperreports.engine.xml.JRXmlDigesterFactory">
       <level value="ERROR"/>
   	</logger>
+   	<logger name="net.sf.jasperreports.engine.xml.JRBandFactory">
+      <level value="ERROR"/>
+  	</logger>
    	<root>
  	  <level value="DEBUG" />
       <appender-ref ref="pbms"/>

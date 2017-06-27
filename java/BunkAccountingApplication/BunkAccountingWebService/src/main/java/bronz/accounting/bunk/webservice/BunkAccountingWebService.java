@@ -643,20 +643,13 @@ public class BunkAccountingWebService {
         return this.bunkManager.getTankList(date);
     }
 
-    @GET
-    @Path("getRateChangesHistory")
-    public List<ProdRateChange> getRateChangesHistory() throws BunkMgmtException
-    {
-        return this.bunkManager.getRateChangesHistory();
-    }
-
     @POST
     @Path("saveRateChange")
     public void saveRateChange( final List<UiRateChange> list ) throws BunkMgmtException {
         final int todayInteger = bunkManager.getTodayDate();
         for (UiRateChange rateChange : list) {
             final ProdRateChange prodRateChange = new ProdRateChange();
-            prodRateChange.setComments("TOTAL CASH DIFF IS:" + rateChange.getTotalCashDiff().toPlainString());
+            prodRateChange.setComments("TOTAL CASH DIFF IS:" + rateChange.getTotalCashDiff().toPlainString()); //Do not change this message text. Its used in preparing reports
             prodRateChange.setDate(todayInteger);
             prodRateChange.setOldPrice(rateChange.getOldPrice());
             prodRateChange.setProdId(rateChange.getProductId());
