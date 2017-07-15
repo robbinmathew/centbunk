@@ -325,29 +325,10 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
             idLowerLimit = 1;
             idHigherLimit = 10000;
         }
-        final SQLQuery query = getSession().createSQLQuery(
-                "SELECT PR.PK_PRODUCT_ID AS PRODUCT_ID, TR.PK_SLNO AS SL_NO, " +
-                "    PR.PRODUCT_NAME AS NAME, TX.TOTAL_PRICE AS UNIT_PRICE, " +
-                "    TR.BALANCE AS CLOSING_STOCK, TR.DATE AS DATE, TX.DATE AS LAST_LOAD, TX.MARGIN AS MARGIN " +
-                "FROM ( " +
-                "    SELECT MAX(TQ.PK_SLNO) AS MAX_SLNO " +
-                "    FROM PBMS_PRODUCT_TRANSACTIONS TQ " +
-                "    WHERE TQ.DATE <=:TODAY AND TQ.PRODUCT_ID >= :MIN AND TQ.PRODUCT_ID < :MAX GROUP BY TQ.PRODUCT_ID) AS MAX_SL " +
-                "INNER JOIN PBMS_PRODUCT_TRANSACTIONS AS TR " +
-                "    ON MAX_SL.MAX_SLNO=TR.PK_SLNO " +
-                "LEFT JOIN PBMS_PRODUCT_TABLE AS PR " +
-                "    ON TR.PRODUCT_ID=PR.PK_PRODUCT_ID " +
-                "LEFT JOIN ( " +
-                "    SELECT MAX(TP.PK_SLNO) AS LOAD_PK_SLNO, TP.PRODUCT_ID " +
-                "    FROM PBMS_PRODUCT_TRANSACTIONS TP " +
-                "    WHERE TP.DATE <= :TODAY AND SELL_RECIEVE like 'R%' GROUP BY TP.PRODUCT_ID) AS LAST " +
-                "ON LAST.PRODUCT_ID=PR.PK_PRODUCT_ID " +
-                "INNER JOIN PBMS_PRODUCT_TRANSACTIONS AS TX " +
-                "    ON LAST.LOAD_PK_SLNO=TX.PK_SLNO " +
-                "WHERE TR.BALANCE > 0 OR PR.PK_PRODUCT_ID=3 " +
-                "ORDER BY PR.PRODUCT_NAME"
-                ).addEntity( ProductClosingBalance.class );
-        
+
+
+        final SQLQuery query = getSavedSQLQuery("availableProductList").addEntity( ProductClosingBalance.class);
+
         return query.setInteger( "TODAY", date ).setInteger( "MIN", idLowerLimit).setInteger(
                 "MAX", idHigherLimit  ).list();
         

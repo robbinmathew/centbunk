@@ -317,9 +317,9 @@ public class EntityTransactionBuilder
             final ProductType type) throws BunkMgmtException {
             final Product product = new Product();
             if(type == ProductType.ADDITIONAL_PRODUCTS) {
-                product.setProductId( nextAddionalProdId++ );
+                product.setProductId( ++nextAddionalProdId );
             } else if(type == ProductType.LUBE_PRODUCTS) {
-                product.setProductId( nextOilId++ );
+                product.setProductId( ++nextOilId );
             } else {
                 throw new IllegalStateException("New products for " + type + " not handled");
             }
