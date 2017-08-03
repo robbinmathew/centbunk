@@ -131,11 +131,16 @@ public class GenericHibernateDao
    
    public void rollback()
    {
-       final Session session = getSession();
-       if ( null != session )
-       {
-           session.getTransaction().rollback();
+       try {
+           final Session session = getSession();
+           if ( null != session )
+           {
+               session.getTransaction().rollback();
+           }
+       } catch (Throwable e) {
+           LOG.error("Failed to rollback transactions", e);
        }
+
    }
    
    public <T> T getById( final Class<T> clazz, final Serializable id )

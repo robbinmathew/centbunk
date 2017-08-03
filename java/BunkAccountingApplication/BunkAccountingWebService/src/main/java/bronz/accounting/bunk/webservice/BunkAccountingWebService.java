@@ -195,8 +195,11 @@ public class BunkAccountingWebService {
                 partyToBeUpdated.add(uiParty);
             }
         }
+        if (!partyToBeUpdated.isEmpty() || !partyTransToBeUpdated.isEmpty()) {
+            bunkManager.savePartyDetails(partyToBeUpdated, partyTransToBeUpdated);
+            BunkAppInitializer.refreshPartyNameCache();
+        }
 
-        bunkManager.savePartyDetails(partyToBeUpdated, partyTransToBeUpdated);
     }
 
     @GET
@@ -358,6 +361,7 @@ public class BunkAccountingWebService {
         stockReceipt.setReceiptSummary(receiptSummary);
 
         this.bunkManager.saveStockReceipt(stockReceipt);
+        BunkAppInitializer.refreshProductNameCache();
     }
 
     @GET

@@ -82,7 +82,6 @@ public class BunkManagerImpl implements BunkManager {
     {
         this.partyDao.saveParties( partyToBeUpdated );
         this.partyDao.savePartyTransactions(partyTransToBeUpdated);
-        EntityNameCache.readNames(this.partyDao);
     }
     public Map<Integer, Party> getAllParties() throws BunkMgmtException
     {
@@ -149,7 +148,6 @@ public class BunkManagerImpl implements BunkManager {
     {
         this.productDao.saveProducts( prodToBeUpdated );
         this.productDao.saveProductTransactions(prodTransToBeUpdated);
-        EntityNameCache.readNames(this.productDao);
     }
     
     public List<MeterClosingReading> getMeterList() throws BunkMgmtException
