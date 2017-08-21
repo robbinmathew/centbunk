@@ -727,13 +727,38 @@ public class BunkAccountingWebService {
         throws BunkMgmtException {
         final Report report;
         if ( "DAILY_STMT".equals(type) ) {
-            report = this.reportsCreator.createClosingStatement( getDate(uriInfo) );
+            report = this.reportsCreator.createClosingStatement( getDate(uriInfo, "date") );
         } else if ( "STOCK_STATUS".equals(type) ) {
-            report = this.reportsCreator.createStockStatusReport( getDate(uriInfo) );
+            report = this.reportsCreator.createStockStatusReport(getDate(uriInfo, "date") );
         } else if ( "CREDIT_STATUS".equals(type) ) {
-            report = this.reportsCreator.createCreditStatusReport( getDate(uriInfo) );
+            report = this.reportsCreator.createCreditStatusReport(getDate(uriInfo, "date") );
         } else if ( "CASH_SUMMARY".equals(type) ) {
-            report = this.reportsCreator.createCashSummaryStatement( getDate(uriInfo) );
+            report = this.reportsCreator.createCashSummaryStatement(getDate(uriInfo, "date") );
+        } else if ( "MONTHLY_SUMMARY".equals(type) ) {
+            report = this.reportsCreator.createMonthlyCashSummaryStatement(
+                getDate(uriInfo, "date"), getDate(uriInfo, "toDate"));
+        } else if ( "MONTHLY_SAL_STMT".equals(type) ) {
+            report = this.reportsCreator.createMonthlySalarySummaryStatement(
+                getDate(uriInfo, "date"), getDate(uriInfo, "toDate"));
+        } else if ( "PARTY_COMPLETE_STMT".equals(type) ) {
+            report = this.reportsCreator.createPartyStatement(
+                getField(uriInfo, "id"), getDate(uriInfo, "date"), getDate(uriInfo, "toDate"));
+        } else if ( "PARTY_CREDIT_STMT".equals(type) ) {
+            report = this.reportsCreator.createCreditAlonePartyStatement(
+                getField(uriInfo, "id"), getDate(uriInfo, "date"), getDate(uriInfo, "toDate"));
+        } else if ( "STOCK_RECEIPTS".equals(type) ) {
+            report = this.reportsCreator.createReceiptSummaryReport(getDate(uriInfo, "date"), getDate(uriInfo, "toDate"));
+        } else if ( "PROD_SALES".equals(type) ) {
+            report = this.reportsCreator.createProdSalesStatement(
+                getField(uriInfo, "id"), getDate(uriInfo, "date"), getDate(uriInfo, "toDate"));
+        } else if ( "DSR_STMT".equals(type) ) {
+            report = this.reportsCreator.createDSR(
+                getField(uriInfo, "id"), getDate(uriInfo, "date"), getDate(uriInfo, "toDate"));
+        } else if ( "TANK_SALES".equals(type) ) {
+            report = this.reportsCreator.createTankSalesStatement(
+                getField(uriInfo, "id"), getDate(uriInfo, "date"), getDate(uriInfo, "toDate"));
+        } else if ( "PROD_SALES_STMT".equals(type) ) {
+            report = this.reportsCreator.createProdSalesStatement( getDate(uriInfo, "date"), getDate(uriInfo, "toDate"));
         } else {
             throw new UnsupportedOperationException("This report is not supported");
         }
@@ -765,12 +790,24 @@ public class BunkAccountingWebService {
         return responseBuilder.build();
     }
 
-    private int getDate(UriInfo uriInfo) {
+    private int getDate(UriInfo uriInfo, String fieldName) {
         int date;
-        if(StringUtils.isNotEmpty(uriInfo.getQueryParameters().getFirst("dateText"))) {
-            date = DateUtil.getDateFromSimpleDateString(uriInfo.getQueryParameters().getFirst("dateText"));
+        if(StringUtils.isNotEmpty(uriInfo.getQueryParameters().getFirst(fieldName + "Text"))) {
+            date = DateUtil.getDateFromSimpleDateString(uriInfo.getQueryParameters().getFirst(fieldName + "Text"));
+        } else if (StringUtils.isNotEmpty(uriInfo.getQueryParameters().getFirst(fieldName))) {
+            date = Integer.parseInt(uriInfo.getQueryParameters().getFirst(fieldName));
         } else {
-            date = Integer.parseInt(uriInfo.getQueryParameters().getFirst("date"));
+            throw new IllegalArgumentException("Unable to prepare report without value for field=" + fieldName);
+        }
+        return date;
+    }
+
+    private int getField(UriInfo uriInfo, String fieldName) {
+        int date = 0;
+        if(StringUtils.isNotEmpty(uriInfo.getQueryParameters().getFirst(fieldName))) {
+            date = Integer.parseInt(uriInfo.getQueryParameters().getFirst(fieldName));
+        } else {
+            throw new IllegalArgumentException("Unable to prepare report without value for field=" + fieldName);
         }
         return date;
     }

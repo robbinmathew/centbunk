@@ -30,6 +30,7 @@ import bronz.accounting.bunk.reports.exception.ReportException;
 import bronz.accounting.bunk.reports.model.Report;
 import bronz.accounting.bunk.reports.util.ReportGeneratorHelper;
 import bronz.accounting.bunk.tankandmeter.model.TankClosingStock;
+import bronz.accounting.bunk.util.EntityNameCache;
 import bronz.utilities.general.DateUtil;
 
 public class JRReportsCreatorImpl implements JRReportsCreator
@@ -41,20 +42,20 @@ public class JRReportsCreatorImpl implements JRReportsCreator
     {
         this.dbUtil = dbUtil;
     }
-    
-    public Report createPartyStatement( final PartyClosingBalance party, final int startDate, final int endDate )
+
+    public Report createPartyStatement( final int partyId, final int startDate, final int endDate )
             throws ReportException
     {
-        return createPartyStatement( party, startDate, endDate, "PARTY_ALL_TRANSACTIONS_STMT" );
+        return createPartyStatement( partyId, startDate, endDate, "PARTY_ALL_TRANSACTIONS_STMT" );
     }
-    
-    public Report createCreditAlonePartyStatement( final PartyClosingBalance party, final int startDate, final int endDate )
+
+    public Report createCreditAlonePartyStatement( final int partyId, final int startDate, final int endDate )
         throws ReportException
     {
-        return createPartyStatement( party, startDate, endDate, "PARTY_CREDIT_TRANSACTIONS_STMT" );
+        return createPartyStatement( partyId, startDate, endDate, "PARTY_CREDIT_TRANSACTIONS_STMT" );
     }
-    
-    public Report createProdSalesStatement( final ProductClosingBalance prod, final int startDate, final int endDate )
+
+    public Report createProdSalesStatement( final int prodId, final int startDate, final int endDate )
 		throws ReportException
 	{
     	final Report report = new Report();
@@ -64,12 +65,13 @@ public class JRReportsCreatorImpl implements JRReportsCreator
         {
         	reportTemplateInputStream = getCompiledReportAsStream(
         			"bronz/accounting/bunk/report/GENERIC_TEMPLATE_WITH_TITLE");
-        	report.setTitle( String.format( "Transaction statement for %1$S in period %2$S - %3$S",
-        			prod.getProductName(), DateUtil.getDateString( startDate ), DateUtil.getDateString( endDate ) ) );
+        	report.setTitle( String.format("Transaction statement for %1$S in period %2$S - %3$S",
+                EntityNameCache.getProductName(prodId), DateUtil.getDateString(startDate),
+                DateUtil.getDateString( endDate ) ) );
             connection = this.dbUtil.getConnection();
             final Map<String, Object> subReportParameterMap = new HashMap<String, Object>();
             subReportParameterMap.put("reportName", report.getTitle());
-            subReportParameterMap.put("prodId", prod.getProductId());
+            subReportParameterMap.put("prodId", prodId);
             subReportParameterMap.put("startDate", startDate);
             subReportParameterMap.put("endDate", endDate);
             
@@ -96,7 +98,7 @@ public class JRReportsCreatorImpl implements JRReportsCreator
         return report;
 	}
     
-    public Report createDSR( final ProductClosingBalance prod, final int startDate, final int endDate )
+    public Report createDSR( final int prodId, final int startDate, final int endDate )
     		throws ReportException
     	{
         	final Report report = new Report();
@@ -106,12 +108,13 @@ public class JRReportsCreatorImpl implements JRReportsCreator
             {
             	reportTemplateInputStream = getCompiledReportAsStream(
             			"bronz/accounting/bunk/report/GENERIC_TEMPLATE_WITH_TITLE");
-            	report.setTitle( String.format( "Daily-Sales-Report for %1$S in period %2$S - %3$S",
-            			prod.getProductName(), DateUtil.getDateString( startDate ), DateUtil.getDateString( endDate ) ) );
+            	report.setTitle( String.format("Daily-Sales-Report for %1$S in period %2$S - %3$S",
+                    EntityNameCache.getProductName(prodId), DateUtil.getDateString(startDate),
+                    DateUtil.getDateString(endDate)) );
                 connection = this.dbUtil.getConnection();
                 final Map<String, Object> subReportParameterMap = new HashMap<String, Object>();
                 subReportParameterMap.put("reportName", report.getTitle());
-                subReportParameterMap.put("prodId", prod.getProductId());
+                subReportParameterMap.put("prodId", prodId);
                 subReportParameterMap.put("startDate", startDate);
                 subReportParameterMap.put("endDate", endDate);
                 
@@ -138,7 +141,7 @@ public class JRReportsCreatorImpl implements JRReportsCreator
             return report;
     	}
     
-    public Report createTankSalesStatement( final TankClosingStock tank, final int startDate, final int endDate )
+    public Report createTankSalesStatement( final int tankId, final int startDate, final int endDate )
 	throws ReportException
 	{
     	final Report report = new Report();
@@ -148,12 +151,12 @@ public class JRReportsCreatorImpl implements JRReportsCreator
         {
         	reportTemplateInputStream = getCompiledReportAsStream(
         			"bronz/accounting/bunk/report/GENERIC_TEMPLATE_WITH_TITLE");
-        	report.setTitle( String.format( "Transaction statement for %1$S in period %2$S - %3$S",
-        			tank.getTankName(), DateUtil.getDateString( startDate ), DateUtil.getDateString( endDate ) ) );
+        	report.setTitle( String.format("Tank transaction statement for tankId %1$S in period %2$S - %3$S",
+                tankId, DateUtil.getDateString(startDate), DateUtil.getDateString(endDate ) ) );
             connection = this.dbUtil.getConnection();
             final Map<String, Object> subReportParameterMap = new HashMap<String, Object>();
             subReportParameterMap.put("reportName", report.getTitle());
-            subReportParameterMap.put("tankId", tank.getTankId());
+            subReportParameterMap.put("tankId", tankId);
             subReportParameterMap.put("startDate", startDate);
             subReportParameterMap.put("endDate", endDate);
             
@@ -254,7 +257,7 @@ public class JRReportsCreatorImpl implements JRReportsCreator
         return report;
     }
     
-    private Report createPartyStatement( final PartyClosingBalance party, final int startDate, final int endDate,
+    private Report createPartyStatement( final int partyId, final int startDate, final int endDate,
             final String subReportFileName ) throws ReportException
     {
     	final Report report = new Report();
@@ -264,12 +267,13 @@ public class JRReportsCreatorImpl implements JRReportsCreator
         {
         	reportTemplateInputStream = getCompiledReportAsStream(
         			"bronz/accounting/bunk/report/GENERIC_TEMPLATE_WITH_TITLE");
-        	report.setTitle( String.format( "Credit statement for %1$S in period %2$S - %3$S",
-                    party.getName(), DateUtil.getDateString( startDate ), DateUtil.getDateString( endDate ) ) );
+        	report.setTitle( String.format("Credit statement for %1$S in period %2$S - %3$S",
+                EntityNameCache.getPartyName(partyId), DateUtil.getDateString(startDate),
+                DateUtil.getDateString(endDate)) );
             connection = this.dbUtil.getConnection();
             final Map<String, Object> subReportParameterMap = new HashMap<String, Object>();
             subReportParameterMap.put("reportName", report.getTitle());
-            subReportParameterMap.put("partyId", party.getId());
+            subReportParameterMap.put("partyId", partyId);
             subReportParameterMap.put("startDate", startDate);
             subReportParameterMap.put("endDate", endDate);
             

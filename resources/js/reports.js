@@ -7,6 +7,8 @@ function buildReportsPanel(title, record) {
     //Previous day
     maxDate.setDate(maxDate.getDate()-1);
     var minDate = parseDateText(bunkCache.infos.firstDateText);
+    var partyStore = buildPartyListStore('ALL');
+    var prodStore = buildAvailableProductsStore("ALL", 'ProductStatus');
     var mainContent = Ext.create('Ext.form.Panel', {
         id:'reportsPanel',
         title: title,
@@ -25,18 +27,23 @@ function buildReportsPanel(title, record) {
         items: [{
             xtype:'fieldset',
             //defaults: {anchor: '100%',height:'30px'},
-            layout: 'vbox',
+            layout: {
+                type: 'table',
+                columns: 4
+            },
             title:'Select report type',
             width:'100%',
             defaultType: 'textfield',
             fieldDefaults: {
                 msgTarget: 'side',
                 labelSeparator : ' :',
-                margins: '5 10 5 50',
-                labelWidth: 0
+                markgins: '5 10 5 50',
+                labelWidth: 150
             },
             items: [
                 {
+                    rowspan:1,
+                    colspan:4,
                     xtype: 'radiogroup',
                     fieldLabel: 'Report type',
                     id:"reportType",
@@ -45,28 +52,111 @@ function buildReportsPanel(title, record) {
                     vertical: true,
                     items: [
                         { boxLabel: 'Daily Statement', name: 'reportTypeGroup', inputValue: 'DAILY_STMT', checked: true},
-                        //{ boxLabel: 'Credit Status', name: 'reportTypeGroup', inputValue: 'CREDIT_STATUS'},
+                        { boxLabel: 'Credit Status', name: 'reportTypeGroup', inputValue: 'CREDIT_STATUS'},
                         //{ boxLabel: 'Cash Summary', name: 'reportTypeGroup', inputValue: 'CASH_SUMMARY'},
+                        { boxLabel: 'Monthly summary', name: 'reportTypeGroup', inputValue: 'MONTHLY_SUMMARY'},
+                        { boxLabel: 'Monthly salary statement', name: 'reportTypeGroup', inputValue: 'MONTHLY_SAL_STMT'},
+                        { boxLabel: 'Party statement (Complete)', name: 'reportTypeGroup', inputValue: 'PARTY_COMPLETE_STMT'},
+                        { boxLabel: 'Party statement (Credit alone)', name: 'reportTypeGroup', inputValue: 'PARTY_CREDIT_STMT'},
                         { boxLabel: 'Stock Status', name: 'reportTypeGroup', inputValue: 'STOCK_STATUS'},
-                    ]
+                        { boxLabel: 'Stock receipts', name: 'reportTypeGroup', inputValue: 'STOCK_RECEIPTS'},
+                        { boxLabel: 'Prod sales', name: 'reportTypeGroup', inputValue: 'PROD_SALES'},
+                        { boxLabel: 'Daily sales report (Products)', name: 'reportTypeGroup', inputValue: 'DSR_STMT'},
+                        //{ boxLabel: 'Tank sales', name: 'reportTypeGroup', inputValue: 'TANK_SALES'},
+                        { boxLabel: 'Product sales statement', name: 'reportTypeGroup', inputValue: 'PROD_SALES_STMT'}
+                    ],
+                    listeners: {
+                        change: function(radiogroup, radio) {
+                            if (radio.reportTypeGroup == "DAILY_STMT") {
+                                updateComponents(false, false, false);
+                            } else if (radio.reportTypeGroup == "CREDIT_STATUS") {
+                                updateComponents(false, false, false);
+                            } else if (radio.reportTypeGroup == "STOCK_STATUS") {
+                                updateComponents(false, false, false);
+                            } else if (radio.reportTypeGroup == "MONTHLY_SUMMARY") {
+                                updateComponents(true, false, false);
+                            } else if (radio.reportTypeGroup == "CASH_SUMMARY") {
+                                updateComponents(false, false, false);
+                            } else if (radio.reportTypeGroup == "MONTHLY_SAL_STMT") {
+                                updateComponents(true, false, false);
+                            } else if (radio.reportTypeGroup == "PARTY_COMPLETE_STMT") {
+                                updateComponents(true, true, false);
+                            } else if (radio.reportTypeGroup == "PARTY_CREDIT_STMT") {
+                                updateComponents(true, true, false);
+                            } else if (radio.reportTypeGroup == "STOCK_RECEIPTS") {
+                                updateComponents(true, false, false);
+                            } else if (radio.reportTypeGroup == "PROD_SALES") {
+                                updateComponents(true, false, true);
+                            } else if (radio.reportTypeGroup == "DSR_STMT") {
+                                updateComponents(true, false, true);
+                            } else if (radio.reportTypeGroup == "TANK_SALES") {
+                                updateComponents(true, false, false);
+                            } else if (radio.reportTypeGroup == "PROD_SALES_STMT") {
+                                updateComponents(true, false, false);
+                            };
+                        }
+                    }
                 },{
+                    rowspan:1,
+                    colspan:4,
+                    id: 'partyDropDown',
+                    xtype: 'combobox',
+                    fieldLabel: 'Party Id',
+                    store: partyStore,
+                    displayField: 'name',
+                    valueField: 'id',
+                    editable: false,
+                    labelWidth: 100,
+                    margin: '0 10 10 10',
+                    width: 300
+                },{
+                    rowspan:1,
+                    colspan:4,
+                    id: 'prodDropDown',
+                    xtype: 'combobox',
+                    fieldLabel: 'Product Id',
+                    store: prodStore,
+                    displayField: 'productName',
+                    valueField: 'productId',
+                    editable: false,
+                    labelWidth: 100,
+                    margin: '0 10 10 10',
+                    width: 300
+                },{
+                    rowspan:1,
+                    colspan:2,
                     xtype: 'label',
-                    margins: '5 10 5 100',
                     text: 'Date'
-                },
-                {
+                },{
+                    rowspan:1,
+                    colspan:2,
+                    xtype: 'label',
+                    id: 'toDateLabel',
+                    text: 'To date'
+                },{
+                    rowspan:1,
+                    colspan:2,
                     xtype: 'datepicker',
                     id: 'startDate',
                     maxDate: maxDate,
                     minDate: minDate,
                     value: maxDate,
-                    margins: '5 10 5 100',
+                    margins: '105 100 500 100',
+                    showToday : false
+                },{
+                    rowspan:1,
+                    colspan:2,
+                    xtype: 'datepicker',
+                    id: 'toDate',
+                    maxDate: maxDate,
+                    minDate: minDate,
+                    value: maxDate,
                     showToday : false
                 }, {
+                    rowspan:1,
+                    colspan:4,
                     xtype: 'button',
                     text: 'Show report',
-                    flex:1,
-                    margins: '10 5 5 100',
                     handler: function () {
                         onShowReport();
                     }
@@ -74,7 +164,30 @@ function buildReportsPanel(title, record) {
             ]
         }]
     });
+    updateComponents(false, false, false ); //Update components to the default report selected.
     return mainContent;
+}
+
+function updateComponents(withToDate, withPartyDropDown, withProdDropDown ) {
+    if(withToDate === true) {
+        Ext.getCmp("toDate").enable();
+        Ext.getCmp("toDateLabel").enable();
+    } else {
+        Ext.getCmp("toDate").disable();
+        Ext.getCmp("toDateLabel").disable();
+    }
+
+    if(withPartyDropDown === true) {
+        Ext.getCmp("partyDropDown").enable();
+    } else {
+        Ext.getCmp("partyDropDown").disable();
+    }
+    if(withProdDropDown === true) {
+        Ext.getCmp("prodDropDown").enable();
+    } else {
+        Ext.getCmp("prodDropDown").disable();
+    }
+
 }
 
 function onShowReport() {
@@ -82,6 +195,37 @@ function onShowReport() {
     var reportType = Ext.getCmp('reportType').getValue();
 
     var url = '/api/report?type=' + reportType.reportTypeGroup + '&format=image&dateText=' + dateToSimpleText(selectedDate);
+    if(Ext.getCmp("toDate").disabled === false) {
+        var toDate = Ext.getCmp('toDate').getValue();
+        if (toDate < selectedDate) {
+            Ext.MessageBox.alert('Error', "'To date' is before 'Date'. Please correct.");
+            return;
+        }
+        url = url + "&toDateText=" + dateToSimpleText(toDate);
+    }
+
+    if(Ext.getCmp("partyDropDown").disabled === false) {
+        var id = Ext.getCmp('partyDropDown').getValue();
+        if (id == undefined || id == "") {
+            Ext.MessageBox.alert('Error', "Please select a party");
+            return;
+        }
+        url = url + "&id=" + id;
+    }
+
+    if(Ext.getCmp("prodDropDown").disabled === false) {
+        var id = Ext.getCmp('prodDropDown').getValue();
+        if (id == undefined || id == "") {
+            Ext.MessageBox.alert('Error', "Please select a product");
+            return;
+        }
+        if(reportType.reportTypeGroup == "DSR_STMT" && id > 4) {
+            Ext.MessageBox.alert('Error', "This report is available only for fuels. Please select a fuel product");
+            return;
+        }
+        url = url + "&id=" + id;
+    }
+
     var reportWindowHeight = Ext.getBody().getViewSize().height-100;
     var reportWindowWidth = Ext.getBody().getViewSize().width-100;
 

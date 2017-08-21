@@ -229,12 +229,12 @@ public class ReportsPanel extends BasePublicPanel
                     else if ( getComp( PARTY_COMPLETE_STMT, JRadioButton.class ).isSelected() )
                     {
                         report = this.reportsCreator.createPartyStatement(
-                                (PartyClosingBalance) this.partyIdComboBox.getSelectedItem(), startDate, endDate );
+                            ((PartyClosingBalance) this.partyIdComboBox.getSelectedItem()).getId(), startDate, endDate );
                     }
                     else if ( getComp( PARTY_CREDIT_STMT, JRadioButton.class ).isSelected() )
                     {
                         report = this.reportsCreator.createCreditAlonePartyStatement(
-                                (PartyClosingBalance) this.partyIdComboBox.getSelectedItem(), startDate, endDate );
+                            ((PartyClosingBalance) this.partyIdComboBox.getSelectedItem()).getId(), startDate, endDate );
                     }
                     else if ( getComp( STOCK_RECEIPTS, JRadioButton.class ).isSelected() )
                     {
@@ -243,17 +243,17 @@ public class ReportsPanel extends BasePublicPanel
                     else if ( getComp( PROD_SALES, JRadioButton.class ).isSelected() )
                     {
                         report = this.reportsCreator.createProdSalesStatement(
-                        		(ProductClosingBalance) this.prodIdComboBox.getSelectedItem(), startDate, endDate);
+                            ((ProductClosingBalance) this.prodIdComboBox.getSelectedItem()).getProductId(), startDate, endDate);
                     }
                     else if ( getComp( DSR_STMT, JRadioButton.class ).isSelected() )
                     {
                         report = this.reportsCreator.createDSR(
-                        		(ProductClosingBalance) this.prodIdComboBox.getSelectedItem(), startDate, endDate);
+                            ((ProductClosingBalance) this.prodIdComboBox.getSelectedItem()).getProductId(), startDate, endDate);
                     }
                     else if ( getComp( TANK_SALES, JRadioButton.class ).isSelected() )
                     {
                         report = this.reportsCreator.createTankSalesStatement(
-                        		(TankClosingStock) this.tankIdComboBox.getSelectedItem(), startDate, endDate);
+                            ((TankClosingStock) this.tankIdComboBox.getSelectedItem()).getTankId(), startDate, endDate);
                     }
                     else if ( getComp( PROD_SALES_STMT, JRadioButton.class ).isSelected() )
                     {

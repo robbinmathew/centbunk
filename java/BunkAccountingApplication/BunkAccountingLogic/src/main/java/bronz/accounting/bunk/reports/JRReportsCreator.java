@@ -8,19 +8,19 @@ import bronz.accounting.bunk.tankandmeter.model.TankClosingStock;
 
 public interface JRReportsCreator
 {
-    Report createPartyStatement( final PartyClosingBalance party, final int startDate, final int endDate )
+    Report createPartyStatement( final int partyId, final int startDate, final int endDate )
             throws ReportException;
     
-    Report createCreditAlonePartyStatement( final PartyClosingBalance party, final int startDate, final int endDate )
+    Report createCreditAlonePartyStatement( final int partyId, final int startDate, final int endDate )
         throws ReportException;
     
-    Report createProdSalesStatement( final ProductClosingBalance prod, final int startDate, final int endDate )
+    Report createProdSalesStatement( final int prodId, final int startDate, final int endDate )
     	throws ReportException;
     
-    Report createDSR( final ProductClosingBalance prod, final int startDate, final int endDate )
+    Report createDSR( final int prodId, final int startDate, final int endDate )
         	throws ReportException;
     
-    Report createTankSalesStatement( final TankClosingStock tank, final int startDate, final int endDate )
+    Report createTankSalesStatement( final int tankId, final int startDate, final int endDate )
 		throws ReportException;
     
     Report createReceiptSummaryReport( final int startDate, final int endDate ) throws ReportException;
