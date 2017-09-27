@@ -687,7 +687,12 @@ function buildDailyStatementPanel(title, record) {
                         xtype: 'checkcolumn',
                         header: 'Cheque debit?',
                         dataIndex: 'isChequeDebit',
-                        width:'20px'
+                        width:'20px',
+                        listeners : {
+                            checkchange: function (editor, e, eOpts) {
+                                onPartyTransUpdate();
+                            }
+                        }
                     },{
                         text: "Credit detail",
                         dataIndex: 'creditDetail',
@@ -1491,7 +1496,8 @@ function loadSavedTransactions() {
                 if(savedTrans.creditAmt > 0) {
                     partyTrans.set('creditDetail',savedTrans.creditDetail);
                     partyTrans.set('creditAmt',savedTrans.creditAmt);
-                } else {
+                }
+                if(savedTrans.debitAmt > 0){
                     partyTrans.set('debitDetail',savedTrans.debitDetail);
                     partyTrans.set('debitAmt',savedTrans.debitAmt);
                     partyTrans.set('isChequeDebit',savedTrans.isChequeDebit);
