@@ -2,12 +2,8 @@ package bronz.accounting.bunk.framework.dao;
 
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
+import java.util.*;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import bronz.accounting.bunk.framework.exceptions.BunkValidationException;
 import bronz.accounting.bunk.model.QueryResults;
@@ -810,7 +806,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
             }
             queryResults.setResults(rawResults);
         } else {
-            final Map<String, Map> pivotMap = new HashMap();
+            final Map<String, Map> pivotMap = new LinkedHashMap<String, Map>();
             queryResults.getGroupByFields().addAll(savedQuery.getGroupByFields());
             for (Map<String, Object> rawRecord : (List<Map<String, Object>>)rawResults) {
                 //Prepare key
@@ -826,7 +822,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
 
                 Map pivotRecord = pivotMap.get(key);
                 if(pivotRecord == null) {
-                   pivotRecord = new HashMap();
+                   pivotRecord = new TreeMap();
                     pivotMap.put(key, pivotRecord);
                 }
 
@@ -852,15 +848,36 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
                     }
                 }
             }
-            Set<String> fields = queryResults.getFields();
-            for (Map pivotRecord : pivotMap.values()) {
-                for (String field: fields) {
-                    if (!pivotRecord.containsKey(field)) {
-                        pivotRecord.put(field, 0); //default to zero for missing fields
-                    }
-                }
 
+            Set<String> fields = queryResults.getFields();
+            switch (savedQuery.getMissingValueHandling()) {
+                case 1: //Carry over last value
+                    final Map<String, Object> prevValueMap = new HashMap<>();
+                    for (Map pivotRecord : pivotMap.values()) {
+                        for (String field: fields) {
+                            if (pivotRecord.containsKey(field)) {
+                                //Keep the value for future use
+                                prevValueMap.put(field, pivotRecord.get(field)); //default to zero for missing fields
+                            } else {
+                                if (prevValueMap.containsKey(field)) {
+                                    pivotRecord.put(field, prevValueMap.get(field));
+                                }
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    for (Map pivotRecord : pivotMap.values()) {
+                        for (String field: fields) {
+                            if (!pivotRecord.containsKey(field)) {
+                                pivotRecord.put(field, 0); //default to zero for missing fields
+                            }
+                        }
+
+                    }
+                    break;
             }
+
             queryResults.setResults(pivotMap.values());
         }
         return queryResults;

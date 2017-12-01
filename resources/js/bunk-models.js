@@ -444,7 +444,7 @@ function buildJsonStoreWithData(data, fields, groupByFields, loadMask) {
     return store;
 }
 
-function addReportPanel(path, params, title, targetPanel, unit, colSize, renderType ) {
+function addReportPanel(path, params, title, targetPanel, unit, colSize, renderType, height ) {
     this.path = path;
     this.params = params;
     this.title = title;
@@ -456,7 +456,7 @@ function addReportPanel(path, params, title, targetPanel, unit, colSize, renderT
         autoScroll: true,
         bodyStyle: 'padding:0px 0px 0',
         columnWidth: colSize,
-        height:350,
+        height:height,
         layout: 'column',
         defaults: {
             anchor: '100%'
@@ -483,11 +483,13 @@ function addReportPanel(path, params, title, targetPanel, unit, colSize, renderT
                     width: 250,
                     renderer: function (storeItem, item) {
                         var seriesTitle = item.series.title;
+                        var seriesIdx = item.series.seriesIdx;
                         var text = "";
+
                         for(var i=0; i< responseJson.fields.length; i++) {
                             var fieldName = responseJson.fields[i];
 
-                            text = text + "<p>";
+                            text = text + "<p class=\"small\" onclick='toggleSeries(\"" + title + "\",\"" + seriesIdx + "\")'>";
                             if(fieldName == seriesTitle) {
                                 text = text + "<mark>";
                             }
@@ -543,16 +545,19 @@ function addReportPanel(path, params, title, targetPanel, unit, colSize, renderT
                     xtype: 'chart',
                     //forceFit: true,
                     //padding: '10 0 0 0',
+                    id: title + '_chart',
                     animate: true,
                     columnWidth: 1,
                     shadow: false,
-                    height:300,
+                    height:height-50,
+                    autoScroll: true,
                     style: 'background: #fff;',
                     store: resultsStore,
                     legend: {
                         position: 'right',
                         boxStrokeWidth: 1,
-                        labelFont: '12px Helvetica'
+                        labelFont: '8px Helvetica',
+                        itemSpacing: 0
                     },
                     axes: [{
                         type: 'numeric',
@@ -613,7 +618,7 @@ function addReportPanel(path, params, title, targetPanel, unit, colSize, renderT
                     animate: true,
                     columnWidth: 1,
                     shadow: false,
-                    height:300,
+                    height:height-50,
                     style: 'background: #fff;',
                     store: resultsStore,
                     columns:colArray
@@ -627,6 +632,38 @@ function addReportPanel(path, params, title, targetPanel, unit, colSize, renderT
         function (response) {
             console.log('failed to read info from server for report ' + title + ', response' + response);
         });
+}
+
+function toggleSeries(chartName, seriesIdx) {
+    var chart = Ext.getCmp(chartName+ '_chart');
+    //Find if any hidden
+    var hidden = false;
+    Ext.each(chart.series.items, function(series) {
+        if (series.line != undefined && series.line.attr != undefined && series.line.attr.hidden === true) {
+            hidden = true;
+        }
+    });
+
+    if (hidden === true) {
+        //Enable all
+        Ext.each(chart.series.items, function(series) {
+            series.showAll(series.seriesIdx);
+        });
+    } else {
+        //Hide every series except selected.
+        Ext.each(chart.series.items, function(series) {
+            if (series.seriesIdx == seriesIdx) {
+                // hides the series
+                series.showAll(series.seriesIdx);
+            } else {
+                series.hideAll(series.seriesIdx);
+            }
+
+        });
+    }
+    chart.redraw();
+
+
 }
 
 

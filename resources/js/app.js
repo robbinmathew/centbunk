@@ -2,7 +2,7 @@ Ext.require('Ext.container.Viewport');
 
 var bunkCache = {};
 var pageMask;
-var graphColorArray = ['#1ABC9C', '#F1C40F', '#3498DB', '#C0392B', '#9B59B6', "#48C9B0", "#16A085", "#3498DB", "#9B59B6", "#E67E22", "#2ECC71", "#7F8C8D", "#F1C40F", "#E74C3C", "#273746"]; //10 colors to supports twenty fields
+var graphColorArray = ['#1ABC9C', '#F1C40F', '#3498DB', '#C0392B', '#9B59B6', "#48C9B0", "#16A085", "#3498DB", "#9B59B6", "#E67E22", "#2ECC71", "#7F8C8D", "#F1C40F", "#E74C3C", "#273746", '#1ABC9C', '#F1C40F', '#3498DB', '#C0392B', '#9B59B6', "#48C9B0", "#16A085", "#3498DB", "#9B59B6", "#E67E22", "#2ECC71", "#7F8C8D", "#F1C40F", "#E74C3C", "#273746", '#1ABC9C', '#F1C40F', '#3498DB', '#C0392B', '#9B59B6', "#48C9B0", "#16A085", "#3498DB", "#9B59B6", "#E67E22", "#2ECC71", "#7F8C8D", "#F1C40F", "#E74C3C", "#273746", '#1ABC9C', '#F1C40F', '#3498DB', '#C0392B', '#9B59B6', "#48C9B0", "#16A085", "#3498DB", "#9B59B6", "#E67E22", "#2ECC71", "#7F8C8D", "#F1C40F", "#E74C3C", "#273746"]; //10 colors to supports twenty fields
 
 function getDataWithAjax(urlPath, success, failure) {
     Ext.Ajax.request({
@@ -241,9 +241,10 @@ function buildSummaryPanel() {
 
     });
 
-    addReportPanel("api/result/fuelsSalesSummaryV2", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Fuels sale summary (Last 30 days)", summaryPanel , ' L', 1, "chart");
-    addReportPanel("api/result/fuelsTestSummary", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Fuels test summary (Last 30 days)", summaryPanel , ' L', 0.5, "chart");
-    addReportPanel("api/result/rateChangeHistory", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Rate change history (Last 30 days)", summaryPanel , ' Rs', 0.5, "table");
+    addReportPanel("api/result/fuelsSalesSummaryV2", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Fuels sale summary (Last 30 days)", summaryPanel , ' L', 1, "chart", 350);
+    addReportPanel("api/result/fuelsTestSummary", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Fuels test summary (Last 30 days)", summaryPanel , ' L', 0.5, "chart", 350);
+    addReportPanel("api/result/rateChangeHistory", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Rate change history (Last 30 days)", summaryPanel , ' Rs', 0.5, "table",350);
+    addReportPanel("api/result/partyBalanceSummary", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Fuels sale summary (Last 30 days)", summaryPanel , ' L', 1, "chart",600);
 
     return summaryPanel;
 }

@@ -59616,9 +59616,63 @@ Ext.define('Ext.chart.LegendItem', {
     
     onMouseDown: function() {
         var me = this,
-            index = me.yFieldIndex;
+            index = me.series.seriesIdx;
 
-        if (!me.hiddenSeries) {
+        // If the clicked item isany hidden
+        var hidden = false;
+        Ext.each(me.legend.chart.legend.items, function(item) {
+            if (item.hiddenSeries) {
+                hidden = true;
+            }
+        });
+        if (hidden === true) {
+            //Enable all
+            Ext.each(me.legend.chart.legend.items, function(legend) {
+                legend.series.showAll(legend.series.seriesIdx);
+                legend.label.setAttributes({
+                    opacity: 1
+                }, true);
+                legend.hiddenSeries = false;
+            });
+        } else {
+            //Hide every series except selected.
+            Ext.each(me.legend.chart.legend.items, function(legend) {
+                if (legend.series.seriesIdx == index) {
+                    // hides the series
+                    legend.series.showAll(legend.series.seriesIdx);
+                    legend.label.setAttributes({
+                        opacity: 1
+                    }, true);
+                    legend.hiddenSeries = false;
+                } else {
+                    legend.series.hideAll(legend.series.seriesIdx);
+                    legend.label.setAttributes({
+                        opacity: .5
+                    }, true);
+                    legend.hiddenSeries = true;
+                }
+
+            });
+        }
+        me.legend.chart.redraw();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /*if (me.hiddenSeries) {
             me.series.hideAll(index);
             me.label.setAttributes({
                 opacity: 0.5
@@ -59630,7 +59684,7 @@ Ext.define('Ext.chart.LegendItem', {
             }, true);
         }
         me.hiddenSeries = !me.hiddenSeries; 
-        me.legend.chart.redraw();
+        me.legend.chart.redraw();*/
     },
 
     

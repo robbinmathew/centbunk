@@ -56,7 +56,16 @@ public enum SavedQuery {
             .put("VALUE", new FloatType()).build(),
         Arrays.asList("DATE", "DATE_TEXT"),
         ImmutableMap.<String, String>builder()
-            .put("DETAIL", "VALUE").build());
+            .put("DETAIL", "VALUE").build()),
+    PARTY_BALANCE_SUMMARY("partyBalanceSummary",
+            ImmutableMap.<String, Type>builder()
+                    .put("DATE", new IntegerType())
+                    .put("DATE_TEXT", new StringType())
+                    .put("NAME", new StringType())
+                    .put("BALANCE", new FloatType()).build(),
+            Arrays.asList("DATE", "DATE_TEXT"),
+            ImmutableMap.<String, String>builder()
+                    .put("NAME", "BALANCE").build(), 1);
 
 
     private final String savedQueryName;
@@ -64,10 +73,17 @@ public enum SavedQuery {
     private final List<String> groupByFields;
     private final Map<String, String> pivotFields;
     private final Set<String> ignoreFields;
+    private final int missingValueHandling;
+
+    private SavedQuery(final String savedQueryName,
+                       final Map<String, ? extends Type> typeMap, final List<String> groupByFields,
+                       final Map<String, String> pivotFields) {
+        this(savedQueryName, typeMap, groupByFields, pivotFields, 0);
+    }
 
     private SavedQuery(final String savedQueryName,
         final Map<String, ? extends Type> typeMap, final List<String> groupByFields,
-        final Map<String, String> pivotFields) {
+        final Map<String, String> pivotFields, final int missingValueHandling) {
         this.savedQueryName = savedQueryName;
         this.typeMap = typeMap;
         this.groupByFields = groupByFields;
@@ -76,6 +92,7 @@ public enum SavedQuery {
         if(pivotFields !=null) {
             this.ignoreFields.addAll(pivotFields.values());
         }
+        this.missingValueHandling = missingValueHandling;
     }
 
     public static SavedQuery findQuery(String name) {
@@ -106,5 +123,9 @@ public enum SavedQuery {
 
     public Map<String, ? extends Type> getTypeMap() {
         return typeMap;
+    }
+
+    public int getMissingValueHandling() {
+        return missingValueHandling;
     }
 }

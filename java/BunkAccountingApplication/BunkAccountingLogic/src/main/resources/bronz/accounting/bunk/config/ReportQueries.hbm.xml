@@ -186,4 +186,37 @@ SELECT
         MC.DATE >= :START AND MC.DATE <= :END
         ]]>
     </sql-query>
+    <sql-query name="partyBalanceSummary">
+        <![CDATA[
+    SELECT
+        TRX.DATE DATE,
+        DATE_FORMAT(FROM_DAYS(TRX.DATE), '%d %b %Y') DATE_TEXT,
+        TRX.PARTY_ID ID,
+        TR.BALANCE,
+        CONCAT(PA.PARTY_NAME, '-', PA.PK_PARTY_ID) AS NAME
+    FROM
+        (SELECT
+            MAX(PK_SLNO) AS MAX_SLNO, PARTY_ID, :START AS DATE
+        FROM
+            PBMS_PARTY_TRANSACTIONS
+        WHERE
+            DATE < :START AND PARTY_ID IN (SELECT DISTINCT(PARTY_ID) FROM PBMS_PARTY_TRANSACTIONS WHERE PARTY_ID>=299 AND  DATE >= :START AND DATE <= :END)
+        GROUP BY PARTY_ID UNION SELECT
+            MAX(PK_SLNO) AS MAX_SLNO, PARTY_ID, DATE
+        FROM
+            PBMS_PARTY_TRANSACTIONS
+        WHERE
+            DATE > :START AND DATE <= :END
+                AND PARTY_ID >= 299
+        GROUP BY PARTY_ID , DATE) AS TRX
+            LEFT JOIN
+        PBMS_PARTY_TRANSACTIONS TR ON TR.PK_SLNO = TRX.MAX_SLNO
+            LEFT JOIN
+        PBMS_PARTY_TABLE PA ON (PA.PK_PARTY_ID = TRX.PARTY_ID)
+    WHERE
+        (PA.PARTY_STATUS LIKE 'ACTIVE')
+    ORDER BY TRX.DATE, TRX.PARTY_ID;
+        ]]>
+    </sql-query>
+
 </hibernate-mapping>
