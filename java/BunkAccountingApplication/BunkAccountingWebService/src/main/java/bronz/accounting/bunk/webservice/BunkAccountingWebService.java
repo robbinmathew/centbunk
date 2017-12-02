@@ -1,5 +1,6 @@
 package bronz.accounting.bunk.webservice;
 
+import bronz.accounting.bunk.webservice.model.*;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.commons.lang3.StringUtils;
@@ -66,20 +67,6 @@ import bronz.accounting.bunk.tankandmeter.model.TankTransaction;
 import bronz.accounting.bunk.util.BunkUtil;
 import bronz.accounting.bunk.util.EntityNameCache;
 import bronz.accounting.bunk.util.EntityTransactionBuilder;
-import bronz.accounting.bunk.webservice.model.DailyStatementInfo;
-import bronz.accounting.bunk.webservice.model.UiDailyStatement;
-import bronz.accounting.bunk.webservice.model.UiEmployeeTransaction;
-import bronz.accounting.bunk.webservice.model.UiFuelReceipt;
-import bronz.accounting.bunk.webservice.model.UiFuelSale;
-import bronz.accounting.bunk.webservice.model.UiLubeSale;
-import bronz.accounting.bunk.webservice.model.UiMeterSale;
-import bronz.accounting.bunk.webservice.model.UiOfficeCash;
-import bronz.accounting.bunk.webservice.model.UiPartyTransaction;
-import bronz.accounting.bunk.webservice.model.UiRateChange;
-import bronz.accounting.bunk.webservice.model.UiStockReceipt;
-import bronz.accounting.bunk.webservice.model.UiTankReceipt;
-import bronz.accounting.bunk.webservice.model.UiTankSale;
-import bronz.accounting.bunk.webservice.model.UiUpdateParties;
 import bronz.utilities.custom.CustomDecimal;
 import bronz.utilities.general.DateUtil;
 import bronz.utilities.general.Pair;
@@ -200,6 +187,12 @@ public class BunkAccountingWebService {
             BunkAppInitializer.refreshPartyNameCache();
         }
 
+    }
+
+    @POST
+    @Path("saveSpecialPartyTransactions")
+    public void saveSpecialPartyTransactions(final UiSpecialPartyTransaction data) throws BunkMgmtException {
+        this.bunkManager.specialUpdatePartyTrans(data.getTransaction(), data.getPrevSlNoForInsert(), data.getAmtDiffForTransUpdate());
     }
 
     @GET
@@ -625,10 +618,10 @@ public class BunkAccountingWebService {
     }
 
     @GET
-    @Path("getPartyTransactionHistory")
-    public List<PartyTransaction> getPartyTransactionHistory( final @QueryParam("id") int partyId ) throws BunkMgmtException
+    @Path("partyTransactions")
+    public List<PartyTransaction> getPartyTransactionHistory( final @QueryParam("id") int partyId, @Context UriInfo uriInfo, @QueryParam("typeFilter") String transTypeFilter, @QueryParam("detailFilter") final String detailFilter) throws BunkMgmtException
     {
-        return this.bunkManager.getPartyTransactionHistory(partyId);
+        return this.bunkManager.getPartyTransactionHistory(partyId, getDate(uriInfo, "date"), getDate(uriInfo, "toDate"), transTypeFilter, detailFilter);
     }
 
     @GET

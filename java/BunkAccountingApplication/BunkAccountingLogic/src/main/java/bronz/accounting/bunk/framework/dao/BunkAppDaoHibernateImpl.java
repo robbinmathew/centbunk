@@ -1,5 +1,6 @@
 package bronz.accounting.bunk.framework.dao;
 
+import java.math.BigDecimal;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -194,7 +195,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
     {
         return getByQuery( PartyTransaction.class, "from PartyTransaction " +
                 "where date >= ? and date <= ? and partyId=? and transactionType like ?  and transactionDetail like ? " +
-                "order by partyId, date, slNo", startDate, endDate, partyId, overrideNullFilter( transTypeFilter),
+                "order by date, slNo", startDate, endDate, partyId, overrideNullFilter( transTypeFilter),
                 overrideNullFilter(detailFilter ));
     }
     
@@ -438,7 +439,55 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
             session.saveOrUpdate( partyTransaction );
         }
     }
-    
+
+    @Override
+    public void specialUpdatePartyTrans(PartyTransaction newPartyTransaction, Integer prevSlNo, BigDecimal amtDiff) throws PartyDaoException {
+        final Session session = getSession();
+        if ( newPartyTransaction.getSlNo() == null) {
+            //Add new transaction at the end
+            Integer newSlno = (Integer) session.save( newPartyTransaction );
+            session.flush();
+
+            System.out.print("#############NEW ID:" + newSlno);
+
+            if (prevSlNo != null) {
+                //Push all transactions to make space for the new transaction.
+                final Query updateSlnoQuery = session.createSQLQuery( "update pbms_party_transactions set PK_SLNO=PK_SLNO+1 where PK_SLNO>? ORDER BY PK_SLNO desc");
+                fillParameters(updateSlnoQuery, prevSlNo);
+                updateSlnoQuery.executeUpdate();
+                session.flush();
+
+                //Update the sl no
+                final Query reassignSlnoQuery = session.createQuery( "UPDATE PartyTransaction" +
+                        " set slNo=? where slNo = ?");
+                fillParameters(reassignSlnoQuery, prevSlNo + 1, newSlno);
+                reassignSlnoQuery.executeUpdate();
+                session.flush();
+
+                String updateOperation = PartyTransaction.CREDIT_TRANS_TYPES.contains(newPartyTransaction.getTransactionType()) ? "+" : "-";
+
+                //Update the balances for the rest of the transactions of this party.
+                final Query updateBalanceQuery = session.createQuery( "UPDATE PartyTransaction" +
+                        " set balance=balance" + updateOperation + " ? where slNo > ? and partyId = ?");
+                fillParameters(updateBalanceQuery, newPartyTransaction.getAmount(), prevSlNo + 1, newPartyTransaction.getPartyId());
+                updateBalanceQuery.executeUpdate();
+                session.flush();
+
+            }
+        } else {
+            //Update the transaction.
+            session.saveOrUpdate( newPartyTransaction );
+            session.flush();
+            //Update the balances for the rest of the transactions of this party.
+            final Query queryObject = session.createQuery( "UPDATE PartyTransaction" +
+                            " set balance=balance-? where slNo > ? and partyId = ?");
+            fillParameters(queryObject, amtDiff, newPartyTransaction.getSlNo(), newPartyTransaction.getPartyId());
+            queryObject.executeUpdate();
+            session.flush();
+
+        }
+    }
+
     public void saveProductTransactions( final List<ProductTransaction> transactions ) throws ProductDaoException
     {
         final Session session = getSession();

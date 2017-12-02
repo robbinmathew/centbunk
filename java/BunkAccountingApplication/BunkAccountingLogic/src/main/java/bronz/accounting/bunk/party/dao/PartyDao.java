@@ -1,5 +1,6 @@
 package bronz.accounting.bunk.party.dao;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import bronz.accounting.bunk.party.exception.PartyDaoException;
@@ -40,6 +41,8 @@ public interface PartyDao
     List<PartyTransaction> getPendingChequeAtOffice(final int date) throws PartyDaoException;
     
     void savePartyTransactions( final List<PartyTransaction> transactions ) throws PartyDaoException;
+
+    void specialUpdatePartyTrans(PartyTransaction newPartyTransaction, Integer prevSlNo, BigDecimal amtDiff) throws PartyDaoException;
     
     Settlement getSettlement(final int date) throws PartyDaoException;
     

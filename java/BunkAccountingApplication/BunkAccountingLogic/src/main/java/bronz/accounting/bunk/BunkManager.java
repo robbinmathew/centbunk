@@ -1,5 +1,6 @@
 package bronz.accounting.bunk;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +36,10 @@ public interface BunkManager {
 
     @RequiresTransaction(failureExceptionText = "Failed to save the stock receipt")
     void savePartyDetails(List<Party> partyToBeUpdated, List<PartyTransaction> partyTransToBeUpdated) throws BunkMgmtException;
+
+    //Edit transactions
+    @RequiresTransaction(failureExceptionText = "Failed to edit partyTransactions")
+    void specialUpdatePartyTrans(final PartyTransaction newPartyTransaction, final Integer prevSlNo, BigDecimal amtDiff) throws BunkMgmtException;
 
     Map<Integer, Party> getAllParties() throws BunkMgmtException;
 
@@ -84,7 +89,8 @@ public interface BunkManager {
     @RequiresTransaction(failureExceptionText = "Failed to save saved stmt")
     void saveSavedDailyStatement(SavedDailyStatement savedDailyStatement) throws BunkMgmtException;
 
-    List<PartyTransaction> getPartyTransactionHistory(int partyId) throws BunkMgmtException;
+    List<PartyTransaction> getPartyTransactionHistory(final int partyId, final int startDate, final int endDate,
+                                                      final String transTypeFilter, final String detailFilter) throws BunkMgmtException;
 
     List<ProductClosingBalance> getProductList(int date) throws BunkMgmtException;
 

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import bronz.utilities.general.DateUtil;
+import org.codehaus.jackson.annotate.JsonIgnore;
 
 /**
  * Business model for Party transaction.
@@ -168,12 +169,14 @@ public class PartyTransaction
     {
         return DateUtil.getDateString( this.date );
     }
-    
+
+    @JsonIgnore
     public String getCreditText()
     {
         return this.transactionType.startsWith( CREDIT )? this.amount.toPlainString() : "";
     }
-    
+
+	@JsonIgnore
     public String getDebitText()
     {
         return !this.transactionType.startsWith( CREDIT )? this.amount.toPlainString() : "";
