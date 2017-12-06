@@ -472,8 +472,6 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
             session.update( newPartyTransaction );
             session.flush();
             startSlnoForBalanceUpdate = newPartyTransaction.getSlNo();
-
-
         }
 
         if (startSlnoForBalanceUpdate != null) {
