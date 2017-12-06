@@ -1,6 +1,7 @@
 package bronz.accounting.bunk.webservice;
 
 import bronz.accounting.bunk.webservice.model.*;
+import bronz.utilities.general.GeneralUtil;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.commons.lang3.StringUtils;
@@ -11,6 +12,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -192,7 +194,51 @@ public class BunkAccountingWebService {
     @POST
     @Path("saveSpecialPartyTransactions")
     public void saveSpecialPartyTransactions(final UiSpecialPartyTransaction data) throws BunkMgmtException {
-        this.bunkManager.specialUpdatePartyTrans(data.getTransaction(), data.getPrevSlNoForInsert(), data.getAmtDiffForTransUpdate());
+        if (data.getLastTransaction() == null || data.getUpdateMode() == null) {
+            throw new BunkMgmtException("Incomplete request");
+        }
+
+        final PartyTransaction updatePartyTrans = new PartyTransaction();
+        updatePartyTrans.setPartyId(data.getLastTransaction().getPartyId());
+        BigDecimal amtDiff = null;
+        if ("ADD".equals(data.getUpdateMode())) {
+            updatePartyTrans.setTransactionDetail(data.getTransactionDetail());
+            updatePartyTrans.setTransactionType(data.getTransactionType());
+            updatePartyTrans.setAmount(data.getAmount());
+            //Set date
+            if (data.getDate() != null) {
+                updatePartyTrans.setDate(data.getDate());
+            } else {
+                updatePartyTrans.setDate(DateUtil.getDateFromSimpleDateString(data.getDateText()));
+            }
+
+            //Set balance.
+            BigDecimal balance = data.getLastTransaction().getBalance();
+            if ( PartyTransaction.CREDIT_TRANS_TYPES.contains( data.getTransactionType() ) ) {
+                balance = truncate( balance.add( data.getAmount() ) );
+                amtDiff = data.getAmount();
+            } else {
+                balance = truncate(balance.subtract( data.getAmount() ));
+                amtDiff = data.getAmount().negate();
+            }
+            updatePartyTrans.setBalance(balance);
+        } else {
+            updatePartyTrans.setSlNo(data.getLastTransaction().getSlNo());
+            updatePartyTrans.setTransactionType(data.getLastTransaction().getTransactionType());
+            updatePartyTrans.setDate(data.getLastTransaction().getDate());
+            updatePartyTrans.setTransactionDetail(data.getLastTransaction().getTransactionDetail());
+            updatePartyTrans.setAmount(data.getAmount());
+
+            //Update balance
+            amtDiff = truncate(data.getAmount().subtract(data.getLastTransaction().getAmount()));
+            updatePartyTrans.setBalance(truncate(data.getLastTransaction().getBalance().add(amtDiff)));
+        }
+        this.bunkManager.specialUpdatePartyTrans(updatePartyTrans, data.getLastTransaction().getSlNo(), amtDiff);
+    }
+
+    private BigDecimal truncate( final BigDecimal decimal )
+    {
+        return decimal.setScale( 2, RoundingMode.HALF_UP );
     }
 
     @GET

@@ -443,12 +443,11 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
     @Override
     public void specialUpdatePartyTrans(PartyTransaction newPartyTransaction, Integer prevSlNo, BigDecimal amtDiff) throws PartyDaoException {
         final Session session = getSession();
+        Integer startSlnoForBalanceUpdate = null;
         if ( newPartyTransaction.getSlNo() == null) {
             //Add new transaction at the end
             Integer newSlno = (Integer) session.save( newPartyTransaction );
             session.flush();
-
-            System.out.print("#############NEW ID:" + newSlno);
 
             if (prevSlNo != null) {
                 //Push all transactions to make space for the new transaction.
@@ -457,34 +456,33 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
                 updateSlnoQuery.executeUpdate();
                 session.flush();
 
-                //Update the sl no
+                //Update the sl no. Note that the above query updated the SLNO of the new row by one.
                 final Query reassignSlnoQuery = session.createQuery( "UPDATE PartyTransaction" +
                         " set slNo=? where slNo = ?");
-                fillParameters(reassignSlnoQuery, prevSlNo + 1, newSlno);
+                fillParameters(reassignSlnoQuery, prevSlNo + 1, newSlno +1);
                 reassignSlnoQuery.executeUpdate();
                 session.flush();
 
                 String updateOperation = PartyTransaction.CREDIT_TRANS_TYPES.contains(newPartyTransaction.getTransactionType()) ? "+" : "-";
 
-                //Update the balances for the rest of the transactions of this party.
-                final Query updateBalanceQuery = session.createQuery( "UPDATE PartyTransaction" +
-                        " set balance=balance" + updateOperation + " ? where slNo > ? and partyId = ?");
-                fillParameters(updateBalanceQuery, newPartyTransaction.getAmount(), prevSlNo + 1, newPartyTransaction.getPartyId());
-                updateBalanceQuery.executeUpdate();
-                session.flush();
-
+                startSlnoForBalanceUpdate = prevSlNo + 1;
             }
         } else {
             //Update the transaction.
-            session.saveOrUpdate( newPartyTransaction );
+            session.update( newPartyTransaction );
             session.flush();
+            startSlnoForBalanceUpdate = newPartyTransaction.getSlNo();
+
+
+        }
+
+        if (startSlnoForBalanceUpdate != null) {
             //Update the balances for the rest of the transactions of this party.
             final Query queryObject = session.createQuery( "UPDATE PartyTransaction" +
-                            " set balance=balance-? where slNo > ? and partyId = ?");
-            fillParameters(queryObject, amtDiff, newPartyTransaction.getSlNo(), newPartyTransaction.getPartyId());
+                    " set balance=balance+? where slNo > ? and partyId = ?");
+            fillParameters(queryObject, amtDiff, startSlnoForBalanceUpdate, newPartyTransaction.getPartyId());
             queryObject.executeUpdate();
             session.flush();
-
         }
     }
 
