@@ -5,10 +5,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import bronz.utilities.general.DateUtil;
+import org.codehaus.jackson.annotate.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 /**
  * Business model for Party transaction.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PartyTransaction
 {
     public static final String CHEQUE_DEBIT = "DEBIT_CHQ";
@@ -168,12 +171,14 @@ public class PartyTransaction
     {
         return DateUtil.getDateString( this.date );
     }
-    
+
+    @JsonIgnore
     public String getCreditText()
     {
         return this.transactionType.startsWith( CREDIT )? this.amount.toPlainString() : "";
     }
-    
+
+	@JsonIgnore
     public String getDebitText()
     {
         return !this.transactionType.startsWith( CREDIT )? this.amount.toPlainString() : "";

@@ -88,7 +88,7 @@ public class CashPaymentPanel extends BasePanel implements ActionListener, KeyLi
     {
         this.uiBuilder.addElement( UiElement.JLABEL, "", 20, 20, 350, 20, "MAKE PAYMENT TO COMPANY", UiUtil.LABEL_BOLD_FONT );
         final TableModel model = new GenericReadOnlyTableModel<PartyTransaction>(
-                this.bunkManager.getPartyTransactionHistory( companyPartyId ),
+                this.bunkManager.getPartyTransactionHistory( companyPartyId, todayDate - 30, todayDate, null, null ),
                 Arrays.asList( "DATE", "DETAIL", "DEBIT", "CREDIT", "BALANCE" ),
                 Arrays.asList( "dateText", "transactionDetail", "debitText", "creditText", "balance" ) );
         final JTable historyTable = new JTable( model );

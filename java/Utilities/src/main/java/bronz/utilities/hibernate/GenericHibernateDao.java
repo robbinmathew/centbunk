@@ -324,7 +324,7 @@ public class GenericHibernateDao
        return getSession().connection();
    }
 
-   private void fillParameters( final Query query, final Object... parameters )
+   public void fillParameters( final Query query, final Object... parameters )
    {
 	   if ( null != parameters )
 	   {

@@ -1,5 +1,6 @@
 package bronz.accounting.bunk;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,7 +36,6 @@ import bronz.accounting.bunk.products.model.StockVariation;
 import bronz.accounting.bunk.tankandmeter.dao.TankAndMeterDao;
 import bronz.accounting.bunk.tankandmeter.model.MeterClosingReading;
 import bronz.accounting.bunk.tankandmeter.model.TankClosingStock;
-import bronz.accounting.bunk.util.EntityNameCache;
 import bronz.utilities.general.DateUtil;
 
 public class BunkManagerImpl implements BunkManager {
@@ -83,6 +83,11 @@ public class BunkManagerImpl implements BunkManager {
         this.partyDao.saveParties( partyToBeUpdated );
         this.partyDao.savePartyTransactions(partyTransToBeUpdated);
     }
+
+    public void specialUpdatePartyTrans(PartyTransaction newPartyTransaction, Integer prevSlNo, BigDecimal amtDiff) throws BunkMgmtException {
+        this.partyDao.specialUpdatePartyTrans(newPartyTransaction, prevSlNo, amtDiff);
+    }
+
     public Map<Integer, Party> getAllParties() throws BunkMgmtException
     {
         final Map<Integer, Party> partyMap = new HashMap<Integer, Party>();
@@ -244,10 +249,11 @@ public class BunkManagerImpl implements BunkManager {
         savedStatementDao.saveOrUpdateSavedDailyStatement(savedDailyStatement);
     }
     
-    public List<PartyTransaction> getPartyTransactionHistory(final int partyId) throws BunkMgmtException
+    public List<PartyTransaction> getPartyTransactionHistory(final int partyId, final int startDate, final int endDate,
+                                                             final String transTypeFilter, final String detailFilter) throws BunkMgmtException
     {
         LOG.info("Get the trans history for party:" + partyId);
-        return this.partyDao.getTransForPartyByDate( partyId, getTodayDate() - 30, getTodayDate(), null, null );
+        return this.partyDao.getTransForPartyByDate( partyId, startDate, endDate, transTypeFilter, detailFilter );
     }
     
     public List<ProductClosingBalance> getProductList(final int date)

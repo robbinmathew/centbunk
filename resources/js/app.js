@@ -27,6 +27,7 @@ function hideFailedMask() {
     }
 }
 
+
 var navStore = Ext.create('Ext.data.TreeStore', {
     root: {
         expanded: true,
@@ -49,11 +50,13 @@ var navStore = Ext.create('Ext.data.TreeStore', {
                 leaf: true,
                 panelbuilder: 'buildDailyStatementPanel'
             }, {
-                id: 'party-viewer',
-                text: "Add/Edit parties",
+                id: 'add-edit',
+                text: "Add/Edit",
                 collapsible: false,
-                leaf: true,
-                panelbuilder: 'showPartyViewer'
+                leaf: false,
+                expanded: true,
+                panelbuilder: 'showPartyViewer',
+                children: getAddEditItems()
             }, {
                 id: 'products', text: "Products", expanded: true, collapsible: false,
                 children: [
@@ -106,6 +109,8 @@ Ext.application({
         var myMask = new Ext.LoadMask(Ext.getBody(), {msg: "Loading..."});
         myMask.show();
         loadDateAndUserInfo(myMask);
+
+
 
         Ext.create('Ext.container.Viewport', {
             layout: 'border',
@@ -437,5 +442,28 @@ function getRowActionsColumns(modelName, callback) {
     }
 }
 
+function isBeta() {
+    var getParams = document.URL.split("?");
+    if (getParams.length<2) {
+        return false;
+    }
+    // transforming the GET parameters into a dictionnary
+    var params = Ext.urlDecode(getParams[getParams.length - 1]);
+    if (params["beta"] === "1") {
+        return true;
+    }
+    return false;
+}
+
+
+function getAddEditItems() {
+    var items = [
+        {id: 'add-edit-parties', text: "Credit Parties/Employees", leaf: true, panelbuilder: 'showPartyViewer'}
+    ];
+    if (isBeta()) {
+        items.push({id: 'add-edit-transactions', text: "Party Transactions(Admin-Beta)", leaf: true, panelbuilder: 'showPartyTransEditor'})
+    }
+    return items;
+}
 
 
