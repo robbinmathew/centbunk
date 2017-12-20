@@ -148,7 +148,7 @@ function onRateChangeSave() {
                 totalCashDiff:record.data.cashDiff,
                 oldPrice:record.data.unitSellingPrice,
                 currentStock:record.data.currentStock,
-                margin:record.data.marginPerUnit
+                margin:record.data.margin
             };
             changes.push(obj);
         }

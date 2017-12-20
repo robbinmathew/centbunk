@@ -425,10 +425,10 @@ public class BunkAccountingWebService {
                 transBuilder.getMeterTransactionBuilder().addTrans( meterSale.getMeterId(),
                     meterSale.getTotalSale(), "Test sale:" + meterSale.getTestSale(), "SALE" );
             }
-            final Map<Integer, BigDecimal> stockVariations = new HashMap<Integer, BigDecimal>();
+
             for ( UiTankSale tankSale : uiDailyStatement.getTankSales() ) {
                 transBuilder.getTankTransBuilder().addTrans( tankSale.getTankId(),
-                                                             tankSale.getSale(), "", TankTransaction.SALE );
+                        BunkUtil.setAsProdVolume(tankSale.getSale().add(tankSale.getTestSale())), "", TankTransaction.SALE );
                 if (tankSale.getTestSale().compareTo(CustomDecimal.ZERO ) > 0) {
                     transBuilder.getTankTransBuilder().addTrans( tankSale.getTankId(),
                         tankSale.getTestSale(), "", TankTransaction.TEST );
@@ -439,28 +439,53 @@ public class BunkAccountingWebService {
                     transBuilder.getTankTransBuilder().addTrans( tankSale.getTankId(),
                                                                  tankSale.getDiffToday(), "", TankTransaction.DIFF );
                 }
-                //Override the product stock with the actual
-                if (DateUtil.isLastDayOfMonth(todayInteger)) {
-                    transBuilder.getProdTransBuilder().addTrans( tankSale.getProductId(), tankSale.getDiffThisMonth(),
-                        "Stock diff for tank id " + tankSale.getTankId(), ProductTransaction.DIFF );
-                    if (stockVariations.get(tankSale.getProductId()) == null) {
-                        stockVariations.put(tankSale.getProductId(), BigDecimal.ZERO);
-                    }
-                    stockVariations.put(tankSale.getProductId(), stockVariations.get(
-                        tankSale.getProductId()).add(tankSale.getDiffThisMonth()));
-                }
             }
             for (UiFuelSale bean : uiDailyStatement.getFuelSales()) {
                 transBuilder.getProdTransBuilder().addTrans( bean.getProductId(),
                                                              bean.getActualSale(), "", "SALE" );
+
+            }
+
+            //Handle variations. Override the product stock with the actual
+            final Map<Integer, BigDecimal> stockVariations = new HashMap<Integer, BigDecimal>();
+            if (DateUtil.isLastDayOfMonth(todayInteger)) {
+                final Map<Integer, BigDecimal> tankStockTotal = new HashMap<Integer, BigDecimal>();
+                final Map<Integer, BigDecimal> monthlyVariation = new HashMap<Integer, BigDecimal>();
+                //After adding all other tank and prod transactions, compare the balance and consider it as the difference
+                for ( UiTankSale tankSale : uiDailyStatement.getTankSales() ) {
+                    if (tankStockTotal.get(tankSale.getProductId()) == null) {
+                        tankStockTotal.put(tankSale.getProductId(), BigDecimal.ZERO);
+                    }
+                    final BigDecimal totalStockPerProduct = BunkUtil.setAsProdVolume( tankStockTotal.get(
+                            tankSale.getProductId()).add(transBuilder.getTankTransBuilder().getBalanceForEntity(tankSale.getTankId())));
+                    tankStockTotal.put(tankSale.getProductId(), totalStockPerProduct);
+
+                    //Sum up the monthly variation just for comparison
+                    if (monthlyVariation.get(tankSale.getProductId()) == null) {
+                        monthlyVariation.put(tankSale.getProductId(), BigDecimal.ZERO);
+                    }
+                    final BigDecimal totalMonthlyVariation = BunkUtil.setAsProdVolume( monthlyVariation.get(
+                            tankSale.getProductId()).add(tankSale.getDiffThisMonth()));
+                    monthlyVariation.put(tankSale.getProductId(), totalMonthlyVariation);
+                }
+                for ( Map.Entry<Integer, BigDecimal> entry : tankStockTotal.entrySet() ) {
+                    BigDecimal difference = BunkUtil.setAsProdVolume(entry.getValue().subtract(transBuilder.getProdTransBuilder().getBalanceForEntity(entry.getKey())));
+                    stockVariations.put(entry.getKey(), difference);
+                    transBuilder.getProdTransBuilder().addTrans( entry.getKey(), difference,
+                            "Stock diff id=" + entry.getKey() + " monthly_variation=" + monthlyVariation.get(entry.getKey()), ProductTransaction.DIFF );
+                }
+            }
+            for (UiFuelSale bean : uiDailyStatement.getFuelSales()) {
                 final BigDecimal stockVariation = stockVariations.get(bean.getProductId());
                 if (null != stockVariation) {
                     transBuilder.getPartyTransBuilder().addTrans( AppConfig.EXPENSES_PARTY_ID.getIntValue(),
-                          BunkUtil.setAsPrice(stockVariation.multiply(bean.getUnitSellingPrice())),
-                          EntityNameCache.getProductName(bean.getProductId()) + ":Stock variation this month(Litres):" +
-                          BunkUtil.setAsProdVolume(stockVariation), "DEBIT_S" );
+                            BunkUtil.setAsPrice(stockVariation.multiply(bean.getUnitSellingPrice())),
+                            EntityNameCache.getProductName(bean.getProductId()) + ":Stock variation this month(Litres):" +
+                                    BunkUtil.setAsProdVolume(stockVariation), "DEBIT_S" );
                 }
             }
+
+
             for (UiLubeSale bean : uiDailyStatement.getLubesSales()) {
                 if (bean.getTotalSale().compareTo( CustomDecimal.ZERO ) > 0) {
                     if (bean.getDiscountPerUnit().compareTo( CustomDecimal.ZERO ) > 0) {

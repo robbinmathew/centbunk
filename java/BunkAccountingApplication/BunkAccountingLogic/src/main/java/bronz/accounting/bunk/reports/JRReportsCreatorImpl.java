@@ -570,7 +570,7 @@ public class JRReportsCreatorImpl implements JRReportsCreator
         try
         {
         	reportTemplateInputStream = getCompiledReportAsStream(
-        			"bronz/accounting/bunk/report/GENERIC_TITLELESS_TEMPLATE");
+        			"bronz/accounting/bunk/report/GENERIC_TITLELESS_LANDSCAPE_TEMPLATE");
         	report.setTitle( String.format( "PRODUCT SALES STATEMENT (%1$S - %2$S)",
                 		DateUtil.getDateString( startDate ), DateUtil.getDateString( endDate ) ));
             

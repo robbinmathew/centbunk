@@ -117,8 +117,15 @@ public class Report {
 		throws ReportException{
 		try	{
 			final int pageSize = reportPrint.getPages().size();
-			final BufferedImage result = new BufferedImage(
-				PNG_IMG_PAGE_WIDTH, PNG_IMG_PAGE_HEIGHT * pageSize, BufferedImage.TYPE_INT_RGB);
+			boolean isLandscape = reportPrint.getPageHeight() < reportPrint.getPageWidth();
+			final BufferedImage result;
+			if (isLandscape) {
+				result = new BufferedImage(
+						PNG_IMG_PAGE_HEIGHT, PNG_IMG_PAGE_WIDTH * pageSize, BufferedImage.TYPE_INT_RGB);
+			} else {
+				result = new BufferedImage(
+						PNG_IMG_PAGE_WIDTH, PNG_IMG_PAGE_HEIGHT * pageSize, BufferedImage.TYPE_INT_RGB);
+			}
 			int y = 0;
 			final Graphics g = result.getGraphics();
 			for (int i = 0;i<pageSize; i++) {
