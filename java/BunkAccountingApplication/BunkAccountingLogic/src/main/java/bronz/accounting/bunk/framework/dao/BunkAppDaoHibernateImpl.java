@@ -3,16 +3,13 @@ package bronz.accounting.bunk.framework.dao;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
+import java.util.*;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import bronz.accounting.bunk.framework.exceptions.BunkValidationException;
 import bronz.accounting.bunk.model.QueryResults;
 import bronz.accounting.bunk.model.SavedDailyStatement;
+import bronz.accounting.bunk.model.ScrapedDetail;
 import bronz.accounting.bunk.model.dao.SavedStatementDao;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -440,7 +437,6 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
         }
     }
 
-    @Override
     public void specialUpdatePartyTrans(PartyTransaction newPartyTransaction, Integer prevSlNo, BigDecimal amtDiff) throws PartyDaoException {
         final Session session = getSession();
         Integer startSlnoForBalanceUpdate = null;
@@ -826,6 +822,66 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
         catch ( Exception exception)
         {
             throw new BunkMgmtException( "Failed to save saved daily statement", exception );
+        }
+        finally {
+            closeStatement(ps);
+        }
+    }
+
+    public List<ScrapedDetail> getScrapedDetails(int date) throws BunkMgmtException {
+
+        List<ScrapedDetail> results = new ArrayList<ScrapedDetail>();
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet resultSet = null;
+        try{
+            connection = getSession().connection();
+            ps = connection.prepareStatement("SELECT * FROM PBMS_SCRAPED_DETAILS where date=?");
+            int n = 1;
+            ps.setInt(n++, date);
+            resultSet = ps.executeQuery();
+            if(resultSet.next()){
+                SerialBlob serialBlob = new SerialBlob(resultSet.getBlob("content"));
+                final ScrapedDetail scrapedDetail = new ScrapedDetail();
+                scrapedDetail.setContents(serialBlob.getBytes(1, (int) serialBlob.length()));
+                scrapedDetail.setComments(resultSet.getString("comments"));
+                scrapedDetail.setType(resultSet.getString("type"));
+                scrapedDetail.setPkSlNo(resultSet.getInt("pkSlNo"));
+                scrapedDetail.setDate(resultSet.getInt("date"));
+                results.add(scrapedDetail);
+            }
+        }
+        catch ( Exception exception)
+        {
+            throw new BunkMgmtException( "Failed to read scraped details", exception );
+        }
+        finally {
+            closeStatement(ps);
+            closeResultSet(resultSet);
+        }
+        return results;
+    }
+
+
+    public void saveScrapedDetail(ScrapedDetail scrapedDetail) throws BunkMgmtException {
+        Connection connection = null;
+        PreparedStatement ps = null;
+        try{
+            connection = getSession().connection();
+            ps = connection.prepareStatement("INSERT INTO PBMS_SCRAPED_DETAILS (pkSlNo, date, content, comments, type, " +
+                    "createdDate) VALUES (NULL,?,?,?,?,NOW())");
+            SerialBlob serialBlob = new SerialBlob(scrapedDetail.getContents());
+            int n = 1;
+            //INSERT
+            ps.setInt(n++, scrapedDetail.getDate());
+            ps.setBlob(n++, serialBlob);
+            ps.setString(n++, scrapedDetail.getComments());
+            ps.setString(n++, scrapedDetail.getType());
+            ps.executeUpdate();
+        }
+        catch ( Exception exception)
+        {
+            throw new BunkMgmtException( "Failed to save scrapped info", exception );
         }
         finally {
             closeStatement(ps);

@@ -18,6 +18,12 @@ public enum AppConfig {
 	    AUTO_DB_BACKUP_FOLDER( "bronz.auto.database.backup.folder", false, true ),
 	    IS_TEST_ENV( "bronz.bunkapp.test.env", false, true ),
 
+		HPCL_CUSTID( "hpcl.custid", true ),
+		HPCL_PASS( "hpcl.pass", true ),
+		HPCL_URL( "hpcl.url", true ),
+
+		CHROME_DRIVER_PATH("chromedriverPath", true),
+
 	    COMPANY_NAME( "bronz.company.name", true ),
 	 	CODE_REVISION( "bronz.code.revision", true ),
 	 	COMPANY_ADDRESS( "bronz.company.address", true ),

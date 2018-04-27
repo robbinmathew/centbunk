@@ -237,4 +237,16 @@ public class DateUtil
       Calendar today = getCalendarEquivalent( dateInteger );
       return today.get( Calendar.DAY_OF_WEEK ) != Calendar.SUNDAY;
    }
+
+   public static Date nextByHourRounded(int hour) {
+       Calendar calendar = new GregorianCalendar();
+       if (hour < calendar.get(Calendar.HOUR_OF_DAY)) {
+           //The hour passed, increment the date to get the hour the next day.
+           calendar.add(Calendar.DATE, 1);
+       }
+       calendar.set(Calendar.HOUR_OF_DAY, hour);
+       calendar.set(Calendar.MINUTE, 0);
+       calendar.set(Calendar.SECOND, 0);
+       return calendar.getTime();
+   }
 }

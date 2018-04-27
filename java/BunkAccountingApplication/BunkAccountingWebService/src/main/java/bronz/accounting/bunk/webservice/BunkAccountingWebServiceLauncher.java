@@ -1,6 +1,9 @@
 package bronz.accounting.bunk.webservice;
 
+import bronz.accounting.bunk.webservice.timedtasks.ScanSalesPortalTask;
+import bronz.utilities.general.DateUtil;
 import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -12,8 +15,12 @@ import bronz.accounting.bunk.AppConfig;
 import bronz.accounting.bunk.BunkAppInitializer;
 import bronz.utilities.general.GeneralUtil;
 
+import java.util.Date;
+import java.util.Timer;
+
 public class BunkAccountingWebServiceLauncher
 {
+    public static final Logger LOG = LogManager.getLogger(BunkAccountingWebServiceLauncher.class );
    public static void main( String[] args )
    {
 	   try
@@ -21,7 +28,7 @@ public class BunkAccountingWebServiceLauncher
            AppConfig.IS_TEST_ENV.setValue(BunkAppInitializer.PROD);
            AppConfig.loadProperties();
            //Initialize logger only after the properties are loaded.
-           LogManager.getLogger(BunkAccountingWebServiceLauncher.class ).info("Launching application..");
+           LOG.info("Launching application..");
 
            GeneralUtil.analyseJavaEnvironment();
            GeneralUtil.redirectStdoutAndErrToLog();
@@ -53,18 +60,36 @@ public class BunkAccountingWebServiceLauncher
                "jersey.config.server.disableMoxyJson", "true");
 
 
+           Timer timer = null;
            try {
+               timer = scheduleTasks();
                jettyServer.start();
                jettyServer.join();
            } finally {
-               jettyServer.destroy();
+               if (jettyServer != null) {
+                   jettyServer.destroy();
+               }
+
+               if (timer != null) {
+                   timer.cancel();
+               }
            }
 
-           LogManager.getLogger(BunkAccountingWebServiceLauncher.class ).info("Bunk manager launched successfully");
+           LOG.info("Bunk manager launched successfully");
 	   }
 	   catch ( final Throwable e )
 	   {
-           LogManager.getLogger(BunkAccountingWebServiceLauncher.class ).error("Unhandled error", e);
+           LOG.error("Unhandled error", e);
 	   }
    }
+
+   private static Timer scheduleTasks() {
+       Timer timer = new Timer(true);
+       ScanSalesPortalTask portalTask = new ScanSalesPortalTask();
+       timer.scheduleAtFixedRate(portalTask, DateUtil.nextByHourRounded(2), 10000);
+
+       LOG.info("ScanSalesPortalTask scheduled. Next execution at " + new Date(portalTask.scheduledExecutionTime()));
+       return timer;
+   }
+
 }
