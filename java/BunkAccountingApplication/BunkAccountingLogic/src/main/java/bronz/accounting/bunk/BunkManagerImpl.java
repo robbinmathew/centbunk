@@ -8,17 +8,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import bronz.accounting.bunk.model.QueryResults;
-import bronz.accounting.bunk.model.SavedDailyStatement;
+import bronz.accounting.bunk.model.*;
 import bronz.accounting.bunk.model.dao.SavedStatementDao;
+import bronz.accounting.bunk.util.RequiresTransaction;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import bronz.accounting.bunk.framework.dao.DBUtil;
 import bronz.accounting.bunk.framework.exceptions.BunkMgmtException;
 import bronz.accounting.bunk.framework.exceptions.BunkValidationException;
-import bronz.accounting.bunk.model.ClosingStatement;
-import bronz.accounting.bunk.model.StockReceipt;
 import bronz.accounting.bunk.party.dao.PartyDao;
 import bronz.accounting.bunk.party.model.EmployeeMonthlyStatus;
 import bronz.accounting.bunk.party.model.Party;
@@ -232,6 +230,14 @@ public class BunkManagerImpl implements BunkManager {
         statement.getPartyTransactions().addAll( this.partyDao.getTransByDate( date, date, null, null ) );
         //statement.getProductTransactions().addAll( this.productDao.getAllProdTransByDate( date, date ) );
         return statement;
+    }
+
+    public void saveScrapedDetail(ScrapedDetail scrapedDetail) throws BunkMgmtException {
+        this.savedStatementDao.saveScrapedDetail(scrapedDetail);
+    }
+
+    public Map<String, List<ScrapedDetail>> getScrapedDetails(int date) throws BunkMgmtException {
+        return this.savedStatementDao.getScrapedDetails(date);
     }
 
     public SavedDailyStatement getSavedDailyStatement(final int date) throws BunkMgmtException

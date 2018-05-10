@@ -161,7 +161,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
 	        else if( PARTIES.equals( partyType ) )
 	        {
 	            idLowerLimit = 300;
-	            idHigherLimit = 10000;
+	            idHigherLimit = 9000;
 	        }
 	        else
 	        {
@@ -762,7 +762,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
             ps = connection.prepareStatement("SELECT content FROM PBMS_SAVED_STATEMENT where date=? AND type=?");
             int n = 1;
             ps.setInt(n++, date);
-            ps.setString(n++, SavedStatementDao.DAILY_STATEMENT_TYPE);
+            ps.setString(n++, (date == 0) ? SavedStatementDao.SCANNER_TYPE : SavedStatementDao.DAILY_STATEMENT_TYPE);
             resultSet = ps.executeQuery();
             if(resultSet.next()){
                 SerialBlob serialBlob = new SerialBlob(resultSet.getBlob("content"));
@@ -813,7 +813,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
             //INSERT
             ps.setInt(n++, savedDailyStatement.getDate());
             ps.setBlob(n++, serialBlob);
-            ps.setString(n++, SavedStatementDao.DAILY_STATEMENT_TYPE);
+            ps.setString(n++,  (savedDailyStatement.getDate() == 0) ? SavedStatementDao.SCANNER_TYPE : SavedStatementDao.DAILY_STATEMENT_TYPE);
 
             //UPDATE
             ps.setBlob(n++, serialBlob);
@@ -828,9 +828,8 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
         }
     }
 
-    public List<ScrapedDetail> getScrapedDetails(int date) throws BunkMgmtException {
-
-        List<ScrapedDetail> results = new ArrayList<ScrapedDetail>();
+    public Map<String, List<ScrapedDetail>> getScrapedDetails(int date) throws BunkMgmtException {
+        Map<String, List<ScrapedDetail>> results =  new HashMap<String, List<ScrapedDetail>>();
         Connection connection = null;
         PreparedStatement ps = null;
         ResultSet resultSet = null;
@@ -848,7 +847,14 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
                 scrapedDetail.setType(resultSet.getString("type"));
                 scrapedDetail.setPkSlNo(resultSet.getInt("pkSlNo"));
                 scrapedDetail.setDate(resultSet.getInt("date"));
-                results.add(scrapedDetail);
+                scrapedDetail.setCreatedDate(resultSet.getDate("createdDate"));
+                List<ScrapedDetail> list = results.get(scrapedDetail.getType());
+                if (list == null) {
+                    list = new ArrayList<ScrapedDetail>();
+                    results.put(scrapedDetail.getType(), list);
+                }
+
+                list.add(scrapedDetail);
             }
         }
         catch ( Exception exception)
@@ -861,7 +867,6 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
         }
         return results;
     }
-
 
     public void saveScrapedDetail(ScrapedDetail scrapedDetail) throws BunkMgmtException {
         Connection connection = null;

@@ -18,6 +18,7 @@ public enum AppConfig {
 	    AUTO_DB_BACKUP_FOLDER( "bronz.auto.database.backup.folder", false, true ),
 	    IS_TEST_ENV( "bronz.bunkapp.test.env", false, true ),
 
+		SCHEDULED_TASKS_ENABLED( "tasks.enabled", true ),
 		HPCL_CUSTID( "hpcl.custid", true ),
 		HPCL_PASS( "hpcl.pass", true ),
 		HPCL_URL( "hpcl.url", true ),

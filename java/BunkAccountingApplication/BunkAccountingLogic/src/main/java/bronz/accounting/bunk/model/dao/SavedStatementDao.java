@@ -17,11 +17,12 @@ import bronz.accounting.bunk.model.ScrapedDetail;
  */
 public interface SavedStatementDao {
     String DAILY_STATEMENT_TYPE="DAILY_STATEMENT";
+    String SCANNER_TYPE="SCANNER_STATEMENT";
     SavedDailyStatement getSavedDailyStatement(int date) throws BunkMgmtException;
     void saveOrUpdateSavedDailyStatement(SavedDailyStatement savedDailyStatement) throws BunkMgmtException;
     void deleteSavedDailyStatement(int date) throws BunkMgmtException;
 
-    List<ScrapedDetail> getScrapedDetails(int date) throws BunkMgmtException;
+    Map<String, List<ScrapedDetail>> getScrapedDetails(int date) throws BunkMgmtException;
     void saveScrapedDetail(ScrapedDetail scrapedDetail) throws BunkMgmtException;
 
     QueryResults getResult(final String savedQueryName, final Map<String, Object> params) throws BunkMgmtException;

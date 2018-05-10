@@ -21,6 +21,9 @@ import java.util.Timer;
 public class BunkAccountingWebServiceLauncher
 {
     public static final Logger LOG = LogManager.getLogger(BunkAccountingWebServiceLauncher.class );
+
+
+    private static final long TASKS_INTERVAL = 6 * 60 * 60 * 1000;
    public static void main( String[] args )
    {
 	   try
@@ -84,12 +87,17 @@ public class BunkAccountingWebServiceLauncher
    }
 
    private static Timer scheduleTasks() {
-       Timer timer = new Timer(true);
-       ScanSalesPortalTask portalTask = new ScanSalesPortalTask();
-       timer.scheduleAtFixedRate(portalTask, DateUtil.nextByHourRounded(2), 10000);
 
-       LOG.info("ScanSalesPortalTask scheduled. Next execution at " + new Date(portalTask.scheduledExecutionTime()));
-       return timer;
+       if ("ON".equals(AppConfig.SCHEDULED_TASKS_ENABLED.getStringValue()) ) {
+           Timer timer = new Timer(true);
+           ScanSalesPortalTask portalTask = new ScanSalesPortalTask();
+           portalTask.run();
+           timer.scheduleAtFixedRate(portalTask, DateUtil.nextByHourRounded(2), TASKS_INTERVAL);
+
+           LOG.info("ScanSalesPortalTask scheduled. Next execution at " + new Date(portalTask.scheduledExecutionTime()));
+           return timer;
+       }
+       return null;
    }
 
 }
