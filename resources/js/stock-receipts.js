@@ -220,7 +220,7 @@ function buildReceiptsPanel(title, record, prodType, panelItems, editableReceipt
             sortable: false
         },{
             id: 'receiptAmt',
-            text: "Receipt amount",
+            text: "Quantity",
             dataIndex: 'receiptAmt',
             flex: 1,
             field: receiptAmtField,
