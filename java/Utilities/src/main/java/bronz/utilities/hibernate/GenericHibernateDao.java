@@ -15,8 +15,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
@@ -24,8 +24,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.internal.SessionImpl;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.type.NullableType;
 import org.hibernate.type.Type;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -254,15 +254,6 @@ public class GenericHibernateDao
 	   queryObject.executeUpdate();
    }
    
-   public Object executeSQL( final String sqlQuery, final String scalarName,
-           final NullableType type )
-   {
-       final Session session = getSession();
-       final Query queryObject = session.createSQLQuery(
-               sqlQuery ).addScalar( scalarName, type );
-       return queryObject.uniqueResult();
-   }
-   
    private String getSavedSQLQueryString( final String queryName)
    {
        final Session session = getSession();
@@ -283,7 +274,7 @@ public class GenericHibernateDao
    {
 	   try
 	   {
-		   final Connection connection = getSession().connection();
+		   final Connection connection = getConnection();
 		   final PreparedStatement statement = connection.prepareStatement(
 				   sqlStatement );
 		   if ( null != objects )
@@ -321,7 +312,7 @@ public class GenericHibernateDao
    @SuppressWarnings("deprecation")
    public Connection getConnection()
    {
-       return getSession().connection();
+       return ((SessionImpl)getSession()).connection();
    }
 
    public void fillParameters( final Query query, final Object... parameters )

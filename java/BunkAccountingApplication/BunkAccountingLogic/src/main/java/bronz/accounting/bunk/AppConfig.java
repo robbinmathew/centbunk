@@ -1,7 +1,8 @@
 package bronz.accounting.bunk;
 
-import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
 import java.io.IOException;
 
 import bronz.utilities.general.GeneralUtil;
@@ -17,6 +18,8 @@ public enum AppConfig {
 	    MYSQL_INSTALLATION_HOME_DIR( "mysql.installation.home.dir", false, true ),
 	    AUTO_DB_BACKUP_FOLDER( "bronz.auto.database.backup.folder", false, true ),
 	    IS_TEST_ENV( "bronz.bunkapp.test.env", false, true ),
+	    KEY_STORE_PATH( "bronz.keystore.path", true, true ),
+	    KEY_STORE_PASSWORD( "bronz.keystore.password", true, true ),
 
 	    COMPANY_NAME( "bronz.company.name", true ),
 	 	CODE_REVISION( "bronz.code.revision", true ),
@@ -37,22 +40,22 @@ public enum AppConfig {
 	    DEFAULT_REPORT_PATH_PROP_NAME( "reports.temporaryreports.folderpath", true, true ),
 	    EMAIL_SERVICE_REPORT_FOLDER_PROP_NAME( "reports.emailservice.folderpath", true, true );
 
-	private static String getPropertiesFileFolder() {
-		String folderName;
-		if(SystemUtils.IS_OS_WINDOWS) {
-			folderName = WINDOWS_PROPERTIES_FILE_FOLDER;
-		} else {
-			folderName = LINUX_PROPERTIES_FILE_FOLDER;
+	public static String getAppRootFolder() {
+		String folderName = System.getProperty(CONFIG_DIR_PROP_NAME);
+		if(StringUtils.isBlank(folderName)) {
+			throw new IllegalArgumentException("Please specify the -Dapp.root=<basefolder>");
 		}
-		System.setProperty("app.root", folderName);
+
+		new File(folderName+"/logs").mkdirs();
+
+
 		return folderName;
 	}
 
 	public static final String APP_PROP_FILE_NAME = "pbmsApp.properties";
-	public static final String PROPERTIES_FILE_FOLDER = getPropertiesFileFolder();
+	public static final String PROPERTIES_FILE_FOLDER = getAppRootFolder();
 
-	private static final String LINUX_PROPERTIES_FILE_FOLDER = "/opt/BunkManager/";
-	private static final String WINDOWS_PROPERTIES_FILE_FOLDER = "C:/BunkManager/";
+	private static final String CONFIG_DIR_PROP_NAME = "app.root";
 	private final String propertyName;
 	private final boolean isStatic;
 	private final boolean isSecure;

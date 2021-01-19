@@ -15,8 +15,8 @@ import javax.swing.JTextField;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import bronz.accounting.bunk.AppConfig;
 import bronz.accounting.bunk.framework.exceptions.BunkMgmtException;

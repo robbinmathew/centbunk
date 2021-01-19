@@ -12,8 +12,8 @@ import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JREmptyDataSource;
@@ -24,12 +24,9 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperReport;
 import bronz.accounting.bunk.AppConfig;
 import bronz.accounting.bunk.framework.dao.DBUtil;
-import bronz.accounting.bunk.party.model.PartyClosingBalance;
-import bronz.accounting.bunk.products.model.ProductClosingBalance;
 import bronz.accounting.bunk.reports.exception.ReportException;
 import bronz.accounting.bunk.reports.model.Report;
 import bronz.accounting.bunk.reports.util.ReportGeneratorHelper;
-import bronz.accounting.bunk.tankandmeter.model.TankClosingStock;
 import bronz.accounting.bunk.util.EntityNameCache;
 import bronz.utilities.general.DateUtil;
 

@@ -47,6 +47,6 @@ public class JsonErrorHandler extends ErrorHandler {
             message = HttpStatus.getMessage(code);
         }
 
-        writer.write("{\"code\":\"" + code + "\",\"message\":\"" + StringEscapeUtils.escapeJson(message) + "\"}");
+        writer.write("{\"code1\":\"" + code + "\",\"message\":\"" + StringEscapeUtils.escapeJson(message) + "\"}");
     }
 }

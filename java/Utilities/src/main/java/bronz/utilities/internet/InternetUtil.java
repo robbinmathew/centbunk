@@ -23,12 +23,13 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.Folder;
 import javax.mail.Store;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 
 public class InternetUtil
 {
-    private static final Logger LOG = Logger.getLogger( InternetUtil.class );
+    private static final Logger LOG = LogManager.getLogger( InternetUtil.class );
     
     private InternetUtil()
     {

@@ -15,14 +15,15 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import bronz.utilities.general.GeneralUtil;
 import bronz.utilities.general.ValidationUtil;
 
 public class EmailDaoImpl implements EmailDao
 {
-    private static final Logger LOG = Logger.getLogger( EmailDaoImpl.class );
+    private static final Logger LOG = LogManager.getLogger( EmailDaoImpl.class );
     
     public void sendMail( final String toAddresses, final String bccAddresses,
             final String ccAddresses, final String subject,

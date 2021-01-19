@@ -23,8 +23,8 @@ import bronz.accounting.bunk.tankandmeter.model.TankClosingStock;
 import bronz.accounting.bunk.ui.party.model.*;
 import bronz.utilities.general.Pair;
 import bronz.utilities.general.Triple;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import bronz.accounting.bunk.AppConfig;
 import bronz.accounting.bunk.BunkAppInitializer;

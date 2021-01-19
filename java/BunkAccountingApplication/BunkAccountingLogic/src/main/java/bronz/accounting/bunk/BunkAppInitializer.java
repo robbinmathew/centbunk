@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import bronz.accounting.bunk.model.dao.SavedStatementDao;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
 import bronz.accounting.bunk.framework.dao.BunkAppDaoHibernateImpl;
 import bronz.accounting.bunk.framework.dao.DBUtil;
@@ -22,6 +20,8 @@ import bronz.accounting.bunk.tankandmeter.dao.TankAndMeterDao;
 import bronz.accounting.bunk.util.EntityNameCache;
 import bronz.accounting.bunk.util.EntityTransBalCorrectionHelper;
 import bronz.accounting.bunk.util.TransactionSupportInvocationHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class BunkAppInitializer
 {
@@ -172,7 +172,7 @@ public class BunkAppInitializer
     {
         DB_PROPS_TO_BE_OVERRIDEN.put( "hibernate.connection.url",
                 "jdbc:mysql://" + AppConfig.DB_HOST_PROP_NAME.getValue(String.class)
-                + "/" +  AppConfig.DB_SCHEMA_NAME_PROP_NAME.getValue(String.class) + "?autoReconnect=true" );
+                + "/" +  AppConfig.DB_SCHEMA_NAME_PROP_NAME.getValue(String.class) + "?autoReconnect=true&useSSL=false" );
         DB_PROPS_TO_BE_OVERRIDEN.put( "hibernate.connection.username",
         		AppConfig.DB_USERNAME_PROP_NAME.getValue(String.class) );
         DB_PROPS_TO_BE_OVERRIDEN.put( "hibernate.connection.password",

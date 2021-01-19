@@ -10,8 +10,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.Timer;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import bronz.accounting.bunk.AppConfig;
 import bronz.accounting.bunk.framework.exceptions.BunkMgmtException;

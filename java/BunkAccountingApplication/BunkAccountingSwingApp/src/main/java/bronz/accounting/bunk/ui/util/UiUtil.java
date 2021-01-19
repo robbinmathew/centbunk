@@ -8,8 +8,8 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 import javax.swing.event.TableModelListener;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import bronz.accounting.bunk.framework.exceptions.BunkValidationException;
 import bronz.accounting.bunk.ui.panel.CalendarButton;

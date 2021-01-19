@@ -1,12 +1,11 @@
 package bronz.accounting.bunk.webservice;
 
 import bronz.accounting.bunk.webservice.model.*;
-import bronz.utilities.general.GeneralUtil;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
@@ -20,6 +19,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Singleton;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -30,12 +32,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
 
 import bronz.accounting.bunk.AppConfig;
 import bronz.accounting.bunk.BunkAppInitializer;
@@ -72,13 +69,16 @@ import bronz.accounting.bunk.util.EntityTransactionBuilder;
 import bronz.utilities.custom.CustomDecimal;
 import bronz.utilities.general.DateUtil;
 import bronz.utilities.general.Pair;
+import org.eclipse.jetty.security.HashLoginService;
+import org.eclipse.jetty.util.security.Password;
 
 /**
  * Created by pmathew on 1/9/16.
  */
-@Path("/api")
+@Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Singleton
 public class BunkAccountingWebService {
     private static final Logger LOG = LogManager.getLogger(
         BunkAccountingWebService.class);
@@ -88,8 +88,8 @@ public class BunkAccountingWebService {
     private final JRReportsCreator reportsCreator;
 
     public BunkAccountingWebService() throws BunkMgmtException {
-        this.bunkManager = BunkAppInitializer.getInstance().getBunkManager();
-        this.reportsCreator = BunkAppInitializer.getInstance().getReportsCreator();
+            this.bunkManager = BunkAppInitializer.getInstance().getBunkManager();
+            this.reportsCreator = BunkAppInitializer.getInstance().getReportsCreator();
     }
 
     @GET
@@ -99,9 +99,19 @@ public class BunkAccountingWebService {
     }
 
     @GET
+    @Path("logout")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String logout(@Context HttpServletRequest req) {
+        HttpSession session= req.getSession(true);
+        session.invalidate();
+        return "logged out";
+    }
+
+    @GET
     @Path("info")
-    public Map getInfo() throws BunkMgmtException
+    public Map getInfo(@Context SecurityContext sc) throws BunkMgmtException
     {
+
         final int todayDate = this.bunkManager.getNextDate();
         final Calendar calendar = DateUtil.getCalendarEquivalent(todayDate);
         final Map<String, Object> infoMap = new HashMap<String, Object>();
@@ -110,6 +120,7 @@ public class BunkAccountingWebService {
         infoMap.put("todayDate", todayDate);
         infoMap.put("todayDateText", DateUtil.getSimpleDateString(calendar));
         infoMap.put("todayDateDayText", DateUtil.getDateStringWithDay(calendar));
+        infoMap.put("username", sc.getUserPrincipal().getName());
         for(AppConfig config : AppConfig.values()) {
             if(!config.isSecure()) {
                 infoMap.put(config.name(), config.getValue(Object.class));

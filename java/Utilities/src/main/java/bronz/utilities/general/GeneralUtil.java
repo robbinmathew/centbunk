@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import bronz.utilities.swing.table.DataTable;
 import bronz.utilities.swing.table.DataTableField;
@@ -15,7 +16,7 @@ import bronz.utilities.swing.table.DataTableFieldWrapper;
 
 public class GeneralUtil
 {
-    private static final Logger LOG = Logger.getLogger( GeneralUtil.class );
+    private static final Logger LOG = LogManager.getLogger( GeneralUtil.class );
     private GeneralUtil()
     {
         super();

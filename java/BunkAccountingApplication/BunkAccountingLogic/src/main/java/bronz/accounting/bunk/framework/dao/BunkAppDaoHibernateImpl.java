@@ -3,7 +3,6 @@ package bronz.accounting.bunk.framework.dao;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -15,17 +14,13 @@ import bronz.accounting.bunk.model.QueryResults;
 import bronz.accounting.bunk.model.SavedDailyStatement;
 import bronz.accounting.bunk.model.dao.SavedStatementDao;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
-import org.hibernate.type.FloatType;
-import org.hibernate.type.LiteralType;
-import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
 import bronz.accounting.bunk.AppConfig;
@@ -685,7 +680,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
 		ResultSet resultSet = null;
 		try
 		{
-			connection = getSession().connection();
+			connection = getConnection();
 			statement = connection.createStatement();
 			final String query = "SELECT ((MAX(DATE))+1) AS NEXT FROM" +
 							" pbms_settlements";
@@ -716,7 +711,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
         ResultSet resultSet = null;
         try
         {
-            connection = getSession().connection();
+            connection =getConnection();
             statement = connection.createStatement();
             final String query = "SELECT (MIN(DATE)) AS NEXT FROM" +
                             " pbms_settlements";
@@ -762,7 +757,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
         PreparedStatement ps = null;
         ResultSet resultSet = null;
         try{
-            connection = getSession().connection();
+            connection = getConnection();
             ps = connection.prepareStatement("SELECT content FROM PBMS_SAVED_STATEMENT where date=? AND type=?");
             int n = 1;
             ps.setInt(n++, date);
@@ -790,7 +785,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
         Connection connection = null;
         PreparedStatement ps = null;
         try{
-            connection = getSession().connection();
+            connection = getConnection();
             ps = connection.prepareStatement("DELETE FROM PBMS_SAVED_STATEMENT WHERE date=?");
             int n = 1;
             ps.setInt(n++, date);
@@ -809,7 +804,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
         Connection connection = null;
         PreparedStatement ps = null;
         try{
-            connection = getSession().connection();
+            connection = getConnection();
             ps = connection.prepareStatement("INSERT INTO PBMS_SAVED_STATEMENT (date, content, type, lastSavedDate, " +
                     "createdDate) VALUES (?,?,?,NOW(),NOW()) ON DUPLICATE KEY UPDATE content=?, lastSavedDate=NOW()");
             SerialBlob serialBlob = new SerialBlob(savedDailyStatement.getContents());

@@ -11,8 +11,8 @@ import java.util.Map;
 import bronz.accounting.bunk.model.QueryResults;
 import bronz.accounting.bunk.model.SavedDailyStatement;
 import bronz.accounting.bunk.model.dao.SavedStatementDao;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import bronz.accounting.bunk.framework.dao.DBUtil;
 import bronz.accounting.bunk.framework.exceptions.BunkMgmtException;
