@@ -21,6 +21,13 @@ function showFailedMask() {
     pageMask.show();
 }
 
+function showFailedMask(msg) {
+    if (!pageMask) {
+        pageMask = new Ext.LoadMask(Ext.getBody(), {msg: "Failed to read data from server: " + msg +". Please try after sometime."});
+    }
+    pageMask.show();
+}
+
 function hideFailedMask() {
     if (pageMask) {
         pageMask.hide();
@@ -315,9 +322,9 @@ function loadDateAndUserInfo(myMask) {
         updateSummaryPanel();
         myMask.hide();
     }, function (response) {
-        console.log('failed to read info from server:' + response);
+        console.log('failed to read info from server:' + response.responseText);
         myMask.hide();
-        showFailedMask();
+        showFailedMask(response.responseText);
     });
 }
 
@@ -461,7 +468,7 @@ function getAddEditItems() {
         {id: 'add-edit-parties', text: "Credit Parties/Employees", leaf: true, panelbuilder: 'showPartyViewer'}
     ];
     if (isBeta()) {
-        items.push({id: 'add-edit-transactions', text: "Party Transactions(Admin-Beta)", leaf: true, panelbuilder: 'showPartyTransEditor'})
+        items.push({id: 'admin-panel', text: "Admin Beta", leaf: true, panelbuilder: 'showAdminPanel'})
     }
     return items;
 }

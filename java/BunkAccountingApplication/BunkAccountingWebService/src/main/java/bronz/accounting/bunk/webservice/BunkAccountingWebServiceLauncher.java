@@ -25,10 +25,14 @@ import java.io.File;
 public class BunkAccountingWebServiceLauncher {
     public static void main(String[] args) {
         try {
-
-
             AppConfig.IS_TEST_ENV.setValue(BunkAppInitializer.PROD);
             AppConfig.loadProperties();
+            System.setProperty( "mail.transport.protocol", "smtps" );
+            System.setProperty( "mail.smtps.host", "smtp.gmail.com" );
+            System.setProperty("mail.smtp.ssl.enable", "true");
+            System.setProperty( "mail.smtps.port", "465" );
+            System.setProperty( "mail.smtps.auth", "true" );
+
             //Initialize logger only after the properties are loaded.
             LogManager.getLogger(BunkAccountingWebServiceLauncher.class).info("Launching application..");
 
@@ -109,7 +113,7 @@ public class BunkAccountingWebServiceLauncher {
                     "jersey.config.server.provider.classnames",
                     BunkAccountingWebService.class.getCanonicalName());
             jerseyServlet.setInitParameter(
-                    "jersey.config.server.provider.packages", "org.codehaus.jackson.jaxrs");
+                    "jersey.config.server.provider.packages", "org.codehaus.jackson.jaxrs,bronz.accounting.bunk.webservice");
 
             jerseyServlet.setInitParameter(
                     "jersey.config.server.disableMoxyJson", "true");
@@ -129,6 +133,7 @@ public class BunkAccountingWebServiceLauncher {
             requestLogHandler.setHandler(context);
             contexts.addHandler(requestLogHandler);
 
+            EmailService.init();
             try {
                 jettyServer.start();
                 jettyServer.join();

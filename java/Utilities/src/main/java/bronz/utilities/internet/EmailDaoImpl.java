@@ -3,12 +3,7 @@ package bronz.utilities.internet;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.Transport;
+import javax.mail.*;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
@@ -18,12 +13,19 @@ import javax.mail.internet.MimeMultipart;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import bronz.utilities.general.GeneralUtil;
 import bronz.utilities.general.ValidationUtil;
 
 public class EmailDaoImpl implements EmailDao
 {
     private static final Logger LOG = LogManager.getLogger( EmailDaoImpl.class );
+
+    private final String email;
+    private final String creds;
+
+    public EmailDaoImpl(final String email, final String creds) {
+        this.email = email;
+        this.creds = creds;
+    }
     
     public void sendMail( final String toAddresses, final String bccAddresses,
             final String ccAddresses, final String subject,
@@ -41,20 +43,22 @@ public class EmailDaoImpl implements EmailDao
         Transport transport = null;
         try
         {
-            final Session session = Session.getDefaultInstance(
-                    System.getProperties() );
+            final Session session = Session.getInstance(
+                    System.getProperties(), new javax.mail.Authenticator() {
+
+                        protected PasswordAuthentication getPasswordAuthentication() {
+
+                            return new PasswordAuthentication("bronz.app.mail@gmail.com", "20thCentury");
+
+                        }
+
+                    } );
 
             session.setDebug( false );
-            /*if ( LOG.isDebugEnabled() )
-            {
-                  session.setDebug( false );
-            }*/
-            
+
             // Define a new mail message 
             final Message message = new MimeMessage( session );
-            final InternetAddress sender = new InternetAddress(
-                    GeneralUtil.getPropValueFromSystemProperties(
-                            SEND_MAIL_USERNAME_PROP_NAME, String.class ) );
+            final InternetAddress sender = new InternetAddress(this.email);
             message.setFrom( sender ); 
             addRecipients( Message.RecipientType.TO, toAddresses, message );
             addRecipients( Message.RecipientType.CC, ccAddresses, message );
@@ -78,9 +82,7 @@ public class EmailDaoImpl implements EmailDao
             message.setContent( multipart );
             
             transport = session.getTransport();
-            transport.connect( sender.getAddress(),
-                    GeneralUtil.getPropValueFromSystemProperties(
-                            SEND_MAIL_USERPASSWORD_PROP_NAME, String.class ) );
+            transport.connect( sender.getAddress(), this.creds );
             // Send the message 
             transport.sendMessage( message,
                     message.getRecipients( Message.RecipientType.TO ) );

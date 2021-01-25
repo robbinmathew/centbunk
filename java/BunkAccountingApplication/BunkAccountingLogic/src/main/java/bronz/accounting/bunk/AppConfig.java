@@ -38,7 +38,13 @@ public enum AppConfig {
 	    ADMIN_MAIL_IDS_PROP_NAME( "administrator.mail.ids", true, true ),
 	    REPORT_GENERATION_FOLDER_PROP_NAME( "reports.folder", true, true ),
 	    DEFAULT_REPORT_PATH_PROP_NAME( "reports.temporaryreports.folderpath", true, true ),
-	    EMAIL_SERVICE_REPORT_FOLDER_PROP_NAME( "reports.emailservice.folderpath", true, true );
+
+	    EMAIL_SERVICE_REPORT_FOLDER_PROP_NAME( "reports.emailservice.folderpath", true, true ),
+	    NOTIFICATION_EMAIL_SOURCE_ADDRESS( "emailservice.sourceEmail", true, true ),
+	    NOTIFICATION_EMAIL_SOURCE_CREDS( "emailservice.sourceCreds", true, true ),
+	    NOTIFICATION_EMAIL_TARGET_ADDRESS( "emailservice.targetEmail", true, true ),
+	    NOTIFICATION_EMAIL_ENABLED( "emailservice.enabled", true, true ),
+	;
 
 	public static String getAppRootFolder() {
 		String folderName = System.getProperty(CONFIG_DIR_PROP_NAME);

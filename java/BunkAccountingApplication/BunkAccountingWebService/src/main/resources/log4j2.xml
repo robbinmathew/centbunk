@@ -15,10 +15,10 @@
     </Appenders>
     <Loggers>
         <Logger name="net.sf.jasperreports" level="ERROR" />
+        <Logger name="com.zaxxer.hikari" level="ERROR" />
         <Logger name="org.hibernate" level="ERROR" />
         <Logger name="org.eclipse.jetty" level="INFO" />
         <Root level="DEBUG">
-            <AppenderRef ref="Console"/>
             <AppenderRef ref="RollingFile"/>
         </Root>
     </Loggers>

@@ -68,9 +68,6 @@ import bronz.accounting.bunk.util.EntityNameCache;
 import bronz.accounting.bunk.util.EntityTransactionBuilder;
 import bronz.utilities.custom.CustomDecimal;
 import bronz.utilities.general.DateUtil;
-import bronz.utilities.general.Pair;
-import org.eclipse.jetty.security.HashLoginService;
-import org.eclipse.jetty.util.security.Password;
 
 /**
  * Created by pmathew on 1/9/16.
@@ -111,7 +108,6 @@ public class BunkAccountingWebService {
     @Path("info")
     public Map getInfo(@Context SecurityContext sc) throws BunkMgmtException
     {
-
         final int todayDate = this.bunkManager.getNextDate();
         final Calendar calendar = DateUtil.getCalendarEquivalent(todayDate);
         final Map<String, Object> infoMap = new HashMap<String, Object>();
@@ -121,6 +117,8 @@ public class BunkAccountingWebService {
         infoMap.put("todayDateText", DateUtil.getSimpleDateString(calendar));
         infoMap.put("todayDateDayText", DateUtil.getDateStringWithDay(calendar));
         infoMap.put("username", sc.getUserPrincipal().getName());
+        infoMap.put("isAdmin", InMemoryLoginService.getInstance().getLoginService().getUsers().get(sc.getUserPrincipal().getName()).isUserInRole("admin", null));
+
         for(AppConfig config : AppConfig.values()) {
             if(!config.isSecure()) {
                 infoMap.put(config.name(), config.getValue(Object.class));
@@ -423,7 +421,7 @@ public class BunkAccountingWebService {
 
     @POST
     @Path("saveDailyStatement")
-    public void saveAndCloseStatement(final UiDailyStatement uiDailyStatement) throws BunkMgmtException
+    public void saveAndCloseStatement(@Context SecurityContext sc, final UiDailyStatement uiDailyStatement) throws BunkMgmtException
     {
         final int todayInteger = bunkManager.getTodayDate();
         if("SUBMIT".equals(uiDailyStatement.getType())) {
@@ -644,7 +642,7 @@ public class BunkAccountingWebService {
 
             settlement.setClosingBal( uiDailyStatement.getClosingBalance() );
             settlement.setComments( "" );
-            settlement.setCreatedBy( "admin" );
+            settlement.setCreatedBy(sc.getUserPrincipal().getName());
             settlement.setCreatedDate( new Date() );
             settlement.setSettlementDate( DateUtil.getCalendarEquivalent( uiDailyStatement.getDate() ).getTime() );
             settlement.setDate( uiDailyStatement.getDate() );

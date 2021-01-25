@@ -280,9 +280,9 @@ public class InternetUtil
                 System.getProperties().load( new FileInputStream( "C:\\BunkManager\\pbmsApp.properties" ) );
                 String[] filenames = 
                 {"C:\\BunkManager\\pbmsApp.properties"};       
-                final EmailDao dao = new EmailDaoImpl();
-                dao.sendMail( "hismajesty.prabin@gmail.com&&mathewprabin@yahoo.co.in",
-                        null, null, "subject", "messageBody", filenames );
+                ///final EmailDao dao = new EmailDaoImpl();
+                ///dao.sendMail( "hismajesty.prabin@gmail.com&&mathewprabin@yahoo.co.in",
+                ///        null, null, "subject", "messageBody", filenames );
             } 
             catch(Exception e) 
             { 
