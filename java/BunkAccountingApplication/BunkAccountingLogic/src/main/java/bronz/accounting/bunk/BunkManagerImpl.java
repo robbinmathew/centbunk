@@ -8,9 +8,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import bronz.accounting.bunk.model.QueryResults;
-import bronz.accounting.bunk.model.SavedDailyStatement;
+import bronz.accounting.bunk.model.*;
 import bronz.accounting.bunk.model.dao.SavedStatementDao;
+import bronz.accounting.bunk.scanner.ScanDataParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -48,6 +48,7 @@ public class BunkManagerImpl implements BunkManager {
     private final ProductDao productDao;
     private final DBUtil dbUtil;
     private final SavedStatementDao savedStatementDao;
+    private final ScanDataParser scanDataParser;
     
     BunkManagerImpl(final PartyDao partyDao, final ProductDao productDao,
                     final TankAndMeterDao tankAndMeterDao, final DBUtil dbUtil,
@@ -59,6 +60,7 @@ public class BunkManagerImpl implements BunkManager {
         this.productDao = productDao;
         this.tankAndMeterDao = tankAndMeterDao;
         this.savedStatementDao =  savedStatementDao;
+        this.scanDataParser = new ScanDataParser();
     }
     
     public int getNextDate() throws BunkMgmtException
@@ -232,6 +234,21 @@ public class BunkManagerImpl implements BunkManager {
         statement.getPartyTransactions().addAll( this.partyDao.getTransByDate( date, date, null, null ) );
         //statement.getProductTransactions().addAll( this.productDao.getAllProdTransByDate( date, date ) );
         return statement;
+    }
+
+    public String saveScannedData(String data, ScanType type, String source) throws BunkMgmtException {
+        int recordsUpdated = 0;
+        List<ScannedDetail> items = scanDataParser.parse(type, data, source, true);
+        for (ScannedDetail scannedDetail : items) {
+            recordsUpdated = recordsUpdated+this.savedStatementDao.saveScrapedDetail(scannedDetail);
+        }
+        String response = String.format("Total records:%s , Updated records=%s", items.size(), recordsUpdated);
+        LOG.info( "saveScannedData=" + response );
+        return response;
+    }
+
+    public List<ScannedDetail> getScannedData(int startDate, int endDate, ScanType type) throws BunkMgmtException {
+        return this.savedStatementDao.getScrapedDetails(startDate, endDate, type.getType());
     }
 
     public SavedDailyStatement getSavedDailyStatement(final int date) throws BunkMgmtException

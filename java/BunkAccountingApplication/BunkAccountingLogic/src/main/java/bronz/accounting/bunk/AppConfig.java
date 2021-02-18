@@ -21,6 +21,13 @@ public enum AppConfig {
 	    KEY_STORE_PATH( "bronz.keystore.path", true, true ),
 	    KEY_STORE_PASSWORD( "bronz.keystore.password", true, true ),
 
+		SCHEDULED_TASKS_ENABLED( "tasks.enabled", true ),
+		HPCL_CUSTID( "hpcl.custid", true ),
+		HPCL_PASS( "hpcl.pass", true ),
+		HPCL_URL( "hpcl.url", true ),
+
+		CHROME_DRIVER_PATH("chromedriverPath", true),
+
 	    COMPANY_NAME( "bronz.company.name", true ),
 	 	CODE_REVISION( "bronz.code.revision", true ),
 	 	COMPANY_ADDRESS( "bronz.company.address", true ),

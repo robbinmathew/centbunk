@@ -3,6 +3,7 @@
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <ThresholdFilter level="ERROR"/>
         </Console>
         <RollingFile name="RollingFile" filename="${sys:app.root}/logs/pbms.log"
                      filepattern="${sys:app.root}/logs/%d{yyyyMMddHHmmss}-pbms.log">
@@ -20,6 +21,7 @@
         <Logger name="org.eclipse.jetty" level="INFO" />
         <Root level="DEBUG">
             <AppenderRef ref="RollingFile"/>
+            <AppenderRef ref="Console"/>
         </Root>
     </Loggers>
 </Configuration>

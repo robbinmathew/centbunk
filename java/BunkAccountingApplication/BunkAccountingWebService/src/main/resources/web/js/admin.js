@@ -36,57 +36,134 @@ function showAdminPanel(title, record) {
                 labelWidth: 100
             },
             items: [
-                {
+                    {
+                        rowspan:1,
+                        colspan:4,
+                        xtype: 'radiogroup',
+                        fieldLabel: 'Data type',
+                        id:"admindatatype",
+                        // Arrange radio buttons into two columns, distributed vertically
+                        columns: 1,
+                        vertical: true,
+                        items: [
+                            { boxLabel: 'Price change', name: 'reportTypeGroup', inputValue: 'PRI', checked: true},
+                            //{ boxLabel: 'HPCL Transactions', name: 'reportTypeGroup', inputValue: 'HPCL_TRN'},
+                            //{ boxLabel: 'Bank Transactions', name: 'reportTypeGroup', inputValue: 'BNK_TRN'},
+                            { boxLabel: 'Stock receipt', name: 'reportTypeGroup', inputValue: 'REC'}
+                        ],
+                        listeners: {
+                            change: function(radiogroup, radio) {
+                                if (radio.reportTypeGroup == "PRI") {
+                                    updateComponents(false, false, false);
+                                } else if (radio.reportTypeGroup == "HPCL_TRN") {
+                                    updateComponents(false, false, false);
+                                } else if (radio.reportTypeGroup == "BNK_TRN") {
+                                    updateComponents(false, false, false);
+                                } else if (radio.reportTypeGroup == "REC") {
+                                    updateComponents(true, false, false);
+                                };
+                            }
+                        }
+                    }/*,
+                    {
                         xtype: 'numberfield',
                         anchor: '100%',
-                        name: 'fromDays',
-                        fieldLabel: 'From',
+                        name: 'lastdays',
+                        fieldLabel: 'Last days',
                         value: 30,
                         minValue: 5,
                         rowspan:1,
                         colspan:2
-                },{
-                      xtype: 'numberfield',
-                      anchor: '100%',
-                      name: 'toDays',
-                      fieldLabel: 'To',
-                      value: 0,
-                      minValue: 0,
-                      rowspan:1,
-                      colspan:2
-                },{
+                    }
+                    , {
+                         rowspan:1,
+                         colspan:2,
+                         xtype: 'button',
+                         text: 'Load data',
+                         handler: function () {
+                             onShowReport();
+                         }
+                     },
+                     {
+                       xtype     : 'label',
+                       fieldLabel: 'Current Data',
+                       rowspan:1,
+                       colspan:4,
+                 },
+                 {
                       xtype     : 'textareafield',
                       grow      : true,
                       name      : 'currentData',
                       fieldLabel: 'Current Data',
                       rowspan:1,
-                     // height: '300',
+                      height: '700',
                       width: '100%',
                       labelWidth: '50',
                       hideLabel : true,
                       colspan:4,
                       anchor    : '100%'
-                },{
+                }*/,{
                       xtype     : 'textareafield',
                       grow      : true,
-                      name      : 'newData',
+                      id      : 'newAdminScanData',
                       fieldLabel: 'New Data',
-                      rowspan:2,
-                      colspan:1,
+                      height: '700',
+                      width: '100%',
+                      rowspan:1,
+                      colspan:4,
                       anchor    : '100%'
                 },{
                     xtype: 'button',
                     rowspan:1,
                     colspan:1,
                     margins: '10 200 5 0',
-                    text: 'Load transactions',
+                    text: 'Save data',
                     handler: function () {
-
-
+                            saveData();
                     }
                 }
             ]
         }]
     });
     return mainContent;
+}
+
+function loadData() {
+    var selectedDate = Ext.getCmp('lastdays').getValue();
+    var reportType = Ext.getCmp('admindatatype').getValue();
+
+    var url = '/api/report?type=' + reportType.reportTypeGroup + '&format=image&dateText=' + dateToSimpleText(selectedDate);
+    if(Ext.getCmp("toDate").disabled === false) {
+        var toDate = Ext.getCmp('toDate').getValue();
+        if (toDate < selectedDate) {
+            Ext.MessageBox.alert('Error', "'To date' is before 'Date'. Please correct.");
+            return;
+        }
+        url = url + "&toDateText=" + dateToSimpleText(toDate);
+    }
+}
+
+function saveData() {
+    var myMask = new Ext.LoadMask(Ext.getBody(), {msg:"Saving records..."});
+    myMask.show();
+    var newData = Ext.getCmp('newAdminScanData').getValue();
+    var reportType = Ext.getCmp('admindatatype').getValue();
+
+    var url = '/api/saveScanData?type=' + reportType.reportTypeGroup;
+
+    //Save
+    Ext.Ajax.request({
+        url: url,
+        method: 'POST',
+        jsonData:newData,
+        success: function(response) {
+            myMask.hide();
+            Ext.MessageBox.alert('Success', "Successfully updated the records. <br/>" + response.responseText);
+            Ext.getCmp('newAdminScanData').setValue("");
+        },
+        failure : function(response) {
+            myMask.hide();
+            Ext.Msg.alert("Error", "Failed to update party records. Please try again. <br/> " + response.responseText);
+        }
+    });
 }

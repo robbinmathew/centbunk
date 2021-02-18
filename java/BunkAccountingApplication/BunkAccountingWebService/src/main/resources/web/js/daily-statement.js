@@ -845,9 +845,9 @@ function saveObj(type) {
         url: 'api/saveDailyStatement',
         method: 'POST',
         jsonData:dailyStatementObject,
-        success: function() {
+        success: function(response) {
             if( type == "SUBMIT" ) {
-                Ext.MessageBox.alert('Success', "Successfully saved the daily statement.");
+                Ext.MessageBox.alert('Success', "Successfully saved the daily statement." + response.responseText);
                 loadDateAndUserInfo(myMask);
             } else {
                 lastSavedDate = new Date();

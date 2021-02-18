@@ -1,5 +1,7 @@
 package bronz.accounting.bunk.webservice;
 
+import bronz.accounting.bunk.model.*;
+import bronz.accounting.bunk.scanner.PriceChangeScanModel;
 import bronz.accounting.bunk.webservice.model.*;
 import com.google.common.collect.ImmutableMap;
 
@@ -38,10 +40,6 @@ import bronz.accounting.bunk.AppConfig;
 import bronz.accounting.bunk.BunkAppInitializer;
 import bronz.accounting.bunk.BunkManager;
 import bronz.accounting.bunk.framework.exceptions.BunkMgmtException;
-import bronz.accounting.bunk.model.ClosingStatement;
-import bronz.accounting.bunk.model.QueryResults;
-import bronz.accounting.bunk.model.SavedDailyStatement;
-import bronz.accounting.bunk.model.StockReceipt;
 import bronz.accounting.bunk.party.dao.PartyDao;
 import bronz.accounting.bunk.party.model.EmployeeMonthlyStatus;
 import bronz.accounting.bunk.party.model.Party;
@@ -198,6 +196,13 @@ public class BunkAccountingWebService {
             BunkAppInitializer.refreshPartyNameCache();
         }
 
+    }
+
+    @POST
+    @Path("saveScanData")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String saveScanData(@QueryParam("type") String type, final String data) throws BunkMgmtException {
+        return this.bunkManager.saveScannedData(data, ScanType.getByType(type), "web");
     }
 
     @POST
@@ -421,7 +426,8 @@ public class BunkAccountingWebService {
 
     @POST
     @Path("saveDailyStatement")
-    public void saveAndCloseStatement(@Context SecurityContext sc, final UiDailyStatement uiDailyStatement) throws BunkMgmtException
+    @Produces(MediaType.TEXT_PLAIN)
+    public String saveAndCloseStatement(@Context SecurityContext sc, final UiDailyStatement uiDailyStatement) throws BunkMgmtException
     {
         final int todayInteger = bunkManager.getTodayDate();
         if("SUBMIT".equals(uiDailyStatement.getType())) {
@@ -653,7 +659,63 @@ public class BunkAccountingWebService {
             statement.getTankTransactions().addAll( transBuilder.getTankTransBuilder().getTransactions() );
             statement.setSettlement( settlement );
             this.bunkManager.saveAndCloseStatement(statement);
+
+            try {
+                //Apply rate changes for the next day;
+
+
+                int nextday = this.bunkManager.getNextDate();
+                List<ScannedDetail> priceChanges = bunkManager.getScannedData(nextday, nextday, ScanType.PRICE_CHANGE_TYPE);
+                if (priceChanges != null && priceChanges.size() > 0) {
+                    List<ProductClosingBalance> records =this.bunkManager.getAvailableProductList("PRIMARY_PRODUCTS");
+                    Map<Integer, ProductClosingBalance> prodsMap = new HashMap<>();
+                    for (ProductClosingBalance productClosingBalance : records) {
+                        prodsMap.put(productClosingBalance.getProductId(), productClosingBalance);
+                    }
+
+                    List<UiRateChange> list = new ArrayList<>();
+                    StringBuilder priceChangeInfoBuilder = new StringBuilder("Auto price change::");
+
+                    for (ScannedDetail priceChange : priceChanges ) {
+
+                        PriceChangeScanModel priceChangeScanModel = JSON_SERIALIZER.readValue(priceChange.getContents(), PriceChangeScanModel.class);
+
+                        if (priceChangeScanModel == null || priceChangeScanModel.getNewPrice().intValue() <= 0) {
+                            throw new IllegalStateException("Invalid priceChangeScanModel:" + priceChange.getContents());
+                        }
+
+                        ProductClosingBalance productClosingBalance = prodsMap.get(priceChangeScanModel.getProductId());
+                        if (productClosingBalance == null) {
+                            throw new IllegalStateException("Invalid product:" + priceChangeScanModel.getProductId());
+                        }
+                        BigDecimal rateChange = BunkUtil.setAsPrice(priceChangeScanModel.getNewPrice().subtract(productClosingBalance.getUnitSellingPrice()));
+                        if (rateChange.compareTo( CustomDecimal.ZERO ) >= 0 ) {
+                            priceChangeInfoBuilder.append("\n").append("Prod:").append(productClosingBalance.getProductName()).append(" Old price:").append(productClosingBalance.getUnitSellingPrice()).append(" New price:").append(priceChangeScanModel.getNewPrice());
+
+                            BigDecimal totalCashDiff = BunkUtil.setAsPrice(rateChange).multiply(productClosingBalance.getClosingStock());
+
+                            UiRateChange uiRateChange = new UiRateChange();
+                            uiRateChange.setProductId(productClosingBalance.getProductId());
+                            uiRateChange.setOldPrice(productClosingBalance.getUnitSellingPrice());
+                            uiRateChange.setCurrentStock(productClosingBalance.getClosingStock());
+                            uiRateChange.setNewUnitPrice(priceChangeScanModel.getNewPrice());
+                            uiRateChange.setTotalCashDiff(totalCashDiff);
+                            uiRateChange.setMargin(BunkUtil.setAsPrice(productClosingBalance.getMargin().add(rateChange)));
+                            list.add(uiRateChange);
+                        }
+                    }
+                    if (list.size()>0)
+                        saveRateChangeinternal(list);
+
+                    return priceChangeInfoBuilder.toString();
+                }
+            } catch (Exception e) {
+                //Consider these as warnings.
+                EmailService.notifyError(e, "Failed to auto apply rate changes");
+            }
+            return "";
         } else {
+            //TODO:: Validate if the statement was submitted. Avoid updated
             try {
                 final SavedDailyStatement savedDailyStatement = new SavedDailyStatement();
                 savedDailyStatement.setDate(uiDailyStatement.getDate());
@@ -662,6 +724,7 @@ public class BunkAccountingWebService {
             } catch (Exception e) {
                 LOG.error("Failed to save stmt", e);
             }
+            return "";
         }
     }
 
@@ -723,6 +786,17 @@ public class BunkAccountingWebService {
     @POST
     @Path("saveRateChange")
     public void saveRateChange( final List<UiRateChange> list ) throws BunkMgmtException {
+        try {
+            String data = JSON_SERIALIZER.writeValueAsString(list);
+            LOG.info("Manual rate change::" + data);
+            EmailService.notify("Manual rate change",data);
+        } catch (Exception e) {
+            LOG.error(e);
+        }
+        saveRateChangeinternal(list);
+    }
+
+    private void saveRateChangeinternal(final List<UiRateChange> list)  throws BunkMgmtException{
         final int todayInteger = bunkManager.getTodayDate();
         for (UiRateChange rateChange : list) {
             final ProdRateChange prodRateChange = new ProdRateChange();
@@ -737,8 +811,8 @@ public class BunkAccountingWebService {
             transaction.setUnitPrice(rateChange.getNewUnitPrice());
             transaction.setDate(todayInteger);
             transaction.setDetail(
-                "Rate changed from " + rateChange.getOldPrice() + " to " + rateChange.getNewUnitPrice()
-                    .toPlainString());
+                    "Rate changed from " + rateChange.getOldPrice() + " to " + rateChange.getNewUnitPrice()
+                            .toPlainString());
             transaction.setProductId(rateChange.getProductId());
             transaction.setQuantity(CustomDecimal.ZERO);
             transaction.setTransactionType(ProductTransaction.RECEIPT);

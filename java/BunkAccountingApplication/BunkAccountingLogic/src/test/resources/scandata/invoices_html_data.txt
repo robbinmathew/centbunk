@@ -1,0 +1,622 @@
+<table border="0" style="table-layout:fixed" id="Headings" width="1410" cellpadding="3">
+<colgroup><col width="35"><col width="140"><col width="225"><col width="75"><col width="70"><col width="225"><col width="100"><col width="100"><col width="40"><col width="70"><col width="50"><col width="100"><col width="75"><col width="100"><col width="140"><col width="140"><col width="70">
+</colgroup><tbody><tr bgcolor="#e6e6e6"><td>1</td>
+<td align="left">20047570  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>02/01/21</td>
+<td align="left">2812000                  </td>
+<td align="left">HSD - BS VI                   </td>
+<td align="left">-</td>
+<td align="right">8,000.000</td>
+<td align="left">LT</td>
+<td align="right">8.000</td>
+<td align="left">KL</td>
+<td align="right">76,314.5267</td>
+<td align="left">KL</td>
+<td align="right">610,516.21</td>
+<td>20046173  /S4/11845/2.0</td>
+
+<td>-</td>
+
+<td align="right">KL64G7590    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>2</td>
+<td align="left">20047570  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>02/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">-</td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">81,184.2948</td>
+<td align="left">KL</td>
+<td align="right">324,737.18</td>
+<td>20046173  /S4/11845/1.0</td>
+
+<td>-</td>
+
+<td align="right">KL64G7590    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>3</td>
+<td align="left">20047742  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>04/01/21</td>
+<td align="left">2812000                  </td>
+<td align="left">HSD - BS VI                   </td>
+<td align="left">-</td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">76,314.5267</td>
+<td align="left">KL</td>
+<td align="right">305,258.11</td>
+<td>20046366  /S4/11845/1.0</td>
+
+<td>-</td>
+
+<td align="right">KL63E634     </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>4</td>
+<td align="left">20047742  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>04/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">-</td>
+<td align="right">8,000.000</td>
+<td align="left">LT</td>
+<td align="right">8.000</td>
+<td align="left">KL</td>
+<td align="right">81,184.2948</td>
+<td align="left">KL</td>
+<td align="right">649,474.36</td>
+<td>20046366  /S4/11845/2.0</td>
+
+<td>-</td>
+
+<td align="right">KL63E634     </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>5</td>
+<td align="left">20048259  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>06/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">-</td>
+<td align="right">8,000.000</td>
+<td align="left">LT</td>
+<td align="right">8.000</td>
+<td align="left">KL</td>
+<td align="right">81,462.1131</td>
+<td align="left">KL</td>
+<td align="right">651,696.90</td>
+<td>20046847  /S4/11845/2.0</td>
+
+<td>-</td>
+
+<td align="right">KL42R9071    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>6</td>
+<td align="left">20048259  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>06/01/21</td>
+<td align="left">2812000                  </td>
+<td align="left">HSD - BS VI                   </td>
+<td align="left">-</td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">76,594.0778</td>
+<td align="left">KL</td>
+<td align="right">306,376.31</td>
+<td>20046847  /S4/11845/1.0</td>
+
+<td>-</td>
+
+<td align="right">KL42R9071    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>7</td>
+<td align="left">20048769  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>08/01/21</td>
+<td align="left">2812000                  </td>
+<td align="left">HSD - BS VI                   </td>
+<td align="left">-</td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">76,883.5457</td>
+<td align="left">KL</td>
+<td align="right">307,534.18</td>
+<td>20047344  /S4/11845/3.0</td>
+
+<td>-</td>
+
+<td align="right">KL64B7390    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>8</td>
+<td align="left">20048769  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>08/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">-</td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">81,710.1715</td>
+<td align="left">KL</td>
+<td align="right">326,840.69</td>
+<td>20047344  /S4/11845/1.0</td>
+
+<td>-</td>
+
+<td align="right">KL64B7390    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>9</td>
+<td align="left">20048769  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>08/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">POWER                         </td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">84,934.9084</td>
+<td align="left">KL</td>
+<td align="right">339,739.63</td>
+<td>20047344  /S4/11845/2.0</td>
+
+<td>-</td>
+
+<td align="right">KL64B7390    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>10</td>
+<td align="left">20049298  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>09/01/21</td>
+<td align="left">2812000                  </td>
+<td align="left">HSD - BS VI                   </td>
+<td align="left">-</td>
+<td align="right">8,000.000</td>
+<td align="left">LT</td>
+<td align="right">8.000</td>
+<td align="left">KL</td>
+<td align="right">76,883.5457</td>
+<td align="left">KL</td>
+<td align="right">615,068.37</td>
+<td>20047811  /S4/11845/2.0</td>
+
+<td>-</td>
+
+<td align="right">KL40G6539    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>11</td>
+<td align="left">20049298  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>09/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">-</td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">81,710.1715</td>
+<td align="left">KL</td>
+<td align="right">326,840.69</td>
+<td>20047811  /S4/11845/1.0</td>
+
+<td>-</td>
+
+<td align="right">KL40G6539    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>12</td>
+<td align="left">20049986  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>13/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">-</td>
+<td align="right">8,000.000</td>
+<td align="left">LT</td>
+<td align="right">8.000</td>
+<td align="left">KL</td>
+<td align="right">81,958.2214</td>
+<td align="left">KL</td>
+<td align="right">655,665.77</td>
+<td>20048507  /S4/11845/2.0</td>
+
+<td>-</td>
+
+<td align="right">KL01BN4960   </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>13</td>
+<td align="left">20049986  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>13/01/21</td>
+<td align="left">2812000                  </td>
+<td align="left">HSD - BS VI                   </td>
+<td align="left">-</td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">77,152.9463</td>
+<td align="left">KL</td>
+<td align="right">308,611.79</td>
+<td>20048507  /S4/11845/1.0</td>
+
+<td>-</td>
+
+<td align="right">KL01BN4960   </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>14</td>
+<td align="left">20050419  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>15/01/21</td>
+<td align="left">2812000                  </td>
+<td align="left">HSD - BS VI                   </td>
+<td align="left">-</td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">77,412.5307</td>
+<td align="left">KL</td>
+<td align="right">309,650.12</td>
+<td>20048935  /S4/11845/1.0</td>
+
+<td>-</td>
+
+<td align="right">KL08BS7979   </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>15</td>
+<td align="left">20050419  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>15/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">-</td>
+<td align="right">8,000.000</td>
+<td align="left">LT</td>
+<td align="right">8.000</td>
+<td align="left">KL</td>
+<td align="right">82,206.2877</td>
+<td align="left">KL</td>
+<td align="right">657,650.30</td>
+<td>20048935  /S4/11845/2.0</td>
+
+<td>-</td>
+
+<td align="right">KL08BS7979   </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>16</td>
+<td align="left">20050892  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>16/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">-</td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">82,206.2877</td>
+<td align="left">KL</td>
+<td align="right">328,825.15</td>
+<td>20049389  /S4/11845/1.0</td>
+
+<td>-</td>
+
+<td align="right">KL41C5595    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>17</td>
+<td align="left">20050892  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>16/01/21</td>
+<td align="left">2812000                  </td>
+<td align="left">HSD - BS VI                   </td>
+<td align="left">-</td>
+<td align="right">8,000.000</td>
+<td align="left">LT</td>
+<td align="right">8.000</td>
+<td align="left">KL</td>
+<td align="right">77,412.5307</td>
+<td align="left">KL</td>
+<td align="right">619,300.25</td>
+<td>20049389  /S4/11845/2.0</td>
+
+<td>-</td>
+
+<td align="right">KL41C5595    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>18</td>
+<td align="left">20051085  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>18/01/21</td>
+<td align="left">2812000                  </td>
+<td align="left">HSD - BS VI                   </td>
+<td align="left">-</td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">77,672.1076</td>
+<td align="left">KL</td>
+<td align="right">310,688.43</td>
+<td>20049584  /S4/11845/3.0</td>
+
+<td>-</td>
+
+<td align="right">KL39L6474    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>19</td>
+<td align="left">20051085  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>18/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">-</td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">82,454.3442</td>
+<td align="left">KL</td>
+<td align="right">329,817.38</td>
+<td>20049584  /S4/11845/1.0</td>
+
+<td>-</td>
+
+<td align="right">KL39L6474    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>20</td>
+<td align="left">20051085  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>18/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">POWER                         </td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">85,679.0911</td>
+<td align="left">KL</td>
+<td align="right">342,716.36</td>
+<td>20049584  /S4/11845/2.0</td>
+
+<td>-</td>
+
+<td align="right">KL39L6474    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>21</td>
+<td align="left">20051397  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>19/01/21</td>
+<td align="left">2812000                  </td>
+<td align="left">HSD - BS VI                   </td>
+<td align="left">-</td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">77,941.5181</td>
+<td align="left">KL</td>
+<td align="right">311,766.07</td>
+<td>20049888  /S4/11845/1.0</td>
+
+<td>-</td>
+
+<td align="right">KL64B2416    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>22</td>
+<td align="left">20051397  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>19/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">-</td>
+<td align="right">8,000.000</td>
+<td align="left">LT</td>
+<td align="right">8.000</td>
+<td align="left">KL</td>
+<td align="right">82,702.4040</td>
+<td align="left">KL</td>
+<td align="right">661,619.23</td>
+<td>20049888  /S4/11845/2.0</td>
+
+<td>-</td>
+
+<td align="right">KL64B2416    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>23</td>
+<td align="left">20052185  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>22/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">-</td>
+<td align="right">8,000.000</td>
+<td align="left">LT</td>
+<td align="right">8.000</td>
+<td align="left">KL</td>
+<td align="right">82,950.4704</td>
+<td align="left">KL</td>
+<td align="right">663,603.76</td>
+<td>20050653  /S4/11845/2.0</td>
+
+<td>-</td>
+
+<td align="right">KL41C8204    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>24</td>
+<td align="left">20052185  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>22/01/21</td>
+<td align="left">2812000                  </td>
+<td align="left">HSD - BS VI                   </td>
+<td align="left">-</td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">78,201.0925</td>
+<td align="left">KL</td>
+<td align="right">312,804.37</td>
+<td>20050653  /S4/11845/1.0</td>
+
+<td>-</td>
+
+<td align="right">KL41C8204    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>25</td>
+<td align="left">20052476  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>23/01/21</td>
+<td align="left">2812000                  </td>
+<td align="left">HSD - BS VI                   </td>
+<td align="left">-</td>
+<td align="right">8,000.000</td>
+<td align="left">LT</td>
+<td align="right">8.000</td>
+<td align="left">KL</td>
+<td align="right">78,460.6696</td>
+<td align="left">KL</td>
+<td align="right">627,685.36</td>
+<td>20050918  /S4/11845/2.0</td>
+
+<td>-</td>
+
+<td align="right">KL20H2311    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>26</td>
+<td align="left">20052476  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>23/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">-</td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">83,198.5203</td>
+<td align="left">KL</td>
+<td align="right">332,794.08</td>
+<td>20050918  /S4/11845/1.0</td>
+
+<td>-</td>
+
+<td align="right">KL20H2311    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>27</td>
+<td align="left">20052895  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>25/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">-</td>
+<td align="right">8,000.000</td>
+<td align="left">LT</td>
+<td align="right">8.000</td>
+<td align="left">KL</td>
+<td align="right">83,198.5203</td>
+<td align="left">KL</td>
+<td align="right">665,588.16</td>
+<td>20051323  /S4/11845/2.0</td>
+
+<td>-</td>
+
+<td align="right">KL39K8403    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>28</td>
+<td align="left">20052895  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>25/01/21</td>
+<td align="left">2812000                  </td>
+<td align="left">HSD - BS VI                   </td>
+<td align="left">-</td>
+<td align="right">4,000.000</td>
+<td align="left">LT</td>
+<td align="right">4.000</td>
+<td align="left">KL</td>
+<td align="right">78,460.6696</td>
+<td align="left">KL</td>
+<td align="right">313,842.68</td>
+<td>20051323  /S4/11845/1.0</td>
+
+<td>-</td>
+
+<td align="right">KL39K8403    </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>29</td>
+<td align="left">20053725  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>28/01/21</td>
+<td align="left">2812000                  </td>
+<td align="left">HSD - BS VI                   </td>
+<td align="left">-</td>
+<td align="right">10,000.000</td>
+<td align="left">LT</td>
+<td align="right">10.000</td>
+<td align="left">KL</td>
+<td align="right">79,099.3828</td>
+<td align="left">KL</td>
+<td align="right">790,993.83</td>
+<td>20052159  /S4/11845/2.0</td>
+
+<td>-</td>
+
+<td align="right">KL07BX7732   </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td>30</td>
+<td align="left">20053725  /RI/11845</td>
+<td align="left">Irumpanam Terminal                      </td>
+<td>28/01/21</td>
+<td align="left">2811000                  </td>
+<td align="left">MS -BS VI                     </td>
+<td align="left">-</td>
+<td align="right">10,000.000</td>
+<td align="left">LT</td>
+<td align="right">10.000</td>
+<td align="left">KL</td>
+<td align="right">83,793.8605</td>
+<td align="left">KL</td>
+<td align="right">837,938.61</td>
+<td>20052159  /S4/11845/1.0</td>
+
+<td>-</td>
+
+<td align="right">KL07BX7732   </td>
+</tr>
+<tr bgcolor="#e6e6e6"><td><b>Total</b></td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td align="right">14,145,644.33</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+<td>&nbsp;</td>
+</tr></tbody></table>

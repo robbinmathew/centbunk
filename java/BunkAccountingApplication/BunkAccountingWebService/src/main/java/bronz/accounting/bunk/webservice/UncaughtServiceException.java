@@ -20,7 +20,7 @@ public class UncaughtServiceException extends Throwable implements ExceptionMapp
             return Response.status(400).entity("Validation Error:" +  exception.getMessage()).type("text/plain").build();
         } else {
             EmailService.notifyError(exception, "UncaughtServiceException");
-            return Response.status(500).entity("Something bad happened. Please try again !!").type("text/plain").build();
+            return Response.status(500).entity("Something bad happened. Please try again !!" +  exception.getMessage()).type("text/plain").build();
         }
     }
 }

@@ -5,10 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import bronz.accounting.bunk.framework.exceptions.BunkMgmtException;
-import bronz.accounting.bunk.model.ClosingStatement;
-import bronz.accounting.bunk.model.QueryResults;
-import bronz.accounting.bunk.model.SavedDailyStatement;
-import bronz.accounting.bunk.model.StockReceipt;
+import bronz.accounting.bunk.model.*;
 import bronz.accounting.bunk.party.model.EmployeeMonthlyStatus;
 import bronz.accounting.bunk.party.model.Party;
 import bronz.accounting.bunk.party.model.PartyClosingBalance;
@@ -88,6 +85,11 @@ public interface BunkManager {
 
     @RequiresTransaction(failureExceptionText = "Failed to save saved stmt")
     void saveSavedDailyStatement(SavedDailyStatement savedDailyStatement) throws BunkMgmtException;
+
+    @RequiresTransaction(failureExceptionText = "Failed to save scraped data")
+    String saveScannedData(String data, ScanType type, String source) throws BunkMgmtException;
+
+    List<ScannedDetail> getScannedData(int startDate, int endDate, ScanType type) throws BunkMgmtException;
 
     List<PartyTransaction> getPartyTransactionHistory(final int partyId, final int startDate, final int endDate,
                                                       final String transTypeFilter, final String detailFilter) throws BunkMgmtException;

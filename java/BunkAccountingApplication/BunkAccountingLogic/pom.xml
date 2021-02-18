@@ -33,6 +33,18 @@
       		<type>jar</type>
       	</dependency>
 		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-chrome-driver</artifactId>
+			<version>3.7.1</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-support -->
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-support</artifactId>
+			<version>3.7.1</version>
+		</dependency>
+
+		<dependency>
 		    <groupId>jasperreports</groupId>
     		<artifactId>jasperreports</artifactId>
     		<version>${jasper.reports.version}</version>

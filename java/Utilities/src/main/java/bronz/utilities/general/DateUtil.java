@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 import bronz.utilities.custom.CustomCalendar;
 
@@ -19,6 +20,7 @@ public class DateUtil
     private static final String DATE_FORMATTER = "dd-MMM-yyyy";
     private static final String DATE_FORMAT = "dd-MM-yyyy";
     private static final String MONTH_YEAR_FORMATTER = "MMM-yyyy";
+    private static final String INDIAN_DATE_FORMAT = "dd-MMM-yyyy 'at' HH:mm:ss z";
     
     public static String getDateString( final int date )
     {
@@ -36,10 +38,41 @@ public class DateUtil
         return new SimpleDateFormat(DATE_FORMAT).format(getDateEquivalent(date));
     }
 
+    public static int getIndianDate( final Calendar calendar ) {
+        return getDateFromSimpleDateString(getIndianDateString(calendar));
+    }
+
+    public static int getIndianDate( final Date date ) {
+        return getDateFromSimpleDateString(getIndianDateString(date));
+    }
+
+    public static String getIndianDateString( final Calendar calendar )
+    {
+        return getIndianDateString(calendar.getTime());
+    }
+
+    public static String getIndianDateString( final Date date )
+    {
+        SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
+        format.setTimeZone(TimeZone.getTimeZone("IST"));
+        return format.format(date);
+    }
+
+    public static String getIndianDateTimeString( final Calendar calendar )
+    {
+        SimpleDateFormat format = new SimpleDateFormat(INDIAN_DATE_FORMAT);
+        format.setTimeZone(TimeZone.getTimeZone("IST"));
+        return format.format(calendar.getTime());
+    }
+
     public static int getDateFromSimpleDateString( final String dateText ) {
-        Calendar cal = Calendar.getInstance();
+        return getDateFromSimpleDateString(dateText, DATE_FORMAT);
+    }
+
+    public static int getDateFromSimpleDateString( final String dateText, String format ) {
+        Calendar cal = GregorianCalendar.getInstance();
         try {
-            cal.setTime(new SimpleDateFormat(DATE_FORMAT).parse(dateText));
+            cal.setTime(new SimpleDateFormat(format).parse(dateText));
         } catch (ParseException e) {
             throw new IllegalArgumentException("Invalid date", e);
         }
@@ -77,6 +110,12 @@ public class DateUtil
    {
        return new SimpleDateFormat(MONTH_YEAR_FORMATTER).format(calendar.getTime());
    }
+
+    public static int getIntegerEquivalent( final Date date ) {
+        Calendar cal = GregorianCalendar.getInstance();
+        cal.setTime(date);
+       return getIntegerEquivalent(cal);
+    }
    
    public static int getIntegerEquivalent( final Calendar calendar )
    {
@@ -237,4 +276,17 @@ public class DateUtil
       Calendar today = getCalendarEquivalent( dateInteger );
       return today.get( Calendar.DAY_OF_WEEK ) != Calendar.SUNDAY;
    }
+
+   public static Date nextByHourRounded(int hour) {
+       Calendar calendar = new GregorianCalendar();
+       if (hour < calendar.get(Calendar.HOUR_OF_DAY)) {
+           //The hour passed, increment the date to get the hour the next day.
+           calendar.add(Calendar.DATE, 1);
+       }
+       calendar.set(Calendar.HOUR_OF_DAY, hour);
+       calendar.set(Calendar.MINUTE, 0);
+       calendar.set(Calendar.SECOND, 0);
+       return calendar.getTime();
+   }
+
 }

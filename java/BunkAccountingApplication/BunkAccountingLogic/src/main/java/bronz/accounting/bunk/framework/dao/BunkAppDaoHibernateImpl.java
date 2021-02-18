@@ -1,8 +1,10 @@
 package bronz.accounting.bunk.framework.dao;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.Set;
 import bronz.accounting.bunk.framework.exceptions.BunkValidationException;
 import bronz.accounting.bunk.model.QueryResults;
 import bronz.accounting.bunk.model.SavedDailyStatement;
+import bronz.accounting.bunk.model.ScannedDetail;
 import bronz.accounting.bunk.model.dao.SavedStatementDao;
 
 import org.apache.logging.log4j.LogManager;
@@ -159,7 +162,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
 	        else if( PARTIES.equals( partyType ) )
 	        {
 	            idLowerLimit = 300;
-	            idHigherLimit = 10000;
+	            idHigherLimit = 9000;
 	        }
 	        else
 	        {
@@ -761,7 +764,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
             ps = connection.prepareStatement("SELECT content FROM PBMS_SAVED_STATEMENT where date=? AND type=?");
             int n = 1;
             ps.setInt(n++, date);
-            ps.setString(n++, SavedStatementDao.DAILY_STATEMENT_TYPE);
+            ps.setString(n++, (date == 0) ? SavedStatementDao.SCANNER_TYPE : SavedStatementDao.DAILY_STATEMENT_TYPE);
             resultSet = ps.executeQuery();
             if(resultSet.next()){
                 SerialBlob serialBlob = new SerialBlob(resultSet.getBlob("content"));
@@ -812,7 +815,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
             //INSERT
             ps.setInt(n++, savedDailyStatement.getDate());
             ps.setBlob(n++, serialBlob);
-            ps.setString(n++, SavedStatementDao.DAILY_STATEMENT_TYPE);
+            ps.setString(n++,  (savedDailyStatement.getDate() == 0) ? SavedStatementDao.SCANNER_TYPE : SavedStatementDao.DAILY_STATEMENT_TYPE);
 
             //UPDATE
             ps.setBlob(n++, serialBlob);
@@ -821,6 +824,83 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
         catch ( Exception exception)
         {
             throw new BunkMgmtException( "Failed to save saved daily statement", exception );
+        }
+        finally {
+            closeStatement(ps);
+        }
+    }
+
+    public List<ScannedDetail> getScrapedDetails(int startDate, int endDate, String type) throws BunkMgmtException {
+        List<ScannedDetail> results =  new ArrayList<>();
+        Connection connection = null;
+        PreparedStatement ps = null;
+        ResultSet resultSet = null;
+        try{
+            connection = getConnection();
+            ps = connection.prepareStatement("SELECT * FROM PBMS_SCRAPED_DETAILS where date>=? and date<=? and type=?");
+            int n = 1;
+            ps.setInt(n++, startDate);
+            ps.setInt(n++, endDate);
+            ps.setString(n++, type);
+            resultSet = ps.executeQuery();
+            if(resultSet.next()){
+                SerialBlob serialBlob = new SerialBlob(resultSet.getBlob("contents"));
+                SerialBlob rawSerialBlob = new SerialBlob(resultSet.getBlob("rawContents"));
+                final ScannedDetail scannedDetail = new ScannedDetail();
+                if (serialBlob != null)
+                    scannedDetail.setContents(new String(serialBlob.getBytes(1, (int) serialBlob.length()),StandardCharsets.UTF_8));
+                if (rawSerialBlob != null)
+                    scannedDetail.setRawContents(new String(rawSerialBlob.getBytes(1, (int) rawSerialBlob.length()),StandardCharsets.UTF_8));
+                scannedDetail.setIdentifier(resultSet.getString("identifier"));
+                scannedDetail.setComments(resultSet.getString("comments"));
+                scannedDetail.setType(resultSet.getString("type"));
+                scannedDetail.setDate(resultSet.getInt("date"));
+                scannedDetail.setCreatedDate(resultSet.getDate("createdDate"));
+                scannedDetail.setUpdatedDate(resultSet.getDate("updatedDate"));
+                results.add(scannedDetail);
+            }
+        }
+        catch ( Exception exception)
+        {
+            throw new BunkMgmtException( "Failed to read scraped details", exception );
+        }
+        finally {
+            closeStatement(ps);
+            closeResultSet(resultSet);
+        }
+        return results;
+    }
+
+    public int saveScrapedDetail(ScannedDetail scannedDetail) throws BunkMgmtException {
+        Connection connection = null;
+        PreparedStatement ps = null;
+        try{
+            connection = getConnection();
+            ps = connection.prepareStatement("INSERT INTO PBMS_SCRAPED_DETAILS (date, contents, rawContents, identifier, comments, type, " +
+                    "createdDate, updatedDate) VALUES (?,?,?,?,?,?,NOW(),NOW()) ON DUPLICATE KEY UPDATE contents=?, rawContents=?, updatedDate=NOW()");
+            SerialBlob serialBlob = (scannedDetail.getContents() == null) ? null : new SerialBlob(scannedDetail.getContents().getBytes(StandardCharsets.UTF_8));
+            SerialBlob rawBlob = (scannedDetail.getRawContents() == null) ? null : new SerialBlob(scannedDetail.getRawContents().getBytes(StandardCharsets.UTF_8));
+            int n = 1;
+            //INSERT
+            ps.setInt(n++, scannedDetail.getDate());
+            ps.setBlob(n++, serialBlob);
+            ps.setBlob(n++, rawBlob);
+            ps.setString(n++, scannedDetail.getIdentifier());
+            ps.setString(n++, scannedDetail.getComments());
+            ps.setString(n++, scannedDetail.getType());
+            ps.setBlob(n++, serialBlob);
+            ps.setBlob(n++, rawBlob);
+            int rowUpdated = ps.executeUpdate();
+            if (rowUpdated == 2) {
+                // https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html
+                // With ON DUPLICATE KEY UPDATE, the affected-rows value per row is 1 if the row is inserted as a new row and 2 if an existing row is updated.
+                return 0;
+            }
+            return rowUpdated;
+        }
+        catch ( Exception exception)
+        {
+            throw new BunkMgmtException( "Failed to save scrapped info", exception );
         }
         finally {
             closeStatement(ps);
