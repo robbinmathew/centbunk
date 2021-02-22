@@ -247,8 +247,8 @@ public class BunkManagerImpl implements BunkManager {
         return response;
     }
 
-    public List<ScannedDetail> getScannedData(int startDate, int endDate, ScanType type) throws BunkMgmtException {
-        return this.savedStatementDao.getScrapedDetails(startDate, endDate, type.getType());
+    public List<ScannedDetail> getScannedData(int startDate, int endDate, String type) throws BunkMgmtException {
+        return this.savedStatementDao.getScrapedDetails(startDate, endDate, type);
     }
 
     public SavedDailyStatement getSavedDailyStatement(final int date) throws BunkMgmtException

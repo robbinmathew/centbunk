@@ -2,6 +2,7 @@ package bronz.accounting.bunk.webservice;
 
 import bronz.accounting.bunk.model.*;
 import bronz.accounting.bunk.scanner.PriceChangeScanModel;
+import bronz.accounting.bunk.scanner.ProdReceiptScanModel;
 import bronz.accounting.bunk.webservice.model.*;
 import com.google.common.collect.ImmutableMap;
 
@@ -14,12 +15,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
@@ -47,7 +43,6 @@ import bronz.accounting.bunk.party.model.PartyClosingBalance;
 import bronz.accounting.bunk.party.model.PartyResult;
 import bronz.accounting.bunk.party.model.PartyTransaction;
 import bronz.accounting.bunk.party.model.Settlement;
-import bronz.accounting.bunk.products.dao.ProductDao;
 import bronz.accounting.bunk.products.model.ProdRateChange;
 import bronz.accounting.bunk.products.model.Product;
 import bronz.accounting.bunk.products.model.ProductClosingBalance;
@@ -203,6 +198,19 @@ public class BunkAccountingWebService {
     @Produces(MediaType.TEXT_PLAIN)
     public String saveScanData(@QueryParam("type") String type, final String data) throws BunkMgmtException {
         return this.bunkManager.saveScannedData(data, ScanType.getByType(type), "web");
+    }
+
+    @GET
+    @Path("getScanData")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<? extends Object> getScanData(@QueryParam("type") String type, final @QueryParam("start") int start, final @QueryParam("end") int end) throws BunkMgmtException {
+        List<ScannedDetail> items = this.bunkManager.getScannedData( start, end, type);
+        /*List<Object> results =  new ArrayList<>();
+        for (ScannedDetail scannedDetail : items) {
+            if ()
+        }
+*/
+        return items;
     }
 
     @POST
@@ -379,7 +387,7 @@ public class BunkAccountingWebService {
                                                              transactionType, "FILL" );
             }
         }
-        stockReceipt.getTankTransactions().addAll(transBuilder.getTankTransBuilder().getTransactions() );
+        stockReceipt.getTankTransactions().addAll(transBuilder.getTankTransBuilder().getTransactions());
 
         //Add fuels transactions
         for ( UiFuelReceipt fuelReceipt : uiStockReceipt.getFuelReceipts() )
@@ -659,13 +667,11 @@ public class BunkAccountingWebService {
             statement.getTankTransactions().addAll( transBuilder.getTankTransBuilder().getTransactions() );
             statement.setSettlement( settlement );
             this.bunkManager.saveAndCloseStatement(statement);
-
+            StringBuilder responseStringBuilder = new StringBuilder();
+            int nextday = this.bunkManager.getNextDate();
             try {
                 //Apply rate changes for the next day;
-
-
-                int nextday = this.bunkManager.getNextDate();
-                List<ScannedDetail> priceChanges = bunkManager.getScannedData(nextday, nextday, ScanType.PRICE_CHANGE_TYPE);
+                List<ScannedDetail> priceChanges = bunkManager.getScannedData(nextday, nextday, ScanType.PRICE_CHANGE_TYPE.getType());
                 if (priceChanges != null && priceChanges.size() > 0) {
                     List<ProductClosingBalance> records =this.bunkManager.getAvailableProductList("PRIMARY_PRODUCTS");
                     Map<Integer, ProductClosingBalance> prodsMap = new HashMap<>();
@@ -673,8 +679,10 @@ public class BunkAccountingWebService {
                         prodsMap.put(productClosingBalance.getProductId(), productClosingBalance);
                     }
 
+                    StringBuilder priceChangeInfo = new StringBuilder();
+
                     List<UiRateChange> list = new ArrayList<>();
-                    StringBuilder priceChangeInfoBuilder = new StringBuilder("Auto price change::");
+                    priceChangeInfo.append("<br/> Auto price change::");
 
                     for (ScannedDetail priceChange : priceChanges ) {
 
@@ -690,7 +698,7 @@ public class BunkAccountingWebService {
                         }
                         BigDecimal rateChange = BunkUtil.setAsPrice(priceChangeScanModel.getNewPrice().subtract(productClosingBalance.getUnitSellingPrice()));
                         if (rateChange.compareTo( CustomDecimal.ZERO ) >= 0 ) {
-                            priceChangeInfoBuilder.append("\n").append("Prod:").append(productClosingBalance.getProductName()).append(" Old price:").append(productClosingBalance.getUnitSellingPrice()).append(" New price:").append(priceChangeScanModel.getNewPrice());
+                            priceChangeInfo.append("<br/>").append("Prod:").append(productClosingBalance.getProductName()).append(" Old price:").append(productClosingBalance.getUnitSellingPrice()).append(" New price:").append(priceChangeScanModel.getNewPrice());
 
                             BigDecimal totalCashDiff = BunkUtil.setAsPrice(rateChange).multiply(productClosingBalance.getClosingStock());
 
@@ -704,16 +712,99 @@ public class BunkAccountingWebService {
                             list.add(uiRateChange);
                         }
                     }
-                    if (list.size()>0)
+                    if (list.size()>0) {
                         saveRateChangeinternal(list);
+                        responseStringBuilder.append(priceChangeInfo);
+                    }
 
-                    return priceChangeInfoBuilder.toString();
                 }
+                List<ScannedDetail> fuelProdReceipts = bunkManager.getScannedData(nextday, nextday, ScanType.PROD_RECEIPT.getType() + StockReceipt.FUEL_RECEIPT_TYPE);
+                if (fuelProdReceipts != null && fuelProdReceipts.size() > 0) {
+
+                    responseStringBuilder.append("<br/> Auto fuel receipt added::");
+                    List<ProductClosingBalance> records =this.bunkManager.getAvailableProductList("PRIMARY_PRODUCTS");
+                    Map<Integer, ProductClosingBalance> prodsMap = new HashMap<>();
+                    for (ProductClosingBalance productClosingBalance : records) {
+                        prodsMap.put(productClosingBalance.getProductId(), productClosingBalance);
+                    }
+
+                    List<TankClosingStock> tankList =this.bunkManager.getTankList(nextday);
+                    Map<Integer, Integer> prodIdToTankIdMap = new HashMap<>();
+                    for (TankClosingStock tankClosingStock : tankList) {
+                        prodIdToTankIdMap.put(tankClosingStock.getProductId(), tankClosingStock.getTankId());
+                    }
+
+                    //Group by invoice
+                    Map<String, UiStockReceipt> receipts = new TreeMap<>(); //Using tree map to order the receipts by the invoice number
+
+                    for (ScannedDetail scannedDetail : fuelProdReceipts) {
+                        ProdReceiptScanModel prodReceiptScanModel = JSON_SERIALIZER.readValue(scannedDetail.getContents(), ProdReceiptScanModel.class);
+                        UiStockReceipt uiStockReceipt = receipts.get(prodReceiptScanModel.getInvoiceNum());
+                        if (uiStockReceipt == null) {
+                            uiStockReceipt = new UiStockReceipt();
+                            uiStockReceipt.setTankReceipts(new ArrayList<>());
+                            uiStockReceipt.setFuelReceipts(new ArrayList<>());
+                            receipts.put(prodReceiptScanModel.getInvoiceNum(), uiStockReceipt);
+                            uiStockReceipt.setInvoiceNo(prodReceiptScanModel.getInvoiceNum());
+                            uiStockReceipt.setType(StockReceipt.FUEL_RECEIPT_TYPE);
+                            uiStockReceipt.setInvoiceAmt(CustomDecimal.ZERO);
+                            uiStockReceipt.setTotalLoad(CustomDecimal.ZERO);
+
+                        }
+                        Integer prodId = null;
+                        if ( "HSD".equalsIgnoreCase(prodReceiptScanModel.getProductNameText())) {
+                            prodId = 2;
+                        } else if ( "MS".equalsIgnoreCase(prodReceiptScanModel.getProductNameText())) {
+                            prodId = 1;
+                        } else if ( "POWER".equalsIgnoreCase(prodReceiptScanModel.getProductNameText())) {
+                            prodId = 3;
+                        }
+
+                        if (prodId == null || !prodIdToTankIdMap.containsKey(prodId)) {
+                            throw new IllegalStateException("Unknown product : " + prodReceiptScanModel.getProductNameText());
+                        }
+
+
+                        UiTankReceipt uiTankReceipt = new UiTankReceipt();
+                        uiTankReceipt.setReceiptAmt(prodReceiptScanModel.getQuantity());
+
+                        uiTankReceipt.setTankId(prodIdToTankIdMap.get(prodId));
+                        uiStockReceipt.getTankReceipts().add(uiTankReceipt);
+
+
+                        UiFuelReceipt uiFuelReceipt = new UiFuelReceipt();
+                        uiFuelReceipt.setCostOnInv(prodReceiptScanModel.getTotalPrice());
+                        uiFuelReceipt.setUnitSellingPrice(prodsMap.get(prodId).getUnitSellingPrice());
+                        uiFuelReceipt.setReceiptAmt(prodReceiptScanModel.getQuantity());
+
+                        //Compute Margin
+                        BigDecimal margin = BunkUtil.setAsPrice(prodsMap.get(prodId).getUnitSellingPrice().subtract(prodReceiptScanModel.getTotalPrice().divide(prodReceiptScanModel.getQuantity())));
+                        uiFuelReceipt.setMargin(margin);
+                        uiFuelReceipt.setProductId(prodId);
+                        uiFuelReceipt.setProductName(prodsMap.get(prodId).getProductName());
+                        uiStockReceipt.getFuelReceipts().add(uiFuelReceipt);
+
+                        uiStockReceipt.setTotalLoad(uiStockReceipt.getTotalLoad().add(prodReceiptScanModel.getQuantity()));
+                        uiStockReceipt.setInvoiceAmt(uiStockReceipt.getInvoiceAmt().add(prodReceiptScanModel.getTotalPrice()));
+                    }
+
+                    for (Map.Entry<String, UiStockReceipt> entry : receipts.entrySet()) {
+                        saveStockReceipt(entry.getValue());
+                        responseStringBuilder.append("<br/> InvNum:").append(entry.getKey());
+
+                        for ( UiFuelReceipt uiFuelReceipt : entry.getValue().getFuelReceipts()) {
+                            responseStringBuilder.append("<br/>&emsp; ProdName:").append(prodsMap.get(uiFuelReceipt.getProductId()).getProductName()).append(" Quantity:") .append(uiFuelReceipt.getReceiptAmt());
+                        }
+                    }
+                }
+                EmailService.notify("Auto updates:" + DateUtil.getDateStringWithDay(DateUtil.getCalendarEquivalent(nextday)), "Applied changes:" + responseStringBuilder.toString());
             } catch (Exception e) {
                 //Consider these as warnings.
-                EmailService.notifyError(e, "Failed to auto apply rate changes");
+                EmailService.notifyError(e, "Failed to auto apply rate changes. Applied changes:" + responseStringBuilder.toString(), "Auto updates:" + DateUtil.getDateStringWithDay(DateUtil.getCalendarEquivalent(nextday)));
+                LOG.error("Failed to apply automatic updates." + DateUtil.getDateStringWithDay(DateUtil.getCalendarEquivalent(nextday)) + " Applied changes:" + responseStringBuilder.toString(), e);
             }
-            return "";
+
+            return responseStringBuilder.toString();
         } else {
             //TODO:: Validate if the statement was submitted. Avoid updated
             try {

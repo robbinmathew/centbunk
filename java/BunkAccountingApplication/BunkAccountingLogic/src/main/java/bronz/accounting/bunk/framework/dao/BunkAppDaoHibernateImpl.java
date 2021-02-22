@@ -843,7 +843,7 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
             ps.setInt(n++, endDate);
             ps.setString(n++, type);
             resultSet = ps.executeQuery();
-            if(resultSet.next()){
+            while(resultSet.next()){
                 SerialBlob serialBlob = new SerialBlob(resultSet.getBlob("contents"));
                 SerialBlob rawSerialBlob = new SerialBlob(resultSet.getBlob("rawContents"));
                 final ScannedDetail scannedDetail = new ScannedDetail();

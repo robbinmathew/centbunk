@@ -5,10 +5,12 @@ import bronz.accounting.bunk.framework.exceptions.BunkValidationException;
 import bronz.accounting.bunk.model.ScanType;
 import bronz.accounting.bunk.model.ScannedDetail;
 import bronz.accounting.bunk.model.StockReceipt;
+import bronz.utilities.custom.CustomDecimal;
 import bronz.utilities.general.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -24,6 +26,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -33,6 +36,7 @@ import java.util.List;
 
 public class ScanDataParser {
     private static final Logger LOG = LogManager.getLogger( ScanDataParser.class );
+    private static final ObjectMapper JSON_SERIALIZER = new ObjectMapper();
 
     private static List<String> KNOWN_PRICE_CHANGE_PRODS = Arrays.asList("HSD","Power","MS");
     private static final String DATE_FORMAT = "dd/MM/yyyy HH:mm:ss"; //28/01/2021 06:00:00
@@ -177,11 +181,12 @@ public class ScanDataParser {
              * <td align="right">KL64E1865    </td>
              */
 
-            String invoiceNum = colList.item(1).getTextContent().trim().replaceAll("\\s+", "");
+            String invoicenumText = colList.item(1).getTextContent().trim().replaceAll("\\s+", "");
+            String invoiceNum = invoicenumText.substring(0, invoicenumText.indexOf("/"));
             String dateText = colList.item(3).getTextContent();
             String productNameText = getProductName(colList);
             String quantityText = colList.item(7).getTextContent().trim();
-            String totalPrice = colList.item(11).getTextContent();
+            String totalPrice = colList.item(13).getTextContent();
 
             int date = DateUtil.getIntegerEquivalent(parseDate(dateText, DATE_FORMAT1));
 
@@ -193,8 +198,14 @@ public class ScanDataParser {
             if (includeRawContents) {
                 scannedDetail.setRawContents(getNodeText(rowNode));
             }
-            scannedDetail.setContents(String.format("{\"productNameText\":\"%s\", \"invoiceNum\":\"%s\", \"quantityText\":\"%s\", \"totalPrice\":\"%s\"}",
-                    productNameText,invoiceNum, quantityText, totalPrice));
+
+            ProdReceiptScanModel prodReceiptScanModel = new ProdReceiptScanModel();
+            prodReceiptScanModel.setInvoiceNum(invoiceNum);
+            prodReceiptScanModel.setProductNameText(productNameText);
+            prodReceiptScanModel.setQuantity(new CustomDecimal(NumberFormat.getInstance().parse(quantityText).doubleValue()));
+            prodReceiptScanModel.setTotalPrice(new CustomDecimal(NumberFormat.getInstance().parse(totalPrice).doubleValue()));
+
+            scannedDetail.setContents(JSON_SERIALIZER.writeValueAsString(prodReceiptScanModel));
 
             details.add(scannedDetail);
         }

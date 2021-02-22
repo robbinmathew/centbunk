@@ -22,6 +22,10 @@ public class EmailService {
         sendMailInternal(AppConfig.NOTIFICATION_EMAIL_TARGET_ADDRESS.getStringValue(), null, null, "Unexpected error in APP:" + t.getMessage(),  "Err context:" + context + ", exception\n" + ExceptionUtils.getStackTrace(t), null);
     }
 
+    public static void notifyError(Throwable t, String context, String subject) {
+        sendMailInternal(AppConfig.NOTIFICATION_EMAIL_TARGET_ADDRESS.getStringValue(), null, null, "ERROR:" + subject,  "Err context:" + context + ", exception\n" + ExceptionUtils.getStackTrace(t), null);
+    }
+
     private static void sendMailInternal( final String toAddresses, final String bccAddresses, final String ccAddresses, final String subject,
                    final String messageBody, final String[] attachments ){
         if (INSTANCE != null) {
@@ -30,6 +34,8 @@ public class EmailService {
             } catch (Exception e) {
                 LogManager.getLogger(EmailService.class).error("Failed to send the email: S: " + subject + " , Body:" + messageBody , e);
             }
+        } else {
+            LogManager.getLogger(EmailService.class).info("Ignored sending email To:" + toAddresses + " S:" + subject + " , Body:" + messageBody);
         }
     }
 

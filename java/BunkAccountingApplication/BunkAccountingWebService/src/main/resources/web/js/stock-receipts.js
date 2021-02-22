@@ -113,18 +113,36 @@ function buildFuelReceiptsPanel(title, record) {
         }]
     };
 
-    var panelItems = [tankPanelConfig];
-
+    var panelItems = getCurrentReceipts();
+    panelItems.push(tankPanelConfig);
 
     return buildReceiptsPanel(title, record, 'FUEL_PRODUCTS', panelItems, false, "FUEL");
 }
 
 function buildLubesReceiptsPanel(title, record) {
-    return buildReceiptsPanel(title, record, 'OIL_PRODUCTS', [], true, "LUBES");
+    return buildReceiptsPanel(title, record, 'OIL_PRODUCTS', getCurrentReceipts(), true, "LUBES");
 }
 
 function buildBatteryWaterReceiptsPanel(title, record) {
-    return buildReceiptsPanel(title, record, 'ADDITIONAL_PRODUCTS', [], true, "ADD_PRODS");
+    return buildReceiptsPanel(title, record, 'ADDITIONAL_PRODUCTS', getCurrentReceipts(), true, "ADD_PRODS");
+}
+
+function getCurrentReceipts() {
+    var d = new Date();
+    var panelItems = [{
+                        xtype: 'image',
+                        layout:'fit',
+                        margins: '0 0 0 0',
+                        width:'100%',
+                        //height:reportWindowHeight,
+                        autoScroll:true,
+                        shrinkWrap:true,
+                        frame:true,
+                        autoEl:"div",
+                        overflowY:"auto",overflowX:"auto",
+                        src: "/api/report?type=STOCK_RECEIPTS&format=image&dateText="+ bunkCache.infos.todayDateText + "&toDateText=" + bunkCache.infos.todayDateText + "&nocache=" + d.getTime(),
+                    }] ;
+                    return panelItems;
 }
 
 function buildReceiptsPanel(title, record, prodType, panelItems, editableReceiptAmt, onSaveType) {

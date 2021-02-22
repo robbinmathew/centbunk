@@ -89,7 +89,7 @@ public interface BunkManager {
     @RequiresTransaction(failureExceptionText = "Failed to save scraped data")
     String saveScannedData(String data, ScanType type, String source) throws BunkMgmtException;
 
-    List<ScannedDetail> getScannedData(int startDate, int endDate, ScanType type) throws BunkMgmtException;
+    List<ScannedDetail> getScannedData(int startDate, int endDate, String type) throws BunkMgmtException;
 
     List<PartyTransaction> getPartyTransactionHistory(final int partyId, final int startDate, final int endDate,
                                                       final String transTypeFilter, final String detailFilter) throws BunkMgmtException;
