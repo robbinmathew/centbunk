@@ -172,7 +172,7 @@ public class BunkAppInitializer
     {
         DB_PROPS_TO_BE_OVERRIDEN.put( "hibernate.connection.url",
                 "jdbc:mysql://" + AppConfig.DB_HOST_PROP_NAME.getValue(String.class)
-                + "/" +  AppConfig.DB_SCHEMA_NAME_PROP_NAME.getValue(String.class) + "?autoReconnect=true&useSSL=false" );
+                + "/" +  AppConfig.DB_SCHEMA_NAME_PROP_NAME.getValue(String.class) + "?autoReconnect=true&useSSL=false&serverTimezone=UTC" );
         DB_PROPS_TO_BE_OVERRIDEN.put( "hibernate.connection.username",
         		AppConfig.DB_USERNAME_PROP_NAME.getValue(String.class) );
         DB_PROPS_TO_BE_OVERRIDEN.put( "hibernate.connection.password",

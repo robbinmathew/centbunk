@@ -48,6 +48,36 @@ public enum SavedQuery {
         Arrays.asList("DATE", "DATE_TEXT"),
         ImmutableMap.<String, String>builder()
             .put("DETAIL", "VALUE").build()),
+    CREDIT_HISTORY_BY_PARTY("creditHistoryByParty",
+            //TRX.DATE DATE, DATE_FORMAT(FROM_DAYS(TRX.DATE), '%d %b') AS DATE_TEXT, TRX.ID, TRX.T VALUE, CONCAT(CONVERT(CAST(CONVERT(PT.PRODUCT_NAME USING latin1) AS BINARY) using utf8), " ", TRX.DETAIL) DETAIL
+            ImmutableMap.<String, Type>builder()
+                    .put("DATE", new IntegerType())
+                    .put("DATE_TEXT", new StringType())
+                    .put("DETAIL", new StringType())
+                    .put("VALUE", new FloatType()).build(),
+            Arrays.asList("DATE", "DATE_TEXT"),
+            ImmutableMap.<String, String>builder()
+                    .put("DETAIL", "VALUE").build()),
+    SALARY_HISTORY_BY_PARTY("salaryHistoryByParty",
+            //TRX.DATE DATE, DATE_FORMAT(FROM_DAYS(TRX.DATE), '%d %b') AS DATE_TEXT, TRX.ID, TRX.T VALUE, CONCAT(CONVERT(CAST(CONVERT(PT.PRODUCT_NAME USING latin1) AS BINARY) using utf8), " ", TRX.DETAIL) DETAIL
+            ImmutableMap.<String, Type>builder()
+                    .put("DATE", new IntegerType())
+                    .put("DATE_TEXT", new StringType())
+                    .put("DETAIL", new StringType())
+                    .put("VALUE", new FloatType()).build(),
+            Arrays.asList("DATE", "DATE_TEXT"),
+            ImmutableMap.<String, String>builder()
+                    .put("DETAIL", "VALUE").build()),
+    EXPENSE_HISTORY("expenseHistory",
+            //TRX.DATE DATE, DATE_FORMAT(FROM_DAYS(TRX.DATE), '%d %b') AS DATE_TEXT, TRX.ID, TRX.T VALUE, CONCAT(CONVERT(CAST(CONVERT(PT.PRODUCT_NAME USING latin1) AS BINARY) using utf8), " ", TRX.DETAIL) DETAIL
+            ImmutableMap.<String, Type>builder()
+                    .put("DATE", new IntegerType())
+                    .put("DATE_TEXT", new StringType())
+                    .put("DETAIL", new StringType())
+                    .put("VALUE", new FloatType()).build(),
+            Arrays.asList("DATE", "DATE_TEXT"),
+            ImmutableMap.<String, String>builder()
+                    .put("DETAIL", "VALUE").build()),
     FUEL_TEST("fuelsTestSummary",
         ImmutableMap.<String, Type>builder()
             .put("DATE", new IntegerType())

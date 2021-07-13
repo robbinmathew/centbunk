@@ -444,7 +444,7 @@ function buildJsonStoreWithData(data, fields, groupByFields, loadMask) {
     return store;
 }
 
-function addReportPanel(path, params, title, targetPanel, unit, colSize, renderType ) {
+function addReportPanel(path, params, title, targetPanel, unit, colSize, renderType, heightPx ) {
     this.path = path;
     this.params = params;
     this.title = title;
@@ -456,7 +456,7 @@ function addReportPanel(path, params, title, targetPanel, unit, colSize, renderT
         autoScroll: true,
         bodyStyle: 'padding:0px 0px 0',
         columnWidth: colSize,
-        height:350,
+        height:heightPx,
         layout: 'column',
         defaults: {
             anchor: '100%'
@@ -546,13 +546,13 @@ function addReportPanel(path, params, title, targetPanel, unit, colSize, renderT
                     animate: true,
                     columnWidth: 1,
                     shadow: false,
-                    height:300,
+                    height: (heightPx -50),
                     style: 'background: #fff;',
                     store: resultsStore,
                     legend: {
                         position: 'right',
                         boxStrokeWidth: 1,
-                        labelFont: '12px Helvetica'
+                        labelFont: '6px Arial'
                     },
                     axes: [{
                         type: 'numeric',

@@ -215,7 +215,14 @@ public class ScanDataParser {
     private String getProductName(NodeList colList) {
         String prodType = colList.item(6).getTextContent().trim();
         if (prodType.equals("-")) {
-            return colList.item(5).getTextContent().trim().replaceAll(" -BS VI", "").replaceAll(" - BS VI", "").replaceAll("\\s+", " ");
+            String item = colList.item(5).getTextContent().trim().replaceAll(" -BS VI", "").replaceAll(" - BS VI", "").replaceAll("\\s+", " ");
+            if (item.startsWith("HSD"))
+                return "HSD";
+            else if (item.startsWith("MS") || item.startsWith("GASOHOL"))
+                return "MS";
+            else {
+                throw new IllegalStateException("Unknown productname:" + item);
+            }
         } else {
             return prodType;
         }
