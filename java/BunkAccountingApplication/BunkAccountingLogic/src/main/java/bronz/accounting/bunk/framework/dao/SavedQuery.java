@@ -1,5 +1,6 @@
 package bronz.accounting.bunk.framework.dao;
 
+import bronz.accounting.bunk.util.BunkUtil;
 import com.google.common.collect.ImmutableMap;
 
 import org.hibernate.type.FloatType;
@@ -28,7 +29,7 @@ public enum SavedQuery {
             .put("P_TEST", new FloatType())
             .put("D_TEST", new FloatType())
             .put("P_CL_STOCK", new FloatType())
-            .put("D_CL_STOCK", new FloatType()).build(), null, null),
+            .put("D_CL_STOCK", new FloatType()).build(), null, null, BunkUtil.ZERO_FILL_MODE),
     RATE_CHANGE_HISTORY("rateChangeHistory",
         ImmutableMap.<String, Type>builder()
             .put("DATE", new IntegerType())
@@ -37,7 +38,7 @@ public enum SavedQuery {
             .put("PRODUCT_ID", new FloatType())
             .put("STOCK", new FloatType())
             .put("PRICE_CHANGE", new FloatType())
-            .put("TOTAL", new FloatType()).build(), null, null),
+            .put("TOTAL", new FloatType()).build(), null, null, BunkUtil.ZERO_FILL_MODE),
     FUEL_SALE_V2("fuelsSalesSummaryV2",
         //TRX.DATE DATE, DATE_FORMAT(FROM_DAYS(TRX.DATE), '%d %b') AS DATE_TEXT, TRX.ID, TRX.T VALUE, CONCAT(CONVERT(CAST(CONVERT(PT.PRODUCT_NAME USING latin1) AS BINARY) using utf8), " ", TRX.DETAIL) DETAIL
         ImmutableMap.<String, Type>builder()
@@ -47,7 +48,7 @@ public enum SavedQuery {
             .put("VALUE", new FloatType()).build(),
         Arrays.asList("DATE", "DATE_TEXT"),
         ImmutableMap.<String, String>builder()
-            .put("DETAIL", "VALUE").build()),
+            .put("DETAIL", "VALUE").build(), BunkUtil.ZERO_FILL_MODE),
     CREDIT_HISTORY_BY_PARTY("creditHistoryByParty",
             //TRX.DATE DATE, DATE_FORMAT(FROM_DAYS(TRX.DATE), '%d %b') AS DATE_TEXT, TRX.ID, TRX.T VALUE, CONCAT(CONVERT(CAST(CONVERT(PT.PRODUCT_NAME USING latin1) AS BINARY) using utf8), " ", TRX.DETAIL) DETAIL
             ImmutableMap.<String, Type>builder()
@@ -57,7 +58,7 @@ public enum SavedQuery {
                     .put("VALUE", new FloatType()).build(),
             Arrays.asList("DATE", "DATE_TEXT"),
             ImmutableMap.<String, String>builder()
-                    .put("DETAIL", "VALUE").build()),
+                    .put("DETAIL", "VALUE").build(), BunkUtil.NO_FILL_MODE),
     SALARY_HISTORY_BY_PARTY("salaryHistoryByParty",
             //TRX.DATE DATE, DATE_FORMAT(FROM_DAYS(TRX.DATE), '%d %b') AS DATE_TEXT, TRX.ID, TRX.T VALUE, CONCAT(CONVERT(CAST(CONVERT(PT.PRODUCT_NAME USING latin1) AS BINARY) using utf8), " ", TRX.DETAIL) DETAIL
             ImmutableMap.<String, Type>builder()
@@ -67,7 +68,7 @@ public enum SavedQuery {
                     .put("VALUE", new FloatType()).build(),
             Arrays.asList("DATE", "DATE_TEXT"),
             ImmutableMap.<String, String>builder()
-                    .put("DETAIL", "VALUE").build()),
+                    .put("DETAIL", "VALUE").build(), BunkUtil.ZERO_FILL_MODE),
     EXPENSE_HISTORY("expenseHistory",
             //TRX.DATE DATE, DATE_FORMAT(FROM_DAYS(TRX.DATE), '%d %b') AS DATE_TEXT, TRX.ID, TRX.T VALUE, CONCAT(CONVERT(CAST(CONVERT(PT.PRODUCT_NAME USING latin1) AS BINARY) using utf8), " ", TRX.DETAIL) DETAIL
             ImmutableMap.<String, Type>builder()
@@ -77,7 +78,7 @@ public enum SavedQuery {
                     .put("VALUE", new FloatType()).build(),
             Arrays.asList("DATE", "DATE_TEXT"),
             ImmutableMap.<String, String>builder()
-                    .put("DETAIL", "VALUE").build()),
+                    .put("DETAIL", "VALUE").build(), BunkUtil.ZERO_FILL_MODE),
     FUEL_TEST("fuelsTestSummary",
         ImmutableMap.<String, Type>builder()
             .put("DATE", new IntegerType())
@@ -86,7 +87,7 @@ public enum SavedQuery {
             .put("VALUE", new FloatType()).build(),
         Arrays.asList("DATE", "DATE_TEXT"),
         ImmutableMap.<String, String>builder()
-            .put("DETAIL", "VALUE").build());
+            .put("DETAIL", "VALUE").build(), BunkUtil.ZERO_FILL_MODE);
 
 
     private final String savedQueryName;
@@ -94,10 +95,11 @@ public enum SavedQuery {
     private final List<String> groupByFields;
     private final Map<String, String> pivotFields;
     private final Set<String> ignoreFields;
+    private final int fillMode;
 
     private SavedQuery(final String savedQueryName,
         final Map<String, ? extends Type> typeMap, final List<String> groupByFields,
-        final Map<String, String> pivotFields) {
+        final Map<String, String> pivotFields, final int fillMode) {
         this.savedQueryName = savedQueryName;
         this.typeMap = typeMap;
         this.groupByFields = groupByFields;
@@ -106,6 +108,7 @@ public enum SavedQuery {
         if(pivotFields !=null) {
             this.ignoreFields.addAll(pivotFields.values());
         }
+        this.fillMode = fillMode;
     }
 
     public static SavedQuery findQuery(String name) {
@@ -136,5 +139,9 @@ public enum SavedQuery {
 
     public Map<String, ? extends Type> getTypeMap() {
         return typeMap;
+    }
+
+    public int getFillMode() {
+        return fillMode;
     }
 }

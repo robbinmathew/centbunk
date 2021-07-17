@@ -17,6 +17,7 @@ import bronz.accounting.bunk.model.SavedDailyStatement;
 import bronz.accounting.bunk.model.ScannedDetail;
 import bronz.accounting.bunk.model.dao.SavedStatementDao;
 
+import bronz.accounting.bunk.util.BunkUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -972,15 +973,18 @@ public class BunkAppDaoHibernateImpl extends GenericHibernateDao
                     }
                 }
             }
-            Set<String> fields = queryResults.getFields();
-            for (Map pivotRecord : pivotMap.values()) {
-                for (String field: fields) {
-                    if (!pivotRecord.containsKey(field)) {
-                        pivotRecord.put(field, 0); //default to zero for missing fields
+            if ( savedQuery.getFillMode() == BunkUtil.ZERO_FILL_MODE) {
+                Set<String> fields = queryResults.getFields();
+                for (Map pivotRecord : pivotMap.values()) {
+                    for (String field: fields) {
+                        if (!pivotRecord.containsKey(field)) {
+                            pivotRecord.put(field, 0); //default to zero for missing fields
+                        }
                     }
-                }
 
+                }
             }
+
             queryResults.setResults(pivotMap.values());
         }
         return queryResults;

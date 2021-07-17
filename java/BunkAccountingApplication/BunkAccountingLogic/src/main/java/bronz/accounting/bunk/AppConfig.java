@@ -22,9 +22,9 @@ public enum AppConfig {
 	    KEY_STORE_PASSWORD( "bronz.keystore.password", true, true ),
 
 		SCHEDULED_TASKS_ENABLED( "tasks.enabled", true ),
-		HPCL_CUSTID( "hpcl.custid", true ),
-		HPCL_PASS( "hpcl.pass", true ),
-		HPCL_URL( "hpcl.url", true ),
+		HPCL_CUSTID( "hpcl.custid", true, true ),
+		HPCL_PASS( "hpcl.pass", true , true),
+		HPCL_URL( "hpcl.url", true, true ),
 
 		CHROME_DRIVER_PATH("chromedriverPath", true),
 

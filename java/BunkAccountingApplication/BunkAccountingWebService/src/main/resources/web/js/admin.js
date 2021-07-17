@@ -64,7 +64,7 @@ function showAdminPanel(title, record) {
                                 };
                             }
                         }
-                    }/*,
+                    },
                     {
                         xtype: 'numberfield',
                         anchor: '100%',
@@ -79,9 +79,9 @@ function showAdminPanel(title, record) {
                          rowspan:1,
                          colspan:2,
                          xtype: 'button',
-                         text: 'Load data',
+                         text: 'Fetch data from HPCL',
                          handler: function () {
-                             onShowReport();
+                             loadData();
                          }
                      },
                      {
@@ -102,7 +102,7 @@ function showAdminPanel(title, record) {
                       hideLabel : true,
                       colspan:4,
                       anchor    : '100%'
-                }*/,{
+                },{
                       xtype     : 'textareafield',
                       grow      : true,
                       id      : 'newAdminScanData',
@@ -129,18 +129,23 @@ function showAdminPanel(title, record) {
 }
 
 function loadData() {
-    var selectedDate = Ext.getCmp('lastdays').getValue();
+    var myMask = new Ext.LoadMask(Ext.getBody(), {msg:"Fetching data from HPCL..."});
     var reportType = Ext.getCmp('admindatatype').getValue();
 
-    var url = '/api/report?type=' + reportType.reportTypeGroup + '&format=image&dateText=' + dateToSimpleText(selectedDate);
-    if(Ext.getCmp("toDate").disabled === false) {
-        var toDate = Ext.getCmp('toDate').getValue();
-        if (toDate < selectedDate) {
-            Ext.MessageBox.alert('Error', "'To date' is before 'Date'. Please correct.");
-            return;
-        }
-        url = url + "&toDateText=" + dateToSimpleText(toDate);
-    }
+    var url = '/api/scanData?types=' + reportType.reportTypeGroup + '&fromDays=0';
+    //Save
+        Ext.Ajax.request({
+            url: url,
+            method: 'GET',
+            success: function(response) {
+                myMask.hide();
+                Ext.MessageBox.alert('Success', "Successfully fetched data from HPCL. <br/>" + response.responseText);
+            },
+            failure : function(response) {
+                myMask.hide();
+                Ext.Msg.alert("Error", "Failed to fetch data from HPCL. Please try again. <br/> " + response.responseText);
+            }
+        });
 }
 
 function saveData() {

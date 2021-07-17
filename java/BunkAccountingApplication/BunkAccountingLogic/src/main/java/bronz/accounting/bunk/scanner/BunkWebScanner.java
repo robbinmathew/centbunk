@@ -10,10 +10,7 @@ import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 public class BunkWebScanner {
 
@@ -23,6 +20,7 @@ public class BunkWebScanner {
     private String driverPath;
 
     private WebDriver webDriver;
+    private int waitTime = 45;
 
     public BunkWebScanner(String custId, String pass, String url, String driverPath){
         this.custId = custId;
@@ -49,16 +47,6 @@ public class BunkWebScanner {
         webDriver.findElement(By.id("password")).sendKeys(pass);
         webDriver.findElement(By.cssSelector("button[type='submit']")).click();
 
-        /*// Locate all input tags on the page
-        List<WebElement> someElements = driver.findElements(By.cssSelector("input"));
-
-        // Now iterate through them and check for our desired match
-        for (WebElement anElement : someElements) {
-            if (anElement.getAttribute("type").equals("text")) {
-                // Do something
-            }
-        }*/
-
         WebDriverWait wait = new WebDriverWait(webDriver,120);
         wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt("middle"));
     }
@@ -71,24 +59,76 @@ public class BunkWebScanner {
         }
     }
 
-    public Map<String, String> scanPrice() throws BunkMgmtException {
-        Map<String, String> results = new HashMap<String, String>();
+    public String scanPrice(int fromDays) throws BunkMgmtException {
 
-        webDriver.findElement(By.partialLinkText("RETAIL SELLING")).click();
-        WebDriverWait wait = new WebDriverWait(webDriver,30);
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/center/input")));
+        try {
+            webDriver.findElement(By.partialLinkText("HOS")).click();
+            Thread.sleep(15000); //Wait for the page to load and set the title of the tab
+            List<String> tabs = new ArrayList<String> (webDriver.getWindowHandles());
 
-        for (int i = 3 ; i <=6 ; i++) {
-            final String item = webDriver.findElement(By.xpath("/html/body/table/tbody/tr[" + i + "]/td[1]")).getText();
-            final String priceText = webDriver.findElement(By.xpath("/html/body/table/tbody/tr[" + i + "]/td[2]")).getText();
-            final String date = webDriver.findElement(By.xpath("/html/body/table/tbody/tr[" + i + "]/td[3]")).getText();
+            System.out.println("#################### Current handle=" + webDriver.getWindowHandle() + " current title=" + webDriver.getTitle());
+            System.out.println("#################### tabs=" + tabs);
 
-            results.put(item, priceText);
-            results.put("DATE", date);
+            for (String tab : tabs) {
+                webDriver.switchTo().window(tab);
+                System.out.println("############### handle=" + tab + " title=" + webDriver.getTitle());
+                if (webDriver.getTitle().contains("HOS")) {
+                    System.out.println("Found the tab. breaking..");
+                    break;
+                }
+            }
+
+            System.out.println("#################### Current handle=" + webDriver.getWindowHandle() + " current title=" + webDriver.getTitle());
+
+            WebDriverWait wait = new WebDriverWait(webDriver,waitTime);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("ctl00_ContentPlaceHolder1_RadDatePicker2_dateInput")));
+            webDriver.findElement(By.id("ctl00_ContentPlaceHolder1_RadDatePicker1_dateInput")).clear();
+            webDriver.findElement(By.id("ctl00_ContentPlaceHolder1_RadDatePicker2_dateInput")).clear();
+            webDriver.findElement(By.id("ctl00_ContentPlaceHolder1_RadDatePicker1_dateInput")).sendKeys("07/07/2021");
+            webDriver.findElement(By.id("ctl00_ContentPlaceHolder1_RadDatePicker2_dateInput")).sendKeys("07/12/2021");
+
+            webDriver.findElement(By.id("Product1_Arrow")).click();
+            Thread.sleep(3000);
+            WebElement selectAllProductsElement = webDriver.findElement(By.className("rcbCheckAllItemsCheckBox"));
+            try {
+                if (!selectAllProductsElement.isSelected()) {
+                    System.out.println("Not selected all prods.. Selecting");
+
+                    webDriver.findElement(By.xpath("//*[@id=\"ctl00_ContentPlaceHolder1_Product1_DropDown\"]/div/div/label")).click();
+
+
+                }
+            } catch (Exception e){
+                System.out.println("########################ERROR########\n" + e.getClass().getSimpleName() + "\n" + e.getMessage());
+                e.printStackTrace();
+
+                Thread.sleep(30000);
+            }
+
+            webDriver.findElement(By.id("ContentPlaceHolder1_PriceChange")).click();
+            Thread.sleep(15000); //Wait for the page to load and set the title of the tab
+
+            System.out.println("####################" + webDriver.getWindowHandles());
+
+            tabs = new ArrayList<String> (webDriver.getWindowHandles());
+
+            System.out.println("#################### Current handle=" + webDriver.getWindowHandle() + " current title=" + webDriver.getTitle());
+            System.out.println("#################### tabs=" + tabs);
+
+            for (String tab : tabs) {
+                webDriver.switchTo().window(tab);
+                System.out.println("############### handle=" + tab + " title=" + webDriver.getTitle());
+            }
+
+            System.out.println("#################### Current handle=" + webDriver.getWindowHandle() + " current title=" + webDriver.getTitle());
+
+
+            return "YAY!!!";
+        } catch (Exception e) {
+            throw new BunkMgmtException("Failed to fetch the price history", e);
         }
 
-        webDriver.findElement(By.xpath("/html/body/center/input")).click();
-        return results;
+
     }
     public Map<String, Map<String, Map<String, String>>> scanTransactions(Calendar currTime) throws BunkMgmtException {
         Map<String, Map<String, Map<String, String>>> results = new LinkedHashMap<String, Map<String, Map<String, String>>>();

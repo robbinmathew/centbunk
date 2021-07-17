@@ -22,26 +22,25 @@ public class TransactionSupportInvocationHandler implements InvocationHandler {
         Object result;
         final RequiresTransaction annotation = method.getDeclaredAnnotation(RequiresTransaction.class);
         final boolean requireTransaction = annotation != null;
-        try {
-            if(requireTransaction) {
+        if (requireTransaction) {
+            try {
                 transactionManager.start();
-            }
-            result = method.invoke(target, params);
-            if(requireTransaction) {
+                result = method.invoke(target, params);
                 transactionManager.commit();
-            }
-        } catch (Throwable t) {
-            if(requireTransaction) {
+            } catch (Throwable t) {
                 transactionManager.rollback();
+                String failureText = "DB operation failed";
+                if(annotation != null) {
+                    failureText = annotation.failureExceptionText();
+                }
+                throw new BunkMgmtException(failureText, t);
+            } finally {
+                transactionManager.closeSession();
             }
-            String failureText = "DB operation failed";
-            if(annotation != null) {
-                failureText = annotation.failureExceptionText();
-            }
-            throw new BunkMgmtException(failureText, t);
-        } finally {
-            transactionManager.closeSession();
+        } else {
+            result = method.invoke(target, params);
         }
+
         return result;
     }
 }

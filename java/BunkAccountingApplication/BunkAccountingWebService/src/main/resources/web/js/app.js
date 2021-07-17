@@ -253,13 +253,39 @@ function buildSummaryPanel() {
 
     });
 
-    addReportPanel("api/result/fuelsSalesSummaryV2", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Fuels sale summary (Last 30 days)", summaryPanel , ' L', 1, "chart", 350);
-    addReportPanel("api/result/fuelsTestSummary", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Fuels test summary (Last 30 days)", summaryPanel , ' L', 0.5, "chart", 350);
-    addReportPanel("api/result/rateChangeHistory", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Rate change history (Last 30 days)", summaryPanel , ' Rs', 0.5, "table", 350);
+    var startDatePadding = Number(getUrlQueryParam("fromDays"));
+    if (isNaN(startDatePadding)) {
+        startDatePadding = 30;
+    }
+
+    var endDatePadding = Number(getUrlQueryParam("toDays"));
+    if (isNaN(endDatePadding)) {
+        endDatePadding = 0;
+    }
+
+    if (endDatePadding >= startDatePadding) {
+        endDatePadding = 0;
+    }
+
+    var chartsStartDate = (bunkCache.infos.todayDate - startDatePadding);
+    var chartsEndDate = (bunkCache.infos.todayDate) - endDatePadding;
+
+    var datesTitleText;
+
+    if (endDatePadding == 0) {
+        datesTitleText = "(Last " +  startDatePadding + " days)"
+    } else {
+        datesTitleText = "(From " +  startDatePadding + " days ago to " + endDatePadding + " days ago)"
+    }
+
+
+    addReportPanel("api/result/fuelsSalesSummaryV2", {"start" : chartsStartDate, "end" : chartsEndDate}, "Fuels sale summary " + datesTitleText, summaryPanel , ' L', 1, "chart", 350, false);
+    addReportPanel("api/result/fuelsTestSummary", {"start" : chartsStartDate, "end" : chartsEndDate}, "Fuels test summary " + datesTitleText, summaryPanel , ' L', 0.5, "chart", 350, false);
+    addReportPanel("api/result/rateChangeHistory", {"start" : chartsStartDate, "end" : chartsEndDate}, "Rate change history " + datesTitleText, summaryPanel , ' Rs', 0.5, "table", 350, false);
     if (isBeta()) {
-        addReportPanel("api/result/creditHistoryByParty", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Credit balance summary (Last 30 days)", summaryPanel , ' Rs', 1, "chart", 1000);
-        addReportPanel("api/result/salaryHistoryByParty", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Salary summary (Last 30 days)", summaryPanel , ' Rs', 0.5, "chart", 350);
-        addReportPanel("api/result/expenseHistory", {"start" : (bunkCache.infos.todayDate - 30), "end" : bunkCache.infos.todayDate}, "Expense summary (Last 30 days)", summaryPanel , ' Rs', 0.5, "chart", 350);
+        addReportPanel("api/result/creditHistoryByParty", {"start" : chartsStartDate, "end" : chartsEndDate}, "Credit balance summary " + datesTitleText, summaryPanel , ' Rs', 1, "chart", 1000, true);
+        addReportPanel("api/result/salaryHistoryByParty", {"start" : chartsStartDate, "end" : chartsEndDate}, "Salary summary " + datesTitleText, summaryPanel , ' Rs', 0.5, "chart", 350, false);
+        addReportPanel("api/result/expenseHistory", {"start" : chartsStartDate, "end" : chartsEndDate}, "Expense summary " + datesTitleText, summaryPanel , ' Rs', 0.5, "chart", 350, false);
     }
 
     return summaryPanel;
@@ -455,16 +481,20 @@ function getRowActionsColumns(modelName, callback) {
 }
 
 function isBeta() {
+    if (getUrlQueryParam("beta") === "1") {
+        return true;
+    }
+    return false;
+}
+
+function getUrlQueryParam(param) {
     var getParams = document.URL.split("?");
     if (getParams.length<2) {
         return false;
     }
     // transforming the GET parameters into a dictionnary
     var params = Ext.urlDecode(getParams[getParams.length - 1]);
-    if (params["beta"] === "1") {
-        return true;
-    }
-    return false;
+    return params[param];
 }
 
 

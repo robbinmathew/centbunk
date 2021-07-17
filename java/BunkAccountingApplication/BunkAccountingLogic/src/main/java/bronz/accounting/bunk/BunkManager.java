@@ -3,6 +3,7 @@ package bronz.accounting.bunk;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import bronz.accounting.bunk.framework.exceptions.BunkMgmtException;
 import bronz.accounting.bunk.model.*;
@@ -113,4 +114,6 @@ public interface BunkManager {
     List<StockVariation> getStockVariation(int date) throws BunkMgmtException;
 
     QueryResults getResult(final String savedQueryName, final Map<String, Object> params) throws BunkMgmtException;
+
+    Map<ScanType, String> scanDataFromHpcl(int fromDays, Set<ScanType> scanTypes) throws BunkMgmtException;
 }

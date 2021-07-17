@@ -200,6 +200,18 @@ public class BunkAccountingWebService {
         return this.bunkManager.saveScannedData(data, ScanType.getByType(type), "web");
     }
 
+
+    @GET
+    @Path("scanData")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<ScanType, String> scanDataFromHpcl(@QueryParam("types") String types, final @QueryParam("fromDays") int fromDays) throws BunkMgmtException {
+        Set<ScanType> scanTypes = new HashSet<>();
+        for (String type : types.split(",")) {
+            scanTypes.add(ScanType.getByType(type));
+        }
+        return this.bunkManager.scanDataFromHpcl(fromDays, scanTypes);
+    }
+
     @GET
     @Path("getScanData")
     @Produces(MediaType.APPLICATION_JSON)

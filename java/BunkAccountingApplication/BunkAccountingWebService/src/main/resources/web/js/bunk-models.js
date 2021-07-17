@@ -444,7 +444,7 @@ function buildJsonStoreWithData(data, fields, groupByFields, loadMask) {
     return store;
 }
 
-function addReportPanel(path, params, title, targetPanel, unit, colSize, renderType, heightPx ) {
+function addReportPanel(path, params, title, targetPanel, unit, colSize, renderType, heightPx, skipMissingRecordsOnLegend ) {
     this.path = path;
     this.params = params;
     this.title = title;
@@ -486,6 +486,10 @@ function addReportPanel(path, params, title, targetPanel, unit, colSize, renderT
                         var text = "";
                         for(var i=0; i< responseJson.fields.length; i++) {
                             var fieldName = responseJson.fields[i];
+                            if (!storeItem.get(fieldName) && skipMissingRecordsOnLegend)
+                                continue;
+
+
 
                             text = text + "<p>";
                             if(fieldName == seriesTitle) {

@@ -1,15 +1,11 @@
 package bronz.accounting.bunk;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import bronz.accounting.bunk.model.*;
 import bronz.accounting.bunk.model.dao.SavedStatementDao;
+import bronz.accounting.bunk.scanner.BunkWebScanner;
 import bronz.accounting.bunk.scanner.ScanDataParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -408,4 +404,25 @@ public class BunkManagerImpl implements BunkManager {
         return savedStatementDao.getResult(savedQueryName, params);
     }
 
+    @Override
+    public Map<ScanType, String> scanDataFromHpcl(int fromDays, Set<ScanType> scanTypes) throws BunkMgmtException {
+        Map<ScanType, String> results = new HashMap<>();
+        BunkWebScanner bunkWebScanner = null;
+        try {
+            bunkWebScanner = new BunkWebScanner(AppConfig.HPCL_CUSTID.getStringValue(),
+                    AppConfig.HPCL_PASS.getStringValue(), AppConfig.HPCL_URL.getStringValue(),
+                    AppConfig.CHROME_DRIVER_PATH.getStringValue());
+            bunkWebScanner.loginToHpcl();
+
+            results.put(ScanType.PRICE_CHANGE_TYPE, bunkWebScanner.scanPrice(fromDays));
+        } catch (Exception e) {
+            LOG.error("Failed scan data from HPCL", e);
+            throw new BunkMgmtException( "Failed scan data from HPCL", e );
+        } finally {
+            if (bunkWebScanner != null) {
+                bunkWebScanner.close();
+            }
+        }
+        return results;
+    }
 }

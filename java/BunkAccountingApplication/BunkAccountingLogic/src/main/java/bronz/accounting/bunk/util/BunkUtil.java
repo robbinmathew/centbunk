@@ -7,6 +7,8 @@ import java.util.Map;
 
 public class BunkUtil
 {
+	public static final int ZERO_FILL_MODE = 0;
+	public static final int NO_FILL_MODE = 1;
 	//private static final BigDecimal PI = new BigDecimal(Math.PI);
 	
 	private static final Map<Integer, BigDecimal> TANK_ID_TO_LENGTH_MAP =
