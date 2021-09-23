@@ -254,7 +254,7 @@ function buildSummaryPanel() {
     });
 
     var startDatePadding = Number(getUrlQueryParam("fromDays"));
-    if (isNaN(startDatePadding)) {
+    if (isNaN(startDatePadding) || startDatePadding <= 0) {
         startDatePadding = 30;
     }
 
@@ -283,7 +283,7 @@ function buildSummaryPanel() {
     addReportPanel("api/result/fuelsTestSummary", {"start" : chartsStartDate, "end" : chartsEndDate}, "Fuels test summary " + datesTitleText, summaryPanel , ' L', 0.5, "chart", 350, false);
     addReportPanel("api/result/rateChangeHistory", {"start" : chartsStartDate, "end" : chartsEndDate}, "Rate change history " + datesTitleText, summaryPanel , ' Rs', 0.5, "table", 350, false);
     if (isBeta()) {
-        addReportPanel("api/result/creditHistoryByParty", {"start" : chartsStartDate, "end" : chartsEndDate}, "Credit balance summary " + datesTitleText, summaryPanel , ' Rs', 1, "chart", 1000, true);
+        addReportPanel("api/result/creditHistoryByParty", {"start" : chartsStartDate, "end" : chartsEndDate}, "Credit balance summary " + datesTitleText, summaryPanel , ' Rs', 1, "chart", 1200, true);
         addReportPanel("api/result/salaryHistoryByParty", {"start" : chartsStartDate, "end" : chartsEndDate}, "Salary summary " + datesTitleText, summaryPanel , ' Rs', 0.5, "chart", 350, false);
         addReportPanel("api/result/expenseHistory", {"start" : chartsStartDate, "end" : chartsEndDate}, "Expense summary " + datesTitleText, summaryPanel , ' Rs', 0.5, "chart", 350, false);
     }

@@ -503,12 +503,13 @@ public class BunkAccountingWebService {
                             tankSale.getProductId()).add(tankSale.getDiffThisMonth()));
                     monthlyVariation.put(tankSale.getProductId(), totalMonthlyVariation);
                 }
-                for ( Map.Entry<Integer, BigDecimal> entry : tankStockTotal.entrySet() ) {
-                    BigDecimal difference = BunkUtil.setAsProdVolume(entry.getValue().subtract(transBuilder.getProdTransBuilder().getBalanceForEntity(entry.getKey())));
-                    stockVariations.put(entry.getKey(), difference);
-                    transBuilder.getProdTransBuilder().addTrans( entry.getKey(), difference,
-                            "Stock diff id=" + entry.getKey() + " monthly_variation=" + monthlyVariation.get(entry.getKey()), ProductTransaction.DIFF );
-                }
+                //TODO
+                //for ( Map.Entry<Integer, BigDecimal> entry : tankStockTotal.entrySet() ) {
+                //    BigDecimal difference = BunkUtil.setAsProdVolume(entry.getValue().subtract(transBuilder.getProdTransBuilder().getBalanceForEntity(entry.getKey())));
+                //    stockVariations.put(entry.getKey(), difference);
+                //    transBuilder.getProdTransBuilder().addTrans( entry.getKey(), difference,
+                //            "Stock diff id=" + entry.getKey() + " monthly_variation=" + monthlyVariation.get(entry.getKey()), ProductTransaction.DIFF );
+                //}
             }
             for (UiFuelSale bean : uiDailyStatement.getFuelSales()) {
                 final BigDecimal stockVariation = stockVariations.get(bean.getProductId());
