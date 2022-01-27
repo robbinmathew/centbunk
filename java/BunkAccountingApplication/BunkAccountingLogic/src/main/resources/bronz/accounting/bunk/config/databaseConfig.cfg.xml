@@ -21,8 +21,8 @@
 
 
    <property name="hibernate.connection.provider_class">com.zaxxer.hikari.hibernate.HikariConnectionProvider</property> <!-- seconds -->
-   <property name="hibernate.hikari.minimumIdle">2</property>
-   <property name="hibernate.hikari.maximumPoolSize">5</property>
+   <property name="hibernate.hikari.minimumIdle">10</property>
+   <property name="hibernate.hikari.maximumPoolSize">25</property>
    <property name="hibernate.hikari.idleTimeout">60000</property>
 
 
