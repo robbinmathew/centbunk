@@ -15,6 +15,8 @@ function getReceiptAmts() {
     for (var i = 0; i <= 30; i++) {
         arr.push([i*1000]);
     }
+    arr.push([4500]);
+    arr.push([13500]);
     return arr;
 }
 
