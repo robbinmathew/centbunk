@@ -14,8 +14,14 @@ function getReceiptAmts() {
     var arr = [];
     for (var i = 0; i <= 30; i++) {
         arr.push([i*1000]);
+        if (i == 3) {
+           arr.push([3500]);
+        }
         if (i == 4) {
            arr.push([4500]);
+        }
+        if (i == 10) {
+           arr.push([10500]);
         }
         if (i == 13) {
            arr.push([13500]);
